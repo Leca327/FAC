@@ -1,6 +1,6 @@
-<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.6.6 Chrome/144.0.7559.236 Electron/40.8.4 Safari/537.36" version="29.6.6">
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.6.6 Chrome/144.0.7559.236 Electron/40.8.4 Safari/537.36">
   <diagram name="Página-1" id="nbBo_y4tWJ06xXvwoEYH">
-    <mxGraphModel dx="983" dy="586" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="808" dy="1654" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -94,7 +94,7 @@
         <mxCell id="k-WlVQk4b3VmQSTFxHsa-38" parent="1" style="text;strokeColor=none;fillColor=none;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;whiteSpace=wrap;html=1;align=right;" value="1:N" vertex="1">
           <mxGeometry height="30" width="40" x="110" y="518" as="geometry" />
         </mxCell>
-        <mxCell id="k-WlVQk4b3VmQSTFxHsa-39" parent="1" style="shape=rhombus;perimeter=rhombusPerimeter;whiteSpace=wrap;html=1;align=center;" value="Prescrever" vertex="1">
+        <mxCell id="k-WlVQk4b3VmQSTFxHsa-39" parent="1" style="shape=rhombus;perimeter=rhombusPerimeter;whiteSpace=wrap;html=1;align=center;" value="Ingerir" vertex="1">
           <mxGeometry height="40" width="80" x="500" y="90" as="geometry" />
         </mxCell>
         <mxCell id="k-WlVQk4b3VmQSTFxHsa-40" parent="1" style="text;strokeColor=none;fillColor=none;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;whiteSpace=wrap;html=1;align=right;" value="1:N" vertex="1">
@@ -160,6 +160,33 @@
         </mxCell>
         <mxCell id="k-WlVQk4b3VmQSTFxHsa-57" parent="1" style="shape=associativeEntity;whiteSpace=wrap;html=1;align=center;" value="Gerenciar" vertex="1">
           <mxGeometry height="40" width="81" x="499.5" y="220" as="geometry" />
+        </mxCell>
+        <mxCell id="hWhwnYjzPKKZEon18-kJ-1" parent="1" style="shape=rhombus;perimeter=rhombusPerimeter;whiteSpace=wrap;html=1;align=center;" value="Prescrever" vertex="1">
+          <mxGeometry height="40" width="80" x="355" y="-90" as="geometry" />
+        </mxCell>
+        <mxCell id="hWhwnYjzPKKZEon18-kJ-2" edge="1" parent="1" source="k-WlVQk4b3VmQSTFxHsa-9" style="endArrow=none;html=1;rounded=0;" target="hWhwnYjzPKKZEon18-kJ-1" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="544" y="-70" />
+            </Array>
+            <mxPoint x="390" y="160" as="sourcePoint" />
+            <mxPoint x="440" y="110" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="hWhwnYjzPKKZEon18-kJ-3" edge="1" parent="1" source="k-WlVQk4b3VmQSTFxHsa-4" style="endArrow=none;html=1;rounded=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="hWhwnYjzPKKZEon18-kJ-1" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="149" y="-70" />
+            </Array>
+            <mxPoint x="269" y="-10" as="sourcePoint" />
+            <mxPoint x="160" y="-90" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="hWhwnYjzPKKZEon18-kJ-4" parent="1" style="text;strokeColor=none;fillColor=none;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;whiteSpace=wrap;html=1;align=right;" value="0:N" vertex="1">
+          <mxGeometry height="30" width="40" x="510" y="-10" as="geometry" />
+        </mxCell>
+        <mxCell id="hWhwnYjzPKKZEon18-kJ-5" parent="1" style="text;strokeColor=none;fillColor=none;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;whiteSpace=wrap;html=1;align=right;" value="0:N" vertex="1">
+          <mxGeometry height="30" width="40" x="136" y="-11" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
