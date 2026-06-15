@@ -1,0 +1,42 @@
+{% comment %}
+Sidebar do contexto do paciente. Requer:
+  - paciente
+  - menu_ativo: identificador do item ativo (ex.: 'visao_geral', 'agenda')
+{% endcomment %}
+<aside class="vg__sidebar">
+    <div class="vg__patient">
+        <span class="vg__patient-label">Paciente</span>
+        <div class="vg__patient-info">
+            <span class="vg__patient-avatar" aria-hidden="true">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                    <circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>
+                </svg>
+            </span>
+            <div>
+                <strong>{{ paciente.nome }}</strong>
+                {% if paciente.idade %}<span>{{ paciente.idade }} anos</span>{% endif %}
+            </div>
+        </div>
+    </div>
+
+    <nav class="vg__nav" aria-label="Menu do paciente">
+        <p class="vg__nav-group">Gestão</p>
+        <a href="{% url 'pacientes:visao_geral' paciente.id %}" {% if menu_ativo == 'visao_geral' %}class="is-active"{% endif %}>Visão Geral</a>
+        <a href="#">Medicamentos</a>
+        <a href="#">Médicos</a>
+
+        <p class="vg__nav-group">Equipe</p>
+        <a href="#">Família</a>
+        <a href="#">Cuidadores</a>
+
+        <p class="vg__nav-group">Rotina</p>
+        <a href="{% url 'pacientes:agenda' paciente.id %}" {% if menu_ativo == 'agenda' %}class="is-active"{% endif %}>Agenda</a>
+        <a href="#">Consultas e Exames</a>
+        <a href="#">Medicação Diária</a>
+        <a href="#">Escala</a>
+
+        <p class="vg__nav-group">&nbsp;</p>
+        <a href="#">Prontuário</a>
+        <a href="#">Ponto</a>
+    </nav>
+</aside>

@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}CuidaCare — Cuidado com carinho e tecnologia{% endblock %}
+
+{% block content %}
+
+<!-- ============ HERO ============ -->
+<section class="hero">
+    <div class="container hero__inner">
+        <div class="hero__text">
+            <span class="badge">
+                <span class="badge__dot"></span> Prontuário digital colaborativo
+            </span>
+            <h1 class="hero__title">
+                Cuidado com <em>carinho</em><br>
+                e <em class="accent-pink">tecnologia</em>.
+            </h1>
+            <p class="hero__subtitle">
+                Acompanhe a rotina do seu ente querido em tempo real — atividades,
+                medicações, consultas e o registro de jornada das cuidadoras, tudo em um só lugar.
+            </p>
+            <div class="hero__actions">
+                <a href="{% url 'usuarios:cadastro' %}" class="btn btn--primary btn--lg">Começar grátis →</a>
+                <a href="#como-funciona" class="btn btn--outline btn--lg">Ver como funciona</a>
+            </div>
+        </div>
+
+        <!-- Mockup do dashboard do paciente -->
+        <div class="hero__preview" aria-hidden="true">
+            <div class="toast">
+                <span class="toast__check"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span> Medicação registrada
+            </div>
+            <div class="patient-card">
+                <div class="patient-card__head">
+                    <div class="patient-card__avatar">MA</div>
+                    <div class="patient-card__id">
+                        <strong>Maria Aparecida, 78 anos</strong>
+                        <span class="badge-status badge-status--online">● Online</span>
+                    </div>
+                </div>
+                <div class="patient-card__stats">
+                    <div><span class="num">120/80</span><small>Pressão</small></div>
+                    <div><span class="num">3/4</span><small>Medicações</small></div>
+                    <div><span class="num">10 Abr</span><small>Consulta</small></div>
+                </div>
+                <p class="patient-card__label">Atividades de hoje</p>
+                <ul class="patient-card__activities">
+                    <li><span>Banho + higiene pessoal</span><i>08:00 · Feito</i></li>
+                    <li><span>Café + Medicação matinal</span><i>08:30 · Feito</i></li>
+                    <li><span>Fisioterapia domiciliar</span><i>10:00</i></li>
+                </ul>
+                <div class="patient-card__foot">
+                    <span class="pin">
+                        <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6-5.5-6-10a6 6 0 0 1 12 0c0 4.5-6 10-6 10Z"/><circle cx="12" cy="11" r="2.5"/></svg>
+                        Ponto registrado · 07:02
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ============ FAIXA DE RECURSOS ============ -->
+<section class="features-strip">
+    <div class="container features-strip__inner">
+        <span>Prontuário digital</span>
+        <span>Controle de ponto</span>
+        <span>Agenda médica</span>
+        <span>Gestão de remédios</span>
+        <span>Acesso da família</span>
+        <span>Alertas em tempo real</span>
+    </div>
+</section>
+
+<!-- ============ COMO FUNCIONA ============ -->
+<section class="section section--lavender" id="como-funciona">
+    <div class="container">
+        <p class="section__eyebrow">Como funciona</p>
+        <h2 class="section__title">Simples para a família.<br>Essencial para quem cuida.</h2>
+        <p class="section__lead">
+            Em três passos, sua família tem visibilidade total sobre os cuidados —
+            com organização e transparência.
+        </p>
+
+        <div class="grid grid--3">
+            {% for passo in passos %}
+            <article class="step-card">
+                <span class="step-card__num">{{ passo.numero }}</span>
+                <h3>{{ passo.titulo }}</h3>
+                <p>{{ passo.descricao }}</p>
+            </article>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- ============ PARA QUEM É ============ -->
+<section class="section" id="para-quem">
+    <div class="container">
+        <p class="section__eyebrow">Para quem é</p>
+        <h2 class="section__title">Uma plataforma para<br>todos no cuidado.</h2>
+
+        <div class="grid grid--3">
+            {% for perfil in perfis %}
+            <article class="profile-card {% if perfil.destaque %}profile-card--featured{% endif %}">
+                <h3>{{ perfil.titulo }}</h3>
+                <p>{{ perfil.descricao }}</p>
+                <ul class="profile-card__list">
+                    {% for item in perfil.itens %}
+                    <li>{{ item }}</li>
+                    {% endfor %}
+                </ul>
+            </article>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- ============ MÉTRICAS + CTA ============ -->
+<section class="cta">
+    <div class="container">
+        <div class="cta__metrics">
+            {% for metrica in metricas %}
+            <div class="metric">
+                <span class="metric__value">{{ metrica.valor }}</span>
+                <span class="metric__label">{{ metrica.rotulo }}</span>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="cta__box">
+            <h2>Comece a cuidar com mais tranquilidade.</h2>
+            <p>Cadastre-se gratuitamente e tenha acesso completo à plataforma. Sem burocracia, sem cartão de crédito.</p>
+            <div class="cta__actions">
+                <a href="{% url 'usuarios:cadastro' %}" class="btn btn--primary btn--lg">Criar conta grátis</a>
+                <a href="#contato" class="btn btn--soft btn--lg">Falar com a equipe →</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

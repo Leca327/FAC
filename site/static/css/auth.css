@@ -1,0 +1,378 @@
+/* =====================================================
+   CuidaCare — auth.css
+   Telas de login e cadastro (layout dividido).
+   Carregado apenas nas páginas de autenticação.
+   ===================================================== */
+
+/* Nas telas de auth, o cabeçalho e o rodapé do site não aparecem
+   (o painel da esquerda já traz a marca) — conforme Figma. */
+.navbar,
+.footer {
+    display: none;
+}
+
+.auth {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: 100vh;
+}
+
+/* ---------- Painel ilustrativo (esquerda) ---------- */
+.auth__aside {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(160deg, var(--primary-light) 0%, var(--primary-dark) 60%, var(--primary-darker) 100%);
+    color: var(--white);
+    display: flex;
+    align-items: flex-end;
+    padding: 56px;
+}
+
+.auth__aside-deco {
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.16) 0 6px, transparent 7px),
+        radial-gradient(circle at 70% 18%, rgba(255, 255, 255, 0.12) 0 4px, transparent 5px),
+        radial-gradient(circle at 80% 60%, rgba(255, 255, 255, 0.10) 0 5px, transparent 6px),
+        radial-gradient(420px 420px at 60% 40%, rgba(255, 255, 255, 0.10), transparent 70%);
+    pointer-events: none;
+}
+
+/* Coração decorativo grande ao centro */
+.auth__aside-deco::after {
+    content: "♥";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -60%);
+    font-size: 9rem;
+    color: rgba(255, 255, 255, 0.18);
+}
+
+.auth__aside-content {
+    position: relative;
+    z-index: 1;
+}
+
+.auth__logo {
+    font-family: var(--font-serif);
+    font-size: 2.4rem;
+    display: block;
+    margin-bottom: 12px;
+}
+
+.auth__logo strong {
+    color: var(--secondary-light);
+    font-weight: 700;
+}
+
+.auth__tagline {
+    font-size: 1rem;
+    max-width: 360px;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+/* ---------- Painel do formulário (direita) ---------- */
+.auth__panel {
+    --auth-accent: var(--primary);
+    --auth-accent-dark: var(--primary-dark);
+    --auth-bg: var(--white);
+    background: var(--auth-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 32px;
+    transition: background var(--transition);
+}
+
+/* Temas do cadastro: rosa (Familiar) / azul (Cuidador) */
+.auth__panel--register.is-familiar {
+    --auth-accent: var(--secondary);
+    --auth-accent-dark: #d4477a;
+    --auth-bg: var(--bg-pink-soft);
+}
+
+.auth__panel--register.is-cuidador {
+    --auth-accent: #5b8def;
+    --auth-accent-dark: #3f6fd1;
+    --auth-bg: #eaf1fd;
+}
+
+.auth__box {
+    width: 100%;
+    max-width: 380px;
+}
+
+/* ---------- Botão "Voltar para a tela principal" ----------
+   Fica no topo-esquerda do painel roxo (lado esquerdo). */
+.auth__back {
+    position: absolute;
+    top: 32px;
+    left: 32px;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--white);
+    padding: 9px 16px;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(4px);
+    transition: var(--transition);
+}
+
+.auth__back:hover {
+    background: rgba(255, 255, 255, 0.22);
+    border-color: var(--white);
+    transform: translateX(-2px);
+}
+
+.auth__back span {
+    font-size: 1.05rem;
+    line-height: 1;
+}
+
+.auth__box--wide {
+    max-width: 520px;
+}
+
+.auth__icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 18px;
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--auth-accent);
+    background: linear-gradient(135deg, var(--bg-lavender), var(--bg-pink-soft));
+    box-shadow: var(--shadow-sm);
+}
+
+.auth__title {
+    font-size: 2rem;
+    margin-bottom: 8px;
+}
+
+.auth__subtitle {
+    color: var(--text-muted);
+    margin-bottom: 28px;
+}
+
+.auth__title--center,
+.auth__subtitle--center {
+    text-align: center;
+}
+
+/* ---------- Campos ---------- */
+.field {
+    margin-bottom: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.field-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.field label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--ink);
+}
+
+.field input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    font-family: var(--font-sans);
+    font-size: 0.95rem;
+    background: var(--white);
+    transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.field input:focus {
+    outline: none;
+    border-color: var(--auth-accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--auth-accent) 22%, transparent);
+}
+
+.field__error {
+    color: var(--error);
+    font-size: 0.82rem;
+}
+
+/* ---------- Campo de senha com ícone de olho ---------- */
+.password-wrap {
+    position: relative;
+    display: flex;
+}
+
+.password-wrap input {
+    padding-right: 46px;
+}
+
+.password-toggle {
+    position: absolute;
+    top: 50%;
+    right: 8px;
+    transform: translateY(-50%);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    border-radius: 8px;
+    transition: var(--transition);
+}
+
+.password-toggle:hover {
+    color: var(--auth-accent);
+    background: color-mix(in srgb, var(--auth-accent) 10%, transparent);
+}
+
+.password-toggle svg {
+    width: 20px;
+    height: 20px;
+}
+
+.field__hint-link {
+    align-self: flex-end;
+    font-size: 0.82rem;
+    color: var(--auth-accent);
+    font-weight: 500;
+}
+
+/* ---------- Toggle Familiar / Cuidador ---------- */
+.toggle {
+    display: flex;
+    gap: 6px;
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 5px;
+    width: fit-content;
+    margin: 0 auto 28px;
+}
+
+.toggle__option input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.toggle__option span {
+    display: block;
+    padding: 9px 26px;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.92rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.toggle__option:has(input:checked) span {
+    background: var(--auth-accent);
+    color: var(--white);
+}
+
+/* ---------- Checkbox de termos ---------- */
+.checkbox {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 0.88rem;
+    color: var(--text);
+    margin: 4px 0 22px;
+}
+
+.checkbox input {
+    width: 18px;
+    height: 18px;
+    margin-top: 2px;
+    accent-color: var(--auth-accent);
+}
+
+.checkbox a {
+    color: var(--auth-accent);
+    font-weight: 600;
+}
+
+/* ---------- Botão temático ---------- */
+.auth__panel .btn--primary {
+    background: var(--auth-accent);
+    margin-top: 6px;
+}
+
+.auth__panel .btn--primary:hover {
+    background: var(--auth-accent-dark);
+}
+
+/* ---------- Rodapé do formulário ---------- */
+.auth__switch {
+    text-align: center;
+    margin-top: 22px;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+.auth__switch a {
+    color: var(--auth-accent);
+    font-weight: 600;
+}
+
+/* ---------- Alertas ---------- */
+.alert {
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    margin-bottom: 20px;
+}
+
+.alert--error {
+    background: #fdeaea;
+    color: var(--error);
+    border: 1px solid #f5c6c6;
+}
+
+/* ---------- Responsivo ---------- */
+@media (max-width: 860px) {
+    .auth {
+        grid-template-columns: 1fr;
+    }
+
+    .auth__aside {
+        min-height: 200px;
+        padding: 32px;
+        align-items: center;
+        text-align: center;
+    }
+
+    .auth__aside-deco::after {
+        font-size: 5rem;
+    }
+
+    .auth__tagline {
+        margin: 0 auto;
+    }
+}
+
+@media (max-width: 520px) {
+    .field-grid {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+}

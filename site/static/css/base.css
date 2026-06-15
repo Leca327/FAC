@@ -1,0 +1,106 @@
+/* =====================================================
+   CuidaCare — base.css
+   Reset, variáveis de design (tokens) e tipografia.
+   Paleta conforme seção 2.7.6 da documentação.
+   ===================================================== */
+
+:root {
+    /* Cores primárias (índigo/roxo) */
+    --primary: #4f46c9;
+    --primary-dark: #3b34a5;
+    --primary-darker: #2e2a7a;
+    --primary-light: #6d63e0;
+
+    /* Cores secundárias (rosa) */
+    --secondary: #ec5b8b;
+    --secondary-light: #f7c2d6;
+
+    /* Estados */
+    --success: #2fa76a;
+    --success-light: #d7f3e4;
+    --error: #e04545;
+    --warning: #e0a23a;
+
+    /* Neutros */
+    --ink: #1f1b3a;          /* títulos serifados escuros */
+    --text: #44425a;         /* corpo */
+    --text-muted: #6f6c87;
+    --line: #e4e2f2;
+    --white: #ffffff;
+
+    /* Fundos */
+    --bg: #ffffff;
+    --bg-lavender: #ececfb;
+    --bg-lavender-soft: #f4f3fd;
+    --bg-pink-soft: #fdeef3;
+
+    /* Tipografia */
+    --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-serif: "Playfair Display", Georgia, "Times New Roman", serif;
+
+    /* Layout */
+    --container: 1200px;
+    --radius: 14px;
+    --radius-lg: 22px;
+    --shadow-sm: 0 2px 8px rgba(31, 27, 58, 0.06);
+    --shadow-md: 0 12px 32px rgba(31, 27, 58, 0.10);
+    --shadow-lg: 0 24px 60px rgba(46, 42, 122, 0.18);
+    --transition: 0.2s ease;
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: var(--font-sans);
+    color: var(--text);
+    background: var(--bg);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 {
+    font-family: var(--font-serif);
+    color: var(--ink);
+    line-height: 1.15;
+    font-weight: 700;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+    transition: color var(--transition);
+}
+
+ul {
+    list-style: none;
+}
+
+img {
+    max-width: 100%;
+    display: block;
+}
+
+em {
+    font-style: italic;
+}
+
+.accent-pink {
+    color: var(--secondary);
+}
+
+/* Acessibilidade: foco visível por teclado (seção 2.7.8) */
+:focus-visible {
+    outline: 3px solid var(--primary-light);
+    outline-offset: 2px;
+    border-radius: 4px;
+}

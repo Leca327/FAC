@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Agenda — {{ paciente.nome }} — CuidaCare{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/pacientes.css' %}">{% endblock %}
+
+{% block content %}
+<div class="vg {% if user.is_familiar %}pac--familiar{% else %}pac--cuidador{% endif %}">
+    <div class="vg__layout">
+        {% include "pacientes/_sidebar.html" with menu_ativo="agenda" %}
+
+        <main class="vg__main">
+            <div class="ag__top">
+                <div>
+                    <a href="{% url 'pacientes:visao_geral' paciente.id %}" class="vg__back">← Voltar ao paciente</a>
+                    <h1 class="vg__title">Agenda</h1>
+                    <p class="vg__subtitle">Acompanhe compromissos, consultas, exames e plantões.</p>
+                </div>
+                {% if user.is_familiar %}
+                <button type="button" class="btn btn--primary ag__new">
+                    <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                    Novo Compromisso
+                </button>
+                {% endif %}
+            </div>
+
+            <div class="ag__grid">
+                <div class="ag__col">
+                    <!-- Calendário mensal -->
+                    <section class="vg-panel ag-cal">
+                        <header class="ag-cal__head">
+                            <h2>Calendário Mensal</h2>
+                            <div class="ag-cal__nav">
+                                <a href="?ano={{ nav_anterior.ano }}&mes={{ nav_anterior.mes }}" aria-label="Mês anterior">‹</a>
+                                <span>{{ mes_nome }}</span>
+                                <a href="?ano={{ nav_seguinte.ano }}&mes={{ nav_seguinte.mes }}" aria-label="Próximo mês">›</a>
+                            </div>
+                        </header>
+
+                        <table class="ag-cal__table">
+                            <thead>
+                                <tr>
+                                    {% for dia in dias_semana %}<th>{{ dia }}</th>{% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for semana in semanas %}
+                                <tr>
+                                    {% for d in semana %}
+                                    <td class="{% if not d.mes_atual %}is-outside{% endif %} {% if d.hoje %}is-today{% endif %} {% if d.selecionado %}is-selected{% endif %}">
+                                        {% if d.mes_atual %}
+                                        <a href="?ano={{ ano }}&mes={{ mes }}&dia={{ d.dia }}" class="ag-cal__cell">
+                                            <span class="ag-cal__day">{{ d.dia }}</span>
+                                        </a>
+                                        {% else %}
+                                        <span class="ag-cal__cell ag-cal__cell--off"><span class="ag-cal__day">{{ d.dia }}</span></span>
+                                        {% endif %}
+                                    </td>
+                                    {% endfor %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </section>
+
+                    <!-- Plantões da semana -->
+                    <section class="vg-panel">
+                        <header class="vg-panel__head">
+                            <h2>Plantões da semana</h2>
+                        </header>
+                        <table class="ag-table">
+                            <thead>
+                                <tr><th>Cuidadora</th><th>Entrada</th><th>Saída</th><th>Status</th></tr>
+                            </thead>
+                            <tbody>
+                                {% for p in plantoes_semana %}
+                                <tr>
+                                    <td>{{ p.cuidadora }}</td>
+                                    <td>{{ p.entrada }}</td>
+                                    <td>{{ p.saida }}</td>
+                                    <td><span class="vg-badge">{{ p.status }}</span></td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="4" class="ag-table__empty">Nenhum plantão registrado nesta semana.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </section>
+                </div>
+
+                <!-- Painel do dia selecionado -->
+                <aside class="vg-panel ag-today">
+                    <h2 class="ag-today__title">{{ painel_label }}</h2>
+                    {% for ev in eventos_dia %}
+                    <div class="vg-panel__row">
+                        <div><strong>{{ ev.titulo }}</strong><small>{{ ev.hora }}</small></div>
+                    </div>
+                    {% empty %}
+                    <p class="vg-panel__empty">Nenhum compromisso para este dia.</p>
+                    {% endfor %}
+                </aside>
+            </div>
+        </main>
+    </div>
+</div>
+{% endblock %}

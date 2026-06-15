@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Redefinir sua senha — CuidaCare{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/auth.css' %}">{% endblock %}
+
+{% block content %}
+<div class="auth">
+    <!-- Painel ilustrativo (esquerda) -->
+    <aside class="auth__aside">
+        <div class="auth__aside-deco" aria-hidden="true"></div>
+        <div class="auth__aside-content">
+            <a href="{% url 'core:home' %}" class="auth__logo">Cuida<strong>Care</strong></a>
+            <p class="auth__tagline">Conectando cuidadores e famílias com informação e cuidado.</p>
+        </div>
+    </aside>
+
+    <!-- Formulário (direita) -->
+    <section class="auth__panel">
+        <div class="auth__box">
+            <div class="auth__icon" aria-hidden="true">
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+            </div>
+
+            <h1 class="auth__title auth__title--center">Redefinir sua senha</h1>
+            <p class="auth__subtitle auth__subtitle--center">Crie uma nova senha para acessar sua conta.</p>
+
+            {% if form.non_field_errors %}
+            <div class="alert alert--error">
+                {% for erro in form.non_field_errors %}{{ erro }}{% endfor %}
+            </div>
+            {% endif %}
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                <div class="field">
+                    <label for="id_password">Senha:</label>
+                    <div class="password-wrap">{{ form.password }}</div>
+                    {% for erro in form.password.errors %}<span class="field__error">{{ erro }}</span>{% endfor %}
+                </div>
+
+                <div class="field">
+                    <label for="id_confirmar_senha">Confirme sua senha:</label>
+                    <div class="password-wrap">{{ form.confirmar_senha }}</div>
+                    {% for erro in form.confirmar_senha.errors %}<span class="field__error">{{ erro }}</span>{% endfor %}
+                </div>
+
+                <button type="submit" class="btn btn--primary btn--block btn--lg">Concluir</button>
+            </form>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}<script src="{% static 'js/auth.js' %}"></script>{% endblock %}

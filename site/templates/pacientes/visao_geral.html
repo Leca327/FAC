@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ paciente.nome }} — Visão Geral — CuidaCare{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/pacientes.css' %}">{% endblock %}
+
+{% block content %}
+<div class="vg {% if user.is_familiar %}pac--familiar{% else %}pac--cuidador{% endif %}">
+    <div class="vg__layout">
+        <!-- Sidebar -->
+        {% include "pacientes/_sidebar.html" with menu_ativo="visao_geral" %}
+
+        <!-- Conteúdo principal -->
+        <main class="vg__main">
+            <a href="{% url 'pacientes:dashboard' %}" class="vg__back">← Voltar aos pacientes</a>
+            <h1 class="vg__title">Visão Geral</h1>
+            <p class="vg__subtitle">Acompanhe o cuidado de {{ paciente.nome }} em tempo real.</p>
+
+            <!-- Cards de resumo -->
+            <div class="vg__summary">
+                <div class="vg-stat">
+                    <span class="vg-stat__icon" aria-hidden="true">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 20.5 3.5 13.5a5 5 0 0 1 7-7l7 7a5 5 0 0 1-7 7Z"/><path d="m8.5 8.5 7 7"/></svg>
+                    </span>
+                    <strong class="vg-stat__big">{{ medicamentos_hoje|length }}</strong>
+                    <span class="vg-stat__label">Medicamentos para Hoje</span>
+                </div>
+
+                <div class="vg-stat">
+                    <span class="vg-stat__icon" aria-hidden="true">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                    </span>
+                    {% if proxima_consulta %}
+                    <strong class="vg-stat__big">{{ proxima_consulta.data_hora|date:"d M" }}</strong>
+                    <span class="vg-stat__label">{{ proxima_consulta.medico }} · Próxima Consulta</span>
+                    {% else %}
+                    <strong class="vg-stat__big">—</strong>
+                    <span class="vg-stat__label">Nenhuma consulta agendada</span>
+                    {% endif %}
+                </div>
+
+                <div class="vg-stat">
+                    <span class="vg-stat__icon" aria-hidden="true">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v5a4 4 0 0 0 8 0V3"/><path d="M5 3H7M13 3h2"/><path d="M10 18a6 6 0 0 0 6-6v-1"/><circle cx="18" cy="10" r="2"/></svg>
+                    </span>
+                    {% if cuidador_plantao %}
+                    <strong class="vg-stat__big">{{ cuidador_plantao.first_name }}</strong>
+                    <span class="vg-stat__label">Cuidadora de Plantão</span>
+                    {% else %}
+                    <strong class="vg-stat__big">—</strong>
+                    <span class="vg-stat__label">Nenhum plantão aberto</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Painéis -->
+            <div class="vg__panels">
+                <section class="vg-panel">
+                    <header class="vg-panel__head">
+                        <h2><svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 20.5 3.5 13.5a5 5 0 0 1 7-7l7 7a5 5 0 0 1-7 7Z"/><path d="m8.5 8.5 7 7"/></svg> Medicamentos do Dia</h2>
+                        <a href="#">Ver todos</a>
+                    </header>
+                    {% for med in medicamentos_hoje %}
+                    <div class="vg-panel__row">
+                        <div><strong>{{ med.nome }}</strong><small>{{ med.horario }}</small></div>
+                        <span class="vg-badge">{{ med.status }}</span>
+                    </div>
+                    {% empty %}
+                    <p class="vg-panel__empty">Nenhum medicamento cadastrado.</p>
+                    {% endfor %}
+                </section>
+
+                <section class="vg-panel">
+                    <header class="vg-panel__head">
+                        <h2><svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2 6 4-14 3 8h5"/></svg> Atividades Recentes</h2>
+                        <a href="#">Ver todas</a>
+                    </header>
+                    {% for atv in atividades %}
+                    <div class="vg-panel__row">
+                        <div><small>{{ atv.data_hora }}</small><strong>{{ atv.descricao }}</strong></div>
+                    </div>
+                    {% empty %}
+                    <p class="vg-panel__empty">Sem atividades recentes.</p>
+                    {% endfor %}
+                </section>
+
+                <section class="vg-panel">
+                    <header class="vg-panel__head">
+                        <h2><svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v5a4 4 0 0 0 8 0V3"/><path d="M5 3H7M13 3h2"/><path d="M10 18a6 6 0 0 0 6-6v-1"/><circle cx="18" cy="10" r="2"/></svg> Cuidadores</h2>
+                        <a href="#">Ver todos</a>
+                    </header>
+                    {% for cuidador in cuidadores %}
+                    <div class="vg-panel__row">
+                        <div>
+                            <strong>{{ cuidador.get_full_name|default:cuidador.email }}</strong>
+                            {% if cuidador.cuidador.especialidade %}<small>{{ cuidador.cuidador.especialidade }}</small>{% endif %}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="vg-panel__empty">Nenhum cuidador vinculado.</p>
+                    {% endfor %}
+                </section>
+            </div>
+        </main>
+    </div>
+</div>
+{% endblock %}

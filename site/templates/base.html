@@ -1,0 +1,119 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="{% block meta_description %}CuidaCare — prontuário digital colaborativo para o cuidado domiciliar. Acompanhe a rotina do seu ente querido em tempo real.{% endblock %}">
+    <title>{% block title %}CuidaCare{% endblock %}</title>
+
+    <!-- Tipografia -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,600;1,700&display=swap" rel="stylesheet">
+
+    <!-- CSS modular (seção 2.7.6) -->
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/layout.css' %}">
+    <link rel="stylesheet" href="{% static 'css/components.css' %}">
+    <link rel="stylesheet" href="{% static 'css/responsive.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navbar (seção 2.7.4) -->
+    <header class="navbar">
+        <div class="container navbar__inner">
+            <a href="{% url 'core:home' %}" class="navbar__brand" aria-label="Página inicial CuidaCare">
+                <span class="navbar__logo-icon" aria-hidden="true">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 21s-7.5-4.6-10-9.3C.4 8.4 2 5 5.3 5c2 0 3.4 1.2 4.2 2.4C10.3 6.2 11.7 5 13.7 5 17 5 18.6 8.4 17 11.7 14.5 16.4 12 21 12 21Z" fill="currentColor"/>
+                    </svg>
+                </span>
+                <span class="navbar__logo-text">Cuida<strong>Care</strong></span>
+            </a>
+
+            <nav class="navbar__nav" aria-label="Navegação principal">
+                {% if user.is_authenticated %}
+                    <a href="{% url 'core:home' %}">Início</a>
+                    <a href="{% url 'pacientes:dashboard' %}">Pacientes</a>
+                {% else %}
+                    <a href="#como-funciona">Como funciona</a>
+                    <a href="#para-quem">Para quem</a>
+                    <a href="#contato">Contato</a>
+                {% endif %}
+            </nav>
+
+            <div class="navbar__actions">
+                {% if user.is_authenticated %}
+                    <div class="user-menu">
+                        <button type="button" class="user-menu__trigger" aria-haspopup="true" aria-expanded="false">
+                            Olá, {{ user.first_name|default:user.email }}
+                            <svg class="user-menu__caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                        </button>
+                        <div class="user-menu__dropdown" role="menu">
+                            <a href="#" class="user-menu__item" role="menuitem">
+                                <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+                                Perfil
+                            </a>
+                            <a href="{% url 'usuarios:logout' %}" class="user-menu__item" role="menuitem">
+                                <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>
+                                Sair
+                            </a>
+                        </div>
+                    </div>
+                {% else %}
+                    <a href="{% url 'usuarios:login' %}" class="btn btn--ghost">Entrar</a>
+                    <a href="{% url 'usuarios:cadastro' %}" class="btn btn--primary">Cadastrar</a>
+                {% endif %}
+            </div>
+
+            <button class="navbar__toggle" aria-label="Abrir menu" aria-expanded="false">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </header>
+
+    <main id="conteudo">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Rodapé (seção 2.7.1) -->
+    <footer class="footer" id="contato">
+        <div class="container footer__inner">
+            <div class="footer__brand">
+                <span class="footer__logo">Cuida<strong>Care</strong></span>
+                <p>Gestão de cuidados domiciliares com tecnologia e humanidade. Prontuário digital, controle de jornada e agenda médica integrados.</p>
+            </div>
+
+            <div class="footer__col">
+                <h4>Produto</h4>
+                <a href="#como-funciona">Como funciona</a>
+                <a href="#para-quem">Para quem é</a>
+                <a href="#">Planos e preços</a>
+            </div>
+
+            <div class="footer__col">
+                <h4>Acesso</h4>
+                <a href="#">Entrar</a>
+                <a href="#">Cadastrar</a>
+                <a href="#">Recuperar senha</a>
+            </div>
+
+            <div class="footer__col">
+                <h4>Empresa</h4>
+                <a href="#">Sobre nós</a>
+                <a href="#contato">Contato</a>
+                <a href="#">Privacidade</a>
+                <a href="{% url 'core:termos' %}">Termos de uso</a>
+            </div>
+        </div>
+        <div class="container footer__bottom">
+            <span>&copy; {% now "Y" %} CuidaCare. Todos os direitos reservados.</span>
+            <span>Feito com cuidado para quem cuida.</span>
+        </div>
+    </footer>
+
+    <script src="{% static 'js/main.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

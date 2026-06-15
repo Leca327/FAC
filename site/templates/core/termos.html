@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Termos de Uso — CuidaCare{% endblock %}
+{% block meta_description %}Termos de Uso da plataforma CuidaCare: regras de utilização, responsabilidades e proteção de dados.{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/termos.css' %}">{% endblock %}
+
+{% block content %}
+<section class="legal-hero">
+    <div class="container">
+        <span class="badge"><span class="badge__dot"></span> Documento legal</span>
+        <h1>Termos de Uso</h1>
+        <p>Última atualização: {{ data_atualizacao|date:"d/m/Y" }}</p>
+    </div>
+</section>
+
+<section class="legal">
+    <div class="container legal__container">
+        <p class="legal__intro">
+            Bem-vindo(a) ao <strong>CuidaCare</strong>. Estes Termos de Uso regem o acesso e a
+            utilização da nossa plataforma de gestão de cuidados domiciliares. Ao criar uma conta
+            ou utilizar o serviço, você declara que leu, compreendeu e concorda com as condições
+            descritas abaixo.
+        </p>
+
+        <article class="legal__section">
+            <h2>1. Aceitação dos Termos</h2>
+            <p>
+                Ao marcar a opção de concordância no momento do cadastro, ou ao utilizar qualquer
+                funcionalidade da plataforma, você concorda integralmente com estes Termos de Uso
+                e com a nossa Política de Privacidade. Caso não concorde, não utilize o serviço.
+            </p>
+        </article>
+
+        <article class="legal__section">
+            <h2>2. Descrição do Serviço</h2>
+            <p>
+                O CuidaCare é uma aplicação web que funciona como um prontuário digital colaborativo,
+                integrando controle de jornada (ponto) das cuidadoras, agenda médica, gestão de
+                medicamentos e diário de plantão. O objetivo é tornar o acompanhamento da rotina do
+                paciente mais transparente e organizado para todos os envolvidos no cuidado.
+            </p>
+        </article>
+
+        <article class="legal__section">
+            <h2>3. Cadastro e Conta de Usuário</h2>
+            <ul>
+                <li>O cadastro é individual; cada usuário é responsável pela veracidade dos dados informados (nome, e-mail, CPF, telefone e endereço).</li>
+                <li>Há dois tipos de perfil: <strong>Familiar</strong>, responsável pela gestão do cuidado, e <strong>Cuidador</strong>, profissional que presta a assistência.</li>
+                <li>Você é responsável por manter a confidencialidade da sua senha e por todas as atividades realizadas em sua conta.</li>
+                <li>É proibido compartilhar credenciais ou criar contas com dados falsos ou de terceiros sem autorização.</li>
+            </ul>
+        </article>
+
+        <article class="legal__section">
+            <h2>4. Responsabilidades do Usuário</h2>
+            <ul>
+                <li>Utilizar a plataforma de forma ética e em conformidade com a legislação vigente.</li>
+                <li>O familiar titular é responsável pelos convites enviados e pelos dados dos pacientes que cadastrar.</li>
+                <li>O cuidador é responsável pela veracidade dos registros de ponto, ocorrências e anotações do diário de plantão.</li>
+                <li>Não inserir conteúdo ofensivo, ilegal ou que viole direitos de terceiros.</li>
+            </ul>
+        </article>
+
+        <article class="legal__section">
+            <h2>5. Registro de Ponto e Localização (GPS)</h2>
+            <p>
+                A funcionalidade de registro de ponto (check-in/check-out) utiliza a localização via
+                GPS para validar que o cuidador está na residência do paciente no momento do registro.
+                Ao utilizar essa funcionalidade, o cuidador autoriza a coleta da sua localização
+                exclusivamente para fins de validação da jornada de trabalho.
+            </p>
+        </article>
+
+        <article class="legal__section">
+            <h2>6. Prontuário e Diário de Plantão</h2>
+            <p>
+                As anotações do diário de plantão só podem ser editadas enquanto o plantão estiver
+                aberto, garantindo a integridade e a imutabilidade do histórico após o seu encerramento.
+                As informações registradas têm caráter de apoio ao cuidado e não substituem a avaliação
+                de profissionais de saúde habilitados.
+            </p>
+        </article>
+
+        <article class="legal__section">
+            <h2>7. Privacidade e Proteção de Dados (LGPD)</h2>
+            <p>
+                O CuidaCare está em conformidade com a Lei Geral de Proteção de Dados (Lei nº 13.709/2018).
+                Os dados pessoais e de saúde coletados são utilizados apenas para a prestação do serviço e
+                protegidos por medidas de segurança como criptografia de senhas e controle de acesso.
+            </p>
+            <ul>
+                <li>Cada usuário só tem acesso aos dados dos pacientes aos quais foi explicitamente vinculado.</li>
+                <li>Você pode solicitar, a qualquer momento, a correção ou a exclusão dos seus dados pessoais.</li>
+                <li>Não compartilhamos seus dados com terceiros para fins comerciais.</li>
+            </ul>
+        </article>
+
+        <article class="legal__section">
+            <h2>8. Cancelamento e Exclusão de Conta</h2>
+            <p>
+                Você pode encerrar sua conta a qualquer momento. Em atenção à LGPD, a solicitação de
+                exclusão resultará na remoção dos seus dados pessoais, ressalvadas as hipóteses de guarda
+                obrigatória previstas em lei.
+            </p>
+        </article>
+
+        <article class="legal__section">
+            <h2>9. Limitação de Responsabilidade</h2>
+            <p>
+                O CuidaCare é uma ferramenta de organização e comunicação. Não nos responsabilizamos por
+                decisões clínicas tomadas com base nas informações registradas, tampouco por indisponibilidades
+                temporárias decorrentes de manutenção ou de fatores externos fora do nosso controle.
+            </p>
+        </article>
+
+        <article class="legal__section">
+            <h2>10. Alterações nos Termos</h2>
+            <p>
+                Estes Termos podem ser atualizados periodicamente. Alterações relevantes serão comunicadas
+                pela plataforma. O uso continuado após a publicação das mudanças implica concordância com a
+                versão revisada.
+            </p>
+        </article>
+
+        <article class="legal__section">
+            <h2>11. Contato</h2>
+            <p>
+                Em caso de dúvidas sobre estes Termos de Uso, entre em contato pelo e-mail
+                <a href="mailto:contato@cuidacare.com.br">contato@cuidacare.com.br</a>.
+            </p>
+        </article>
+    </div>
+</section>
+{% endblock %}

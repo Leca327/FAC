@@ -1,0 +1,628 @@
+/* =====================================================
+   CuidaCare — components.css
+   Componentes reutilizáveis (seção 2.7.2):
+   botões, badges, cards, hero, métricas, CTA, modal.
+   ===================================================== */
+
+/* ---------- Modal / Popup (componente global) ---------- */
+.modal[hidden] {
+    display: none;
+}
+
+.modal {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.modal__overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(31, 27, 58, 0.55);
+    backdrop-filter: blur(3px);
+    animation: modal-fade 0.2s ease;
+}
+
+.modal__card {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 420px;
+    max-height: 90vh;
+    overflow-y: auto;
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    padding: 40px 36px 36px;
+    text-align: center;
+    animation: modal-pop 0.22s ease;
+}
+
+.modal__card--wide {
+    max-width: 560px;
+}
+
+.modal__close {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    background: none;
+    border: none;
+    font-size: 1.6rem;
+    line-height: 1;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.modal__close:hover {
+    color: var(--ink);
+}
+
+.modal__icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 18px;
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary);
+    background: linear-gradient(135deg, var(--bg-lavender), var(--bg-pink-soft));
+    box-shadow: var(--shadow-sm);
+}
+
+.modal__card h2 {
+    font-size: 1.6rem;
+    margin-bottom: 8px;
+}
+
+.modal__subtitle {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    margin-bottom: 26px;
+}
+
+/* Campos de formulário dentro do modal (autossuficiente) */
+.modal__card .field {
+    text-align: left;
+    margin-bottom: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.modal__card .field-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.modal__card .field label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--ink);
+}
+
+.modal__card .field input,
+.modal__card .field textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    font-family: var(--font-sans);
+    font-size: 0.95rem;
+    background: var(--white);
+    resize: vertical;
+}
+
+.modal__card .field input:focus,
+.modal__card .field textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 22%, transparent);
+}
+
+.modal__card .field__error {
+    color: var(--error);
+    font-size: 0.82rem;
+}
+
+.modal__feedback {
+    font-size: 0.9rem;
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 18px;
+    text-align: left;
+}
+
+.modal__feedback[hidden] {
+    display: none;
+}
+
+.modal__feedback--ok {
+    background: var(--success-light);
+    color: var(--success);
+}
+
+.modal__feedback--erro {
+    background: #fdeaea;
+    color: var(--error);
+}
+
+@keyframes modal-fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes modal-pop {
+    from { opacity: 0; transform: translateY(12px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (max-width: 520px) {
+    .modal__card .field-grid {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+}
+
+/* ---------- Botões ---------- */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: var(--font-sans);
+    font-size: 0.95rem;
+    font-weight: 600;
+    padding: 11px 22px;
+    border-radius: 10px;
+    border: 1.5px solid transparent;
+    cursor: pointer;
+    transition: var(--transition);
+    white-space: nowrap;
+}
+
+.btn--lg {
+    padding: 15px 30px;
+    font-size: 1rem;
+}
+
+.btn--block {
+    width: 100%;
+}
+
+.btn--primary {
+    background: var(--primary);
+    color: var(--white);
+}
+
+.btn--primary:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn--outline {
+    background: var(--white);
+    border-color: var(--line);
+    color: var(--ink);
+}
+
+.btn--outline:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.btn--ghost {
+    background: transparent;
+    color: var(--primary-darker);
+}
+
+.btn--ghost:hover {
+    color: var(--primary);
+}
+
+.btn--soft {
+    background: rgba(255, 255, 255, 0.9);
+    color: var(--primary-dark);
+}
+
+.btn--soft:hover {
+    background: var(--white);
+}
+
+/* ---------- Badge ---------- */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--white);
+    border: 1px solid var(--line);
+    color: var(--primary-dark);
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 7px 14px;
+    border-radius: 999px;
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 24px;
+}
+
+.badge__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--secondary);
+}
+
+/* ---------- Hero ---------- */
+.hero {
+    position: relative;
+    background:
+        radial-gradient(900px 500px at 85% 0%, var(--bg-pink-soft), transparent 60%),
+        linear-gradient(160deg, #fbf3f7 0%, #eef0fb 100%);
+    padding: 80px 0 96px;
+    overflow: hidden;
+}
+
+.hero__inner {
+    display: grid;
+    grid-template-columns: 1.05fr 0.95fr;
+    align-items: center;
+    gap: 56px;
+}
+
+.hero__title {
+    font-size: clamp(2.6rem, 5.2vw, 4.2rem);
+    line-height: 1.08;
+    margin-bottom: 24px;
+}
+
+.hero__title em {
+    color: var(--primary);
+}
+
+.hero__subtitle {
+    font-size: 1.12rem;
+    color: var(--text-muted);
+    max-width: 460px;
+    margin-bottom: 36px;
+}
+
+.hero__actions {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+/* Mockup do paciente */
+.hero__preview {
+    position: relative;
+}
+
+.patient-card {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    padding: 26px;
+    border: 1px solid var(--line);
+}
+
+.patient-card__head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 22px;
+}
+
+.patient-card__avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--primary-light), var(--secondary));
+    color: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+}
+
+.patient-card__id {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.patient-card__id strong {
+    font-family: var(--font-sans);
+    color: var(--ink);
+    font-size: 0.98rem;
+}
+
+.badge-status {
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 2px 10px;
+    border-radius: 999px;
+    width: fit-content;
+}
+
+.badge-status--online {
+    background: var(--success-light);
+    color: var(--success);
+}
+
+.patient-card__stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 22px;
+}
+
+.patient-card__stats div {
+    background: var(--bg-lavender-soft);
+    border-radius: 12px;
+    padding: 12px;
+    text-align: center;
+}
+
+.patient-card__stats .num {
+    display: block;
+    font-weight: 700;
+    color: var(--primary-darker);
+}
+
+.patient-card__stats small {
+    color: var(--text-muted);
+    font-size: 0.72rem;
+}
+
+.patient-card__label {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.patient-card__activities li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.88rem;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--line);
+}
+
+.patient-card__activities li:last-child {
+    border-bottom: none;
+}
+
+.patient-card__activities i {
+    font-style: normal;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+}
+
+.patient-card__foot {
+    margin-top: 14px;
+}
+
+.pin {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--secondary-light);
+    color: var(--secondary);
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 999px;
+}
+
+/* Ícones SVG inline */
+.icon {
+    flex-shrink: 0;
+    vertical-align: middle;
+}
+
+.toast {
+    position: absolute;
+    top: -18px;
+    left: -18px;
+    z-index: 2;
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    box-shadow: var(--shadow-md);
+    padding: 10px 16px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.toast__check {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--success);
+    color: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+}
+
+/* ---------- Faixa de recursos ---------- */
+.features-strip {
+    border-bottom: 1px solid var(--line);
+    background: var(--bg-lavender-soft);
+}
+
+.features-strip__inner {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px 32px;
+    padding: 20px 24px;
+    font-weight: 600;
+    color: var(--primary-dark);
+    font-size: 0.95rem;
+}
+
+/* ---------- Card de passo (Como funciona) ---------- */
+.step-card {
+    position: relative;
+    background: var(--white);
+    border: 1.5px solid var(--primary);
+    border-radius: var(--radius-lg);
+    padding: 32px 28px;
+    overflow: hidden;
+}
+
+.step-card__num {
+    position: absolute;
+    top: 18px;
+    right: 22px;
+    font-family: var(--font-serif);
+    font-size: 3.4rem;
+    font-weight: 700;
+    color: var(--bg-lavender);
+    line-height: 1;
+}
+
+.step-card h3 {
+    font-size: 1.35rem;
+    margin-bottom: 12px;
+    position: relative;
+}
+
+.step-card p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+}
+
+/* ---------- Card de perfil (Para quem é) ---------- */
+.profile-card {
+    background: var(--bg-lavender-soft);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    padding: 34px 30px;
+}
+
+.profile-card--featured {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #e9e7fb;
+}
+
+.profile-card--featured h3,
+.profile-card--featured .profile-card__list li {
+    color: var(--white);
+}
+
+.profile-card h3 {
+    font-size: 1.5rem;
+    margin-bottom: 14px;
+}
+
+.profile-card p {
+    margin-bottom: 22px;
+    font-size: 0.96rem;
+}
+
+.profile-card__list li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 0;
+    font-size: 0.94rem;
+    color: var(--text);
+}
+
+.profile-card__list li::before {
+    content: "✓";
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: rgba(79, 70, 201, 0.12);
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+
+.profile-card--featured .profile-card__list li::before {
+    background: rgba(255, 255, 255, 0.2);
+    color: var(--white);
+}
+
+/* ---------- Métricas + CTA ---------- */
+.cta {
+    background: linear-gradient(160deg, var(--primary-dark), var(--primary-darker));
+    padding: 0 0 96px;
+}
+
+.cta__metrics {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+    padding: 64px 0;
+    text-align: center;
+}
+
+.metric__value {
+    display: block;
+    font-family: var(--font-serif);
+    font-size: 2.4rem;
+    font-weight: 700;
+    color: var(--white);
+}
+
+.metric__label {
+    color: #b9b5e4;
+    font-size: 0.9rem;
+}
+
+.cta__box {
+    background: var(--white);
+    border-radius: 28px;
+    padding: 64px 40px;
+    text-align: center;
+    box-shadow: var(--shadow-lg);
+    background-image: radial-gradient(600px 200px at 50% 0%, var(--bg-pink-soft), transparent 70%);
+}
+
+.cta__box h2 {
+    font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+    margin-bottom: 16px;
+}
+
+.cta__box p {
+    color: var(--text-muted);
+    max-width: 460px;
+    margin: 0 auto 32px;
+}
+
+.cta__actions {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.cta__box .btn--soft {
+    background: var(--bg-lavender-soft);
+}

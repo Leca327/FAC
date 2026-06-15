@@ -1,0 +1,128 @@
+/* =====================================================
+   CuidaCare — responsive.css
+   Media queries em 3 breakpoints (seção 2.7.6):
+   - Tablets:  <= 1024px
+   - Móveis:   <= 640px
+   ===================================================== */
+
+/* ---------- Tablets (<= 1024px) ---------- */
+@media (max-width: 1024px) {
+    .hero__inner {
+        grid-template-columns: 1fr;
+        gap: 48px;
+    }
+
+    .hero__preview {
+        max-width: 460px;
+    }
+
+    .grid--3 {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .footer__inner {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .cta__metrics {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    /* Menu colapsável (seção 2.7.4) */
+    .navbar__nav,
+    .navbar__actions {
+        position: absolute;
+        top: 72px;
+        left: 0;
+        right: 0;
+        transform: none;
+        flex-direction: column;
+        background: var(--white);
+        border-bottom: 1px solid var(--line);
+        padding: 16px 24px;
+        gap: 14px;
+        display: none;
+    }
+
+    .navbar__nav { box-shadow: var(--shadow-sm); }
+
+    .navbar.is-open .navbar__nav,
+    .navbar.is-open .navbar__actions {
+        display: flex;
+    }
+
+    .navbar.is-open .navbar__actions {
+        top: auto;
+        border-top: 1px solid var(--line);
+    }
+
+    .navbar__actions .btn {
+        width: 100%;
+    }
+
+    /* Menu do usuário: exibe as opções inline no menu mobile */
+    .user-menu {
+        width: 100%;
+    }
+
+    .user-menu__trigger {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .user-menu__dropdown {
+        position: static;
+        opacity: 1;
+        visibility: visible;
+        transform: none;
+        box-shadow: none;
+        border: none;
+        padding: 6px 0 0;
+        min-width: 0;
+    }
+
+    .navbar__toggle {
+        display: flex;
+    }
+}
+
+/* ---------- Móveis (<= 640px) ---------- */
+@media (max-width: 640px) {
+    .section {
+        padding: 64px 0;
+    }
+
+    .grid--3 {
+        grid-template-columns: 1fr;
+    }
+
+    .footer__inner {
+        grid-template-columns: 1fr;
+        gap: 28px;
+    }
+
+    .footer__bottom {
+        flex-direction: column;
+        gap: 8px;
+        text-align: center;
+    }
+
+    .cta__metrics {
+        grid-template-columns: 1fr 1fr;
+        padding: 40px 0;
+    }
+
+    .cta__box {
+        padding: 44px 24px;
+    }
+
+    .hero__actions .btn,
+    .cta__actions .btn {
+        flex: 1 1 100%;
+    }
+
+    .features-strip__inner {
+        justify-content: flex-start;
+        font-size: 0.85rem;
+    }
+}

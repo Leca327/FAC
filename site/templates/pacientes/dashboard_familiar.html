@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Meus Entes Queridos — CuidaCare{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/pacientes.css' %}">{% endblock %}
+
+{% block content %}
+<section class="pac pac--familiar">
+    <div class="container">
+        <h1 class="pac__title">Meus Entes Queridos</h1>
+
+        <form class="pac__search" method="get">
+            <span class="pac__search-icon" aria-hidden="true">
+                <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            </span>
+            <input type="search" name="busca" value="{{ busca }}" placeholder="Buscar Ente Querido">
+        </form>
+
+        <div class="pac__grid">
+            {% for paciente in pacientes %}
+            <article class="pac-card">
+                <div class="pac-card__avatar" aria-hidden="true">
+                    <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                        <circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>
+                    </svg>
+                </div>
+                <div class="pac-card__body">
+                    <h3 class="pac-card__name">{{ paciente.nome }}</h3>
+                    <div class="pac-card__actions">
+                        <a href="#" class="btn btn--primary">
+                            <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                            Alterar
+                        </a>
+                        <a href="#" class="btn btn--soft">
+                            <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M6 6l1 14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-14"/></svg>
+                            Excluir
+                        </a>
+                    </div>
+                    <a href="{% url 'pacientes:visao_geral' paciente.id %}" class="btn btn--primary pac-card__view">
+                        <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                        Visualizar
+                    </a>
+                </div>
+            </article>
+            {% empty %}
+            {% if busca %}
+            <p class="pac__empty">Nenhum ente querido encontrado para "{{ busca }}".</p>
+            {% endif %}
+            {% endfor %}
+
+            <button type="button" class="pac-card pac-card--new" id="abrir-novo-paciente">
+                <span class="pac-card__plus" aria-hidden="true">+</span>
+                <span>Novo Paciente</span>
+            </button>
+        </div>
+    </div>
+</section>
+
+<!-- Popup: Novo Paciente (RF03) -->
+<div class="modal" id="modal-paciente" {% if not modal_aberto %}hidden{% endif %}>
+    <div class="modal__overlay" data-close></div>
+    <div class="modal__card modal__card--wide" role="dialog" aria-modal="true" aria-labelledby="modal-paciente-title">
+        <button type="button" class="modal__close" data-close aria-label="Fechar">&times;</button>
+
+        <div class="modal__icon" aria-hidden="true">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>
+            </svg>
+        </div>
+
+        <h2 id="modal-paciente-title">Novo Paciente</h2>
+        <p class="modal__subtitle">Preencha todos os campos para cadastrar o ente querido.</p>
+
+        <form method="post" action="{% url 'pacientes:novo' %}" novalidate>
+            {% csrf_token %}
+
+            <div class="field">
+                <label for="id_nome">Nome:</label>
+                {{ paciente_form.nome }}
+                {% for e in paciente_form.nome.errors %}<span class="field__error">{{ e }}</span>{% endfor %}
+            </div>
+
+            <div class="field-grid">
+                <div class="field">
+                    <label for="id_cpf">CPF:</label>
+                    {{ paciente_form.cpf }}
+                    {% for e in paciente_form.cpf.errors %}<span class="field__error">{{ e }}</span>{% endfor %}
+                </div>
+                <div class="field">
+                    <label for="id_data_nascimento">Data de nascimento:</label>
+                    {{ paciente_form.data_nascimento }}
+                    {% for e in paciente_form.data_nascimento.errors %}<span class="field__error">{{ e }}</span>{% endfor %}
+                </div>
+            </div>
+
+            <div class="field">
+                <label for="id_telefone">Telefone:</label>
+                {{ paciente_form.telefone }}
+                {% for e in paciente_form.telefone.errors %}<span class="field__error">{{ e }}</span>{% endfor %}
+            </div>
+
+            <div class="field">
+                <label for="id_endereco">Endereço:</label>
+                {{ paciente_form.endereco }}
+                {% for e in paciente_form.endereco.errors %}<span class="field__error">{{ e }}</span>{% endfor %}
+            </div>
+
+            <div class="field">
+                <label for="id_condicoes_saude">Condições de saúde:</label>
+                {{ paciente_form.condicoes_saude }}
+                {% for e in paciente_form.condicoes_saude.errors %}<span class="field__error">{{ e }}</span>{% endfor %}
+            </div>
+
+            <div class="field">
+                <label for="id_alergias">Alergias:</label>
+                {{ paciente_form.alergias }}
+                {% for e in paciente_form.alergias.errors %}<span class="field__error">{{ e }}</span>{% endfor %}
+            </div>
+
+            <button type="submit" class="btn btn--primary btn--block btn--lg">Cadastrar paciente</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}<script src="{% static 'js/pacientes.js' %}"></script>{% endblock %}

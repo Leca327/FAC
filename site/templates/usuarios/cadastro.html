@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Criar conta — CuidaCare{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/auth.css' %}">{% endblock %}
+
+{% block content %}
+<div class="auth" id="auth">
+    <!-- Painel ilustrativo (esquerda) -->
+    <aside class="auth__aside">
+        <div class="auth__aside-deco" aria-hidden="true"></div>
+        <a href="{% url 'core:home' %}" class="auth__back">
+            <span aria-hidden="true">←</span> Voltar para a tela principal
+        </a>
+        <div class="auth__aside-content">
+            <a href="{% url 'core:home' %}" class="auth__logo">Cuida<strong>Care</strong></a>
+            <p class="auth__tagline">Conectando cuidadores e famílias com informação e cuidado.</p>
+        </div>
+    </aside>
+
+    <!-- Formulário (direita) -->
+    <section class="auth__panel auth__panel--register" id="auth-panel">
+        <div class="auth__box auth__box--wide">
+            <h1 class="auth__title auth__title--center">Crie sua conta</h1>
+            <p class="auth__subtitle auth__subtitle--center">Junte-se à comunidade de cuidadores.</p>
+
+            {% if form.non_field_errors %}
+            <div class="alert alert--error">
+                {% for erro in form.non_field_errors %}{{ erro }}{% endfor %}
+            </div>
+            {% endif %}
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                <!-- Toggle Familiar / Cuidador -->
+                <div class="toggle" role="radiogroup" aria-label="Tipo de conta">
+                    {% for radio in form.tipo_usuario %}
+                    <label class="toggle__option">
+                        {{ radio.tag }}
+                        <span>{{ radio.choice_label }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+
+                <div class="field-grid">
+                    <div class="field">
+                        <label for="id_first_name">Nome:</label>
+                        {{ form.first_name }}
+                        {% for e in form.first_name.errors %}<span class="field__error">{{ e }}</span>{% endfor %}
+                    </div>
+                    <div class="field">
+                        <label for="id_last_name">Sobrenome:</label>
+                        {{ form.last_name }}
+                        {% for e in form.last_name.errors %}<span class="field__error">{{ e }}</span>{% endfor %}
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label for="id_email">E-mail:</label>
+                    {{ form.email }}
+                    {% for e in form.email.errors %}<span class="field__error">{{ e }}</span>{% endfor %}
+                </div>
+
+                <div class="field-grid">
+                    <div class="field">
+                        <label for="id_password">Senha:</label>
+                        <div class="password-wrap">{{ form.password }}</div>
+                        {% for e in form.password.errors %}<span class="field__error">{{ e }}</span>{% endfor %}
+                    </div>
+                    <div class="field">
+                        <label for="id_confirmar_senha">Confirmar Senha:</label>
+                        <div class="password-wrap">{{ form.confirmar_senha }}</div>
+                        {% for e in form.confirmar_senha.errors %}<span class="field__error">{{ e }}</span>{% endfor %}
+                    </div>
+                </div>
+
+                <div class="field-grid">
+                    <div class="field">
+                        <label for="id_cpf">CPF:</label>
+                        {{ form.cpf }}
+                        {% for e in form.cpf.errors %}<span class="field__error">{{ e }}</span>{% endfor %}
+                    </div>
+                    <div class="field">
+                        <label for="id_cep">CEP:</label>
+                        {{ form.cep }}
+                        {% for e in form.cep.errors %}<span class="field__error">{{ e }}</span>{% endfor %}
+                    </div>
+                </div>
+
+                <div class="field-grid">
+                    <div class="field">
+                        <label for="id_telefone">Telefone:</label>
+                        {{ form.telefone }}
+                        {% for e in form.telefone.errors %}<span class="field__error">{{ e }}</span>{% endfor %}
+                    </div>
+                    <div class="field">
+                        <label for="id_endereco">Endereço:</label>
+                        {{ form.endereco }}
+                        {% for e in form.endereco.errors %}<span class="field__error">{{ e }}</span>{% endfor %}
+                    </div>
+                </div>
+
+                <label class="checkbox">
+                    {{ form.aceite_termos }}
+                    <span>Ao cadastrar, concordo com os <a href="{% url 'core:termos' %}" target="_blank" rel="noopener">Termos de Uso</a>.</span>
+                </label>
+                {% for e in form.aceite_termos.errors %}<span class="field__error">{{ e }}</span>{% endfor %}
+
+                <button type="submit" class="btn btn--primary btn--block btn--lg">Cadastre-se</button>
+            </form>
+
+            <p class="auth__switch">Já tem conta? <a href="{% url 'usuarios:login' %}">Entrar agora</a></p>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/auth.js' %}"></script>
+<script>
+    // Troca o tema do painel (rosa = Familiar / azul = Cuidador)
+    (function () {
+        var panel = document.getElementById("auth-panel");
+        var radios = document.querySelectorAll('input[name="tipo_usuario"]');
+        function aplicarTema() {
+            var sel = document.querySelector('input[name="tipo_usuario"]:checked');
+            var tipo = sel ? sel.value : "familiar";
+            panel.classList.toggle("is-cuidador", tipo === "cuidador");
+            panel.classList.toggle("is-familiar", tipo !== "cuidador");
+        }
+        radios.forEach(function (r) { r.addEventListener("change", aplicarTema); });
+        aplicarTema();
+    })();
+</script>
+{% endblock %}

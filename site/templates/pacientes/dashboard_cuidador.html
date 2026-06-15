@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Pacientes — CuidaCare{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/pacientes.css' %}">{% endblock %}
+
+{% block content %}
+<section class="pac pac--cuidador">
+    <div class="container">
+        <h1 class="pac__title">Pacientes</h1>
+
+        <form class="pac__search" method="get">
+            <span class="pac__search-icon" aria-hidden="true">
+                <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            </span>
+            <input type="search" name="busca" value="{{ busca }}" placeholder="Buscar Paciente">
+        </form>
+
+        <div class="pac__grid">
+            {% for paciente in pacientes %}
+            <article class="pac-card">
+                <div class="pac-card__avatar" aria-hidden="true">
+                    <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                        <circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>
+                    </svg>
+                </div>
+                <div class="pac-card__body">
+                    <h3 class="pac-card__name">{{ paciente.nome }}</h3>
+                    <div class="pac-card__actions">
+                        <a href="{% url 'pacientes:visao_geral' paciente.id %}" class="btn btn--primary btn--block">Acessar →</a>
+                    </div>
+                </div>
+            </article>
+            {% empty %}
+            <p class="pac__empty">
+                {% if busca %}
+                    Nenhum paciente encontrado para "{{ busca }}".
+                {% else %}
+                    Você ainda não possui pacientes vinculados. Aguarde o convite de um familiar responsável.
+                {% endif %}
+            </p>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

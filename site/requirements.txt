@@ -1,0 +1,15 @@
+# CuidaCare - Dependências Python
+# Backend conforme seção 2.6 da documentação
+
+Django>=5.0,<6.0
+python-dotenv>=1.0        # Carregamento de variáveis de ambiente (.env)
+
+# Banco de dados
+# SQLite é nativo do Python (desenvolvimento)
+psycopg2-binary>=2.9      # PostgreSQL (produção)
+
+# Regras de negócio
+geopy>=2.4               # Cálculo de distância GPS (RN01 - check-in)
+
+# Produção
+gunicorn>=21.2           # Servidor WSGI (deploy)

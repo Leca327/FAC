@@ -1,0 +1,715 @@
+/* =====================================================
+   CuidaCare — pacientes.css
+   Tela gerencial de pacientes (visões Familiar e Cuidador).
+   ===================================================== */
+
+.pac {
+    --pac-accent: var(--primary);
+    --pac-accent-dark: var(--primary-dark);
+    --pac-soft: var(--bg-lavender-soft);
+    --pac-card: var(--bg-lavender);
+    min-height: calc(100vh - 72px);
+    padding: 48px 0 80px;
+}
+
+/* Tema Familiar (rosa) */
+.pac--familiar {
+    --pac-accent: #d8447a;
+    --pac-accent-dark: #b83564;
+    --pac-soft: #fdeef3;
+    --pac-card: #f7c9d9;
+    background: linear-gradient(180deg, #fff 0%, #fdf4f7 100%);
+}
+
+/* Tema Cuidador (azul) */
+.pac--cuidador {
+    --pac-accent: #4a7fc4;
+    --pac-accent-dark: #3a679f;
+    --pac-soft: #eef4fb;
+    --pac-card: #bcd4ef;
+    background: linear-gradient(180deg, #fff 0%, #f1f6fc 100%);
+}
+
+/* ---------- Título ---------- */
+.pac__title {
+    font-size: clamp(2rem, 4vw, 2.8rem);
+    color: var(--ink);
+    padding-bottom: 14px;
+    margin-bottom: 28px;
+    position: relative;
+}
+
+.pac__title::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 460px;
+    max-width: 90%;
+    height: 2px;
+    background: var(--pac-accent);
+}
+
+.pac__title::before {
+    content: "";
+    position: absolute;
+    left: 458px;
+    bottom: -3px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--pac-accent);
+}
+
+/* ---------- Busca ---------- */
+.pac__search {
+    position: relative;
+    max-width: 440px;
+    margin-bottom: 36px;
+}
+
+.pac__search-icon {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.95rem;
+    opacity: 0.7;
+}
+
+.pac__search input {
+    width: 100%;
+    padding: 14px 16px 14px 44px;
+    border: 1.5px solid var(--pac-accent);
+    border-radius: 12px;
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    background: var(--white);
+}
+
+.pac__search input:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--pac-accent) 22%, transparent);
+}
+
+/* ---------- Grid de cards ---------- */
+.pac__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 24px;
+    max-width: 900px;
+}
+
+.pac__empty {
+    color: var(--text-muted);
+    background: var(--pac-soft);
+    padding: 20px 24px;
+    border-radius: 12px;
+    grid-column: 1 / -1;
+}
+
+/* ---------- Card de paciente ---------- */
+.pac-card {
+    background: var(--pac-soft);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    transition: var(--transition);
+}
+
+.pac-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.pac-card__avatar {
+    background: var(--pac-card);
+    color: var(--pac-accent-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 140px;
+}
+
+.pac-card__body {
+    padding: 18px 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    flex: 1;
+}
+
+.pac-card__name {
+    font-family: var(--font-sans);
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.pac-card__actions {
+    display: flex;
+    gap: 10px;
+    margin-top: auto;
+}
+
+.pac-card__actions .btn {
+    flex: 1;
+    padding: 10px 14px;
+    font-size: 0.9rem;
+}
+
+/* Botão "Visualizar" — largura total, abaixo de Alterar/Excluir */
+.pac-card__view {
+    width: 100%;
+    padding: 10px 14px;
+    font-size: 0.9rem;
+    margin-top: -4px;
+}
+
+/* Botões temáticos dentro dos cards */
+.pac-card .btn--primary {
+    background: var(--pac-accent);
+    border-color: var(--pac-accent);
+}
+
+.pac-card .btn--primary:hover {
+    background: var(--pac-accent-dark);
+}
+
+.pac-card .btn--soft {
+    background: var(--white);
+    color: var(--pac-accent);
+    border-color: color-mix(in srgb, var(--pac-accent) 35%, transparent);
+}
+
+/* ---------- Card "Novo Paciente" ---------- */
+.pac-card--new {
+    border: 2px dashed var(--pac-accent);
+    background: color-mix(in srgb, var(--pac-soft) 60%, transparent);
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    min-height: 240px;
+    color: var(--pac-accent-dark);
+    font-weight: 600;
+    font-size: 1.05rem;
+}
+
+.pac-card--new:hover {
+    background: var(--pac-soft);
+}
+
+.pac-card__plus {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: 2px solid var(--pac-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    line-height: 1;
+}
+
+@media (max-width: 640px) {
+    .pac__grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* =====================================================
+   Visão Geral do paciente
+   ===================================================== */
+.vg {
+    --pac-accent: var(--primary);
+    --pac-accent-dark: var(--primary-dark);
+    --pac-soft: var(--bg-lavender-soft);
+    --pac-card: var(--bg-lavender);
+}
+
+.vg.pac--familiar {
+    --pac-accent: #d8447a;
+    --pac-accent-dark: #b83564;
+    --pac-soft: #fdeef3;
+    --pac-card: #f7c9d9;
+}
+
+.vg.pac--cuidador {
+    --pac-accent: #4a7fc4;
+    --pac-accent-dark: #3a679f;
+    --pac-soft: #eef4fb;
+    --pac-card: #bcd4ef;
+}
+
+.vg__layout {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    min-height: calc(100vh - 72px);
+}
+
+/* ---------- Sidebar ---------- */
+.vg__sidebar {
+    background: var(--pac-soft);
+    border-right: 1px solid var(--line);
+    padding: 28px 22px;
+}
+
+.vg__patient {
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 24px;
+}
+
+.vg__patient-label {
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: var(--text-muted);
+}
+
+.vg__patient-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.vg__patient-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--pac-card);
+    color: var(--pac-accent-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.vg__patient-info strong {
+    display: block;
+    font-size: 0.95rem;
+    color: var(--ink);
+    line-height: 1.2;
+}
+
+.vg__patient-info span {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.vg__nav {
+    display: flex;
+    flex-direction: column;
+}
+
+.vg__nav-group {
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    margin: 18px 0 6px;
+}
+
+.vg__nav a {
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 0.92rem;
+    color: var(--text);
+    transition: var(--transition);
+}
+
+.vg__nav a:hover {
+    background: var(--white);
+    color: var(--pac-accent-dark);
+}
+
+.vg__nav a.is-active {
+    background: var(--pac-accent);
+    color: var(--white);
+    font-weight: 600;
+}
+
+/* ---------- Main ---------- */
+.vg__main {
+    padding: 36px 40px 64px;
+}
+
+.vg__back {
+    display: inline-block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--pac-accent-dark);
+    margin-bottom: 18px;
+}
+
+.vg__title {
+    font-size: 2rem;
+    margin-bottom: 4px;
+}
+
+.vg__subtitle {
+    color: var(--text-muted);
+    margin-bottom: 32px;
+}
+
+/* Cards de resumo */
+.vg__summary {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-bottom: 28px;
+    max-width: 760px;
+}
+
+.vg-stat {
+    background: var(--pac-soft);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.vg-stat__icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+}
+
+.vg-stat__big {
+    font-family: var(--font-serif);
+    font-size: 1.7rem;
+    color: var(--ink);
+    line-height: 1.1;
+}
+
+.vg-stat__label {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+/* Painéis */
+.vg__panels {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+.vg-panel {
+    background: var(--pac-soft);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    padding: 18px 20px 8px;
+}
+
+.vg-panel__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.vg-panel__head h2 {
+    font-family: var(--font-sans);
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.vg-panel__head h2 .icon {
+    color: var(--pac-accent-dark);
+}
+
+.vg-panel__head a {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--pac-accent-dark);
+}
+
+.vg-panel__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--line);
+}
+
+.vg-panel__row:last-child {
+    border-bottom: none;
+}
+
+.vg-panel__row strong {
+    display: block;
+    font-size: 0.9rem;
+    color: var(--ink);
+}
+
+.vg-panel__row small {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+}
+
+.vg-badge {
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: var(--white);
+    color: var(--pac-accent-dark);
+    white-space: nowrap;
+}
+
+.vg-panel__empty {
+    color: var(--text-muted);
+    font-size: 0.88rem;
+    padding: 16px 0 20px;
+}
+
+@media (max-width: 1024px) {
+    .vg__summary,
+    .vg__panels {
+        grid-template-columns: 1fr;
+        max-width: none;
+    }
+}
+
+@media (max-width: 860px) {
+    .vg__layout {
+        grid-template-columns: 1fr;
+    }
+
+    .vg__sidebar {
+        border-right: none;
+        border-bottom: 1px solid var(--line);
+    }
+}
+
+/* =====================================================
+   Agenda
+   ===================================================== */
+.ag__top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 28px;
+}
+
+.ag__new {
+    background: var(--pac-accent);
+    border-color: var(--pac-accent);
+    flex-shrink: 0;
+}
+
+.ag__new:hover {
+    background: var(--pac-accent-dark);
+}
+
+.ag__grid {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 20px;
+    align-items: start;
+}
+
+.ag__col {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Calendário */
+.ag-cal__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+}
+
+.ag-cal__head h2 {
+    font-family: var(--font-sans);
+    font-size: 0.98rem;
+    font-weight: 700;
+    color: var(--ink);
+}
+
+.ag-cal__nav {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.ag-cal__nav a {
+    width: 26px;
+    height: 26px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    color: var(--pac-accent-dark);
+    background: var(--white);
+    border: 1px solid var(--line);
+    transition: var(--transition);
+}
+
+.ag-cal__nav a:hover {
+    background: var(--pac-accent);
+    color: var(--white);
+    border-color: var(--pac-accent);
+}
+
+.ag-cal__table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.ag-cal__table th {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-align: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--line);
+}
+
+.ag-cal__table td {
+    height: 72px;
+    border: 1px solid var(--line);
+    vertical-align: top;
+    padding: 0;
+    background: var(--white);
+}
+
+/* Célula clicável preenche todo o td */
+.ag-cal__cell {
+    display: block;
+    height: 100%;
+    padding: 6px;
+    cursor: pointer;
+    transition: background var(--transition);
+}
+
+.ag-cal__cell--off {
+    cursor: default;
+}
+
+.ag-cal__cell:hover {
+    background: var(--pac-soft);
+}
+
+.ag-cal__cell--off:hover {
+    background: transparent;
+}
+
+.ag-cal__day {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--ink);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+}
+
+.ag-cal__table td.is-outside {
+    background: var(--pac-soft);
+}
+
+.ag-cal__table td.is-outside .ag-cal__day {
+    color: var(--text-muted);
+    opacity: 0.5;
+}
+
+/* Dia de hoje: contorno no número */
+.ag-cal__table td.is-today .ag-cal__day {
+    border: 1.5px solid var(--pac-accent);
+    color: var(--pac-accent-dark);
+}
+
+/* Dia selecionado: número preenchido */
+.ag-cal__table td.is-selected .ag-cal__day {
+    background: var(--pac-accent);
+    color: var(--white);
+    border-color: var(--pac-accent);
+}
+
+/* Tabela de plantões */
+.ag-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.ag-table th {
+    text-align: left;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--ink);
+    padding: 10px 8px;
+    border-bottom: 2px solid var(--pac-card);
+}
+
+.ag-table td {
+    padding: 12px 8px;
+    border-bottom: 1px solid var(--line);
+    font-size: 0.9rem;
+    color: var(--text);
+}
+
+.ag-table__empty {
+    color: var(--text-muted);
+    text-align: center;
+    padding: 22px 8px;
+}
+
+/* Painel do dia */
+.ag-today {
+    min-height: 320px;
+}
+
+.ag-today__title {
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 14px;
+}
+
+@media (max-width: 1024px) {
+    .ag__grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 560px) {
+    .ag__top {
+        flex-direction: column;
+    }
+
+    .ag-cal__table td {
+        height: 52px;
+    }
+}
