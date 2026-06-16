@@ -113,22 +113,27 @@ CREATE TABLE `participacao` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =====================================================
--- TABELA: MEDICO_CLINICA
+-- TABELA: MEDICO (médico, clínica ou laboratório do paciente)
+-- (Antes `medico_clinica`, global; agora vinculado ao paciente,
+--  conforme a tela "Médicos". Todos os campos aparecem na tela.)
 -- =====================================================
 
-CREATE TABLE `medico_clinica` (
+CREATE TABLE `medico` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `paciente_id` INT NOT NULL,
   `nome` VARCHAR(255) NOT NULL,
-  `tipo` ENUM('medico', 'clinica', 'laboratorio') NOT NULL,
-  `crm_cnpj` VARCHAR(50) UNIQUE,
+  `tipo` ENUM('medico', 'clinica', 'laboratorio') NOT NULL DEFAULT 'medico',
   `especialidade` VARCHAR(150),
+  `crm_cnpj` VARCHAR(50),
   `telefone` VARCHAR(11),
   `email` VARCHAR(255),
   `endereco` VARCHAR(255),
   `cidade` VARCHAR(100),
   `uf` VARCHAR(2),
   `data_criacao` DATETIME DEFAULT CURRENT_TIMESTAMP,
-  
+
+  FOREIGN KEY (paciente_id) REFERENCES paciente(id) ON DELETE CASCADE,
+  INDEX idx_paciente (paciente_id),
   INDEX idx_nome (nome),
   INDEX idx_especialidade (especialidade),
   INDEX idx_tipo (tipo)
@@ -141,7 +146,7 @@ CREATE TABLE `medico_clinica` (
 CREATE TABLE `consulta` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `paciente_id` INT NOT NULL,
-  `medico_clinica_id` INT NOT NULL,
+  `medico_id` INT NOT NULL,
   `tipo_consulta` VARCHAR(100),  -- consulta, exame, ultrassom, etc
   `data_hora` DATETIME NOT NULL,
   `local` VARCHAR(255),
@@ -153,7 +158,7 @@ CREATE TABLE `consulta` (
   `data_criacao` DATETIME DEFAULT CURRENT_TIMESTAMP,
   
   FOREIGN KEY (paciente_id) REFERENCES paciente(id) ON DELETE CASCADE,
-  FOREIGN KEY (medico_clinica_id) REFERENCES medico_clinica(id) ON DELETE RESTRICT,
+  FOREIGN KEY (medico_id) REFERENCES medico(id) ON DELETE RESTRICT,
   FOREIGN KEY (familiar_marcou_id) REFERENCES usuario(id) ON DELETE RESTRICT,
   INDEX idx_paciente (paciente_id),
   INDEX idx_data (data_hora),
@@ -166,6 +171,10 @@ CREATE TABLE `consulta` (
 -- (Consolidou as antigas tabelas `medicamento` + `prescricao_medicamento`,
 --  removendo princípio ativo, laboratório e a FK para médico_clínica —
 --  o médico passou a ser um simples campo de texto.)
+-- A tela "Medicamentos" cadastra apenas o remédio (nome, dosagem, forma,
+--  médico). Os campos de posologia/agenda (frequência, horários, quantidade,
+--  período e dias da semana) são preenchidos na tela "Medicação Diária",
+--  por isso ficam opcionais aqui.
 -- =====================================================
 
 CREATE TABLE `medicamento` (
@@ -178,7 +187,7 @@ CREATE TABLE `medicamento` (
   `horarios` VARCHAR(255),                  -- 08:00,20:00 (separados por vírgula)
   `quantidade_dose` VARCHAR(50),            -- 1 comprimido, 10ml, etc
   `medico` VARCHAR(255),                    -- texto (ex: Dr. Carlos)
-  `data_inicio` DATE NOT NULL,
+  `data_inicio` DATE,                       -- definido na Medicação Diária
   `data_fim` DATE,                          -- NULL = contínuo
   -- Controle por dia da semana (segunda a domingo)
   `seg` BOOLEAN DEFAULT TRUE,
@@ -324,7 +333,7 @@ SELECT
   DATEDIFF(c.data_hora, NOW()) as dias_para_consulta
 FROM consulta c
 INNER JOIN paciente p ON c.paciente_id = p.id
-INNER JOIN medico_clinica mc ON c.medico_clinica_id = mc.id
+INNER JOIN medico mc ON c.medico_id = mc.id
 WHERE c.status = 'agendada' AND c.data_hora >= NOW()
 ORDER BY c.data_hora ASC;
 
@@ -448,12 +457,12 @@ INSERT INTO cuidador (id, numero_registro, especialidade, usuario_id) VALUES (2,
 INSERT INTO paciente (nome, cpf, data_nascimento, familiar_responsavel_id, endereco, condicoes_saude, alergias)
 VALUES ('Conceição Silva', '11111111111', '1950-05-15', 1, 'Rua C, 789', 'Diabetes', 'Penicilina');
 
--- Inserir médico
-INSERT INTO medico_clinica (nome, tipo, crm_cnpj, especialidade, telefone, endereco)
-VALUES ('Dr. Carlos', 'medico', '123456/SP', 'Cardiologia', '21988888888', 'Av. Paulista, 1000');
+-- Inserir médico (vinculado ao paciente)
+INSERT INTO medico (paciente_id, nome, tipo, crm_cnpj, especialidade, telefone, email, endereco, cidade, uf)
+VALUES (1, 'Dr. Carlos', 'medico', '123456/SP', 'Cardiologia', '21988888888', 'carlos@clinica.com', 'Av. Paulista, 1000', 'São Paulo', 'SP');
 
 -- Inserir consulta
-INSERT INTO consulta (paciente_id, medico_clinica_id, tipo_consulta, data_hora, local, motivo, familiar_marcou_id)
+INSERT INTO consulta (paciente_id, medico_id, tipo_consulta, data_hora, local, motivo, familiar_marcou_id)
 VALUES (1, 1, 'Consulta de Rotina', '2026-06-20 14:00:00', 'Clínica Centro', 'Acompanhamento Cardiológico', 1);
 
 -- Inserir medicamento (modelo enxuto: já com posologia e período de uso)
