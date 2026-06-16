@@ -58,15 +58,15 @@
                 <section class="vg-panel">
                     <header class="vg-panel__head">
                         <h2><svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 20.5 3.5 13.5a5 5 0 0 1 7-7l7 7a5 5 0 0 1-7 7Z"/><path d="m8.5 8.5 7 7"/></svg> Medicamentos do Dia</h2>
-                        <a href="#">Ver todos</a>
+                        <a href="{% url 'medicamentos:lista' paciente.id %}">Ver todos</a>
                     </header>
                     {% for med in medicamentos_hoje %}
                     <div class="vg-panel__row">
-                        <div><strong>{{ med.nome }}</strong><small>{{ med.horario }}</small></div>
-                        <span class="vg-badge">{{ med.status }}</span>
+                        <div><strong>{{ med.nome }} · {{ med.dosagem }}</strong><small>{{ med.horarios_lista|join:", "|default:"Sem horário" }}</small></div>
+                        {% if med.situacao %}<span class="vg-badge">{{ med.situacao_label }}</span>{% endif %}
                     </div>
                     {% empty %}
-                    <p class="vg-panel__empty">Nenhum medicamento cadastrado.</p>
+                    <p class="vg-panel__empty">Nenhum medicamento para hoje.</p>
                     {% endfor %}
                 </section>
 

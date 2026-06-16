@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Medicamentos — {{ paciente.nome }} — CuidaCare{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/pacientes.css' %}">
+<link rel="stylesheet" href="{% static 'css/medicamentos.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="vg {% if user.is_familiar %}pac--familiar{% else %}pac--cuidador{% endif %}">
+    <div class="vg__layout">
+        {% include "pacientes/_sidebar.html" with menu_ativo="medicamentos" %}
+
+        <main class="vg__main">
+            <a href="{% url 'pacientes:visao_geral' paciente.id %}" class="vg__back">← Voltar ao paciente</a>
+
+            <div class="med__top">
+                <div>
+                    <h1 class="med__title">
+                        <span class="med__title-icon" aria-hidden="true">
+                            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 20.5 3.5 13.5a5 5 0 0 1 7-7l7 7a5 5 0 0 1-7 7Z"/><path d="m8.5 8.5 7 7"/></svg>
+                        </span>
+                        Medicamentos
+                    </h1>
+                    <p class="vg__subtitle">Veja a lista com detalhes sobre todos os medicamentos agendados.</p>
+                </div>
+                {% if user.is_familiar %}
+                <button type="button" class="btn btn--primary med__new" id="abrir-novo-medicamento">
+                    <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                    Novo Medicamento
+                </button>
+                {% endif %}
+            </div>
+
+            <!-- Barra de ferramentas: busca, filtro e ordenação -->
+            <form class="med-toolbar" method="get">
+                <div class="med-toolbar__search">
+                    <span class="med-toolbar__search-icon" aria-hidden="true">
+                        <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                    </span>
+                    <input type="search" name="busca" value="{{ busca }}" placeholder="Buscar medicamento...">
+                </div>
+                <select name="ordenar" onchange="this.form.submit()">
+                    {% for valor, rotulo in ordem_opcoes %}
+                    <option value="{{ valor }}" {% if valor == ordenar %}selected{% endif %}>Ordena por: {{ rotulo }}</option>
+                    {% endfor %}
+                </select>
+            </form>
+
+            <!-- Abas Cards / Tabela -->
+            <div class="med-tabs" role="tablist">
+                <button type="button" class="med-tab is-active" data-view="cards" role="tab">
+                    <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                    Cards
+                </button>
+                <button type="button" class="med-tab" data-view="tabela" role="tab">
+                    <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18M3 12h18M3 19h18"/></svg>
+                    Tabela
+                </button>
+            </div>
+
+            <!-- VISÃO: CARDS -->
+            <div class="med-view" id="view-cards">
+                <div class="med-grid">
+                    {% for med in medicamentos %}
+                    <article class="med-card">
+                        <header class="med-card__head">
+                            <h3 class="med-card__name">{{ med.nome }}</h3>
+                        </header>
+
+                        <div class="med-card__pair">
+                            <div><span class="med-card__label">Dosagem</span><strong>{{ med.dosagem }}</strong></div>
+                            <div><span class="med-card__label">Forma</span><strong>{{ med.forma_farmaceutica|default:"—" }}</strong></div>
+                        </div>
+
+                        <div class="med-card__pair">
+                            <div><span class="med-card__label">Médico</span><strong>{{ med.medico|default:"—" }}</strong></div>
+                        </div>
+
+                        {% if user.is_familiar %}
+                        <footer class="med-card__actions">
+                            <button type="button" class="btn btn--soft med-edit"
+                                    data-action="{% url 'medicamentos:editar' paciente.id med.id %}"
+                                    data-nome="{{ med.nome }}"
+                                    data-dosagem="{{ med.dosagem }}"
+                                    data-forma="{{ med.forma_farmaceutica }}"
+                                    data-medico="{{ med.medico }}">
+                                <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                                Editar
+                            </button>
+                            <form method="post" action="{% url 'medicamentos:deletar' paciente.id med.id %}" onsubmit="return confirm('Remover {{ med.nome|escapejs }}?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn--soft">
+                                    <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M6 6l1 14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-14"/></svg>
+                                    Deletar
+                                </button>
+                            </form>
+                        </footer>
+                        {% endif %}
+                    </article>
+                    {% empty %}
+                    <p class="med__empty">{% if busca %}Nenhum medicamento encontrado para "{{ busca }}".{% else %}Nenhum medicamento cadastrado ainda.{% endif %}</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- VISÃO: TABELA -->
+            <div class="med-view" id="view-tabela" hidden>
+                <div class="med-tablewrap">
+                    <table class="med-table">
+                        <thead>
+                            <tr>
+                                <th>Remédio</th>
+                                <th>Dosagem</th>
+                                <th>Forma</th>
+                                <th>Médico</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for med in medicamentos %}
+                            <tr>
+                                <td><strong>{{ med.nome }}</strong></td>
+                                <td><span class="med-chip med-chip--sm">{{ med.dosagem }}</span></td>
+                                <td>{{ med.forma_farmaceutica|default:"—" }}</td>
+                                <td>{{ med.medico|default:"—" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="4" class="med-table__empty">{% if busca %}Nenhum medicamento encontrado para "{{ busca }}".{% else %}Nenhum medicamento cadastrado ainda.{% endif %}</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+{% if user.is_familiar %}
+<!-- Popup: Novo Medicamento -->
+<div class="modal" id="modal-medicamento" {% if not modal_aberto %}hidden{% endif %}>
+    <div class="modal__overlay" data-close></div>
+    <div class="modal__card modal__card--wide" role="dialog" aria-modal="true" aria-labelledby="modal-medicamento-title">
+        <button type="button" class="modal__close" data-close aria-label="Fechar">&times;</button>
+
+        <div class="modal__icon" aria-hidden="true">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 20.5 3.5 13.5a5 5 0 0 1 7-7l7 7a5 5 0 0 1-7 7Z"/><path d="m8.5 8.5 7 7"/></svg>
+        </div>
+
+        <h2 id="modal-medicamento-title">Novo Medicamento</h2>
+        <p class="modal__subtitle">Cadastre o remédio utilizado pelo paciente.</p>
+
+        <form method="post" action="{% url 'medicamentos:novo' paciente.id %}" novalidate>
+            {% csrf_token %}
+
+            <div class="field-grid">
+                <div class="field">
+                    <label for="id_nome">Remédio:</label>
+                    {{ medicamento_form.nome }}
+                    {% for e in medicamento_form.nome.errors %}<span class="field__error">{{ e }}</span>{% endfor %}
+                </div>
+                <div class="field">
+                    <label for="id_dosagem">Dosagem:</label>
+                    {{ medicamento_form.dosagem }}
+                    {% for e in medicamento_form.dosagem.errors %}<span class="field__error">{{ e }}</span>{% endfor %}
+                </div>
+            </div>
+
+            <div class="field-grid">
+                <div class="field">
+                    <label for="id_forma_farmaceutica">Forma farmacêutica:</label>
+                    {{ medicamento_form.forma_farmaceutica }}
+                </div>
+                <div class="field">
+                    <label for="id_medico">Médico:</label>
+                    {{ medicamento_form.medico }}
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn--primary btn--block btn--lg">Cadastrar medicamento</button>
+        </form>
+    </div>
+</div>
+
+<!-- Popup: Editar Medicamento (compartilhado, preenchido via JS) -->
+<div class="modal" id="modal-editar" {% if not edit_modal_aberto %}hidden{% endif %}>
+    <div class="modal__overlay" data-close></div>
+    <div class="modal__card modal__card--wide" role="dialog" aria-modal="true" aria-labelledby="modal-editar-title">
+        <button type="button" class="modal__close" data-close aria-label="Fechar">&times;</button>
+
+        <div class="modal__icon" aria-hidden="true">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        </div>
+
+        <h2 id="modal-editar-title">Editar Medicamento</h2>
+        <p class="modal__subtitle">Atualize os dados do remédio.</p>
+
+        <form method="post" action="{{ edit_action }}" id="form-editar" novalidate>
+            {% csrf_token %}
+
+            <div class="field-grid">
+                <div class="field">
+                    <label for="edit_nome">Remédio:</label>
+                    <input type="text" name="nome" id="edit_nome" value="{{ edit_values.nome|default:'' }}">
+                    {% for e in edit_errors.nome %}<span class="field__error">{{ e }}</span>{% endfor %}
+                </div>
+                <div class="field">
+                    <label for="edit_dosagem">Dosagem:</label>
+                    <input type="text" name="dosagem" id="edit_dosagem" value="{{ edit_values.dosagem|default:'' }}">
+                    {% for e in edit_errors.dosagem %}<span class="field__error">{{ e }}</span>{% endfor %}
+                </div>
+            </div>
+
+            <div class="field-grid">
+                <div class="field">
+                    <label for="edit_forma">Forma farmacêutica:</label>
+                    <input type="text" name="forma_farmaceutica" id="edit_forma" value="{{ edit_values.forma_farmaceutica|default:'' }}">
+                </div>
+                <div class="field">
+                    <label for="edit_medico">Médico:</label>
+                    <input type="text" name="medico" id="edit_medico" value="{{ edit_values.medico|default:'' }}">
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn--primary btn--block btn--lg">Salvar alterações</button>
+        </form>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}<script src="{% static 'js/medicamentos.js' %}"></script>{% endblock %}

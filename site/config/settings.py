@@ -50,8 +50,9 @@ LOCAL_APPS = [
     "core",          # Páginas públicas (landing page / home)
     "usuarios",      # Autenticação, registro e perfis (seção 2.6.1)
     "pacientes",     # Cadastro de pacientes e participações (seção 2.6.1)
+    "medicamentos",  # Medicamentos agendados do paciente (seção 2.6.1)
+    "medicos",       # Médicos/clínicas/laboratórios do paciente
     # "agenda",
-    # "medicamentos",
     # "ponto",
     # "diario",
 ]

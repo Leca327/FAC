@@ -1,0 +1,314 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Médicos — {{ paciente.nome }} — CuidaCare{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/pacientes.css' %}">
+<link rel="stylesheet" href="{% static 'css/medicamentos.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="vg {% if user.is_familiar %}pac--familiar{% else %}pac--cuidador{% endif %}">
+    <div class="vg__layout">
+        {% include "pacientes/_sidebar.html" with menu_ativo="medicos" %}
+
+        <main class="vg__main">
+            <a href="{% url 'pacientes:visao_geral' paciente.id %}" class="vg__back">← Voltar ao paciente</a>
+
+            <div class="med__top">
+                <div>
+                    <h1 class="med__title">
+                        <span class="med__title-icon" aria-hidden="true">
+                            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.8 2.3A.3.3 0 1 0 5 2.2M8 15a6 6 0 0 0 12 0v-3"/><path d="M8 15v-3a6 6 0 0 1 6-6V3.5M20 12a2 2 0 1 0 0-.1"/><path d="M6 3v2a4 4 0 0 0 8 0V3"/></svg>
+                        </span>
+                        Médicos
+                    </h1>
+                    <p class="vg__subtitle">Cadastro dos médicos, clínicas e laboratórios do paciente.</p>
+                </div>
+                {% if user.is_familiar %}
+                <button type="button" class="btn btn--primary med__new" id="abrir-novo-medico">
+                    <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                    Novo Médico
+                </button>
+                {% endif %}
+            </div>
+
+            <!-- Barra de ferramentas: busca e ordenação -->
+            <form class="med-toolbar" method="get">
+                <div class="med-toolbar__search">
+                    <span class="med-toolbar__search-icon" aria-hidden="true">
+                        <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                    </span>
+                    <input type="search" name="busca" value="{{ busca }}" placeholder="Buscar médico ou especialidade...">
+                </div>
+                <select name="ordenar" onchange="this.form.submit()">
+                    {% for valor, rotulo in ordem_opcoes %}
+                    <option value="{{ valor }}" {% if valor == ordenar %}selected{% endif %}>Ordena por: {{ rotulo }}</option>
+                    {% endfor %}
+                </select>
+            </form>
+
+            <!-- Abas Cards / Tabela -->
+            <div class="med-tabs" role="tablist">
+                <button type="button" class="med-tab is-active" data-view="cards" role="tab">
+                    <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                    Cards
+                </button>
+                <button type="button" class="med-tab" data-view="tabela" role="tab">
+                    <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18M3 12h18M3 19h18"/></svg>
+                    Tabela
+                </button>
+            </div>
+
+            <!-- VISÃO: CARDS -->
+            <div class="med-view" id="view-cards">
+                <div class="med-grid">
+                    {% for medico in medicos %}
+                    <article class="med-card">
+                        <header class="med-card__head">
+                            <h3 class="med-card__name">{{ medico.nome }}</h3>
+                            <span class="med-badge med-badge--tipo">{{ medico.get_tipo_display }}</span>
+                        </header>
+
+                        <div class="med-card__pair">
+                            <div><span class="med-card__label">Especialidade</span><strong>{{ medico.especialidade|default:"—" }}</strong></div>
+                            <div><span class="med-card__label">CRM/CNPJ</span><strong>{{ medico.crm_cnpj|default:"—" }}</strong></div>
+                        </div>
+
+                        <div class="med-card__pair">
+                            <div><span class="med-card__label">Telefone</span><strong>{{ medico.telefone|default:"—" }}</strong></div>
+                            <div><span class="med-card__label">E-mail</span><strong>{{ medico.email|default:"—" }}</strong></div>
+                        </div>
+
+                        <div class="med-card__pair">
+                            <div><span class="med-card__label">Cidade</span><strong>{{ medico.cidade|default:"—" }}</strong></div>
+                            <div><span class="med-card__label">UF</span><strong>{{ medico.uf|default:"—" }}</strong></div>
+                        </div>
+
+                        {% if medico.endereco %}
+                        <p class="med-card__obs">{{ medico.endereco }}</p>
+                        {% endif %}
+
+                        {% if user.is_familiar %}
+                        <footer class="med-card__actions">
+                            <button type="button" class="btn btn--soft med-edit"
+                                    data-action="{% url 'medicos:editar' paciente.id medico.id %}"
+                                    data-nome="{{ medico.nome }}"
+                                    data-tipo="{{ medico.tipo }}"
+                                    data-especialidade="{{ medico.especialidade }}"
+                                    data-crm_cnpj="{{ medico.crm_cnpj }}"
+                                    data-telefone="{{ medico.telefone }}"
+                                    data-email="{{ medico.email }}"
+                                    data-endereco="{{ medico.endereco }}"
+                                    data-cidade="{{ medico.cidade }}"
+                                    data-uf="{{ medico.uf }}">
+                                <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                                Editar
+                            </button>
+                            <form method="post" action="{% url 'medicos:deletar' paciente.id medico.id %}" onsubmit="return confirm('Remover {{ medico.nome|escapejs }}?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn--soft">
+                                    <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M6 6l1 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L6 6"/></svg>
+                                    Deletar
+                                </button>
+                            </form>
+                        </footer>
+                        {% endif %}
+                    </article>
+                    {% empty %}
+                    <p class="med__empty">{% if busca %}Nenhum médico encontrado para "{{ busca }}".{% else %}Nenhum médico cadastrado ainda.{% endif %}</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- VISÃO: TABELA -->
+            <div class="med-view" id="view-tabela" hidden>
+                <div class="med-tablewrap">
+                    <table class="med-table">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Tipo</th>
+                                <th>Especialidade</th>
+                                <th>CRM/CNPJ</th>
+                                <th>Telefone</th>
+                                <th>E-mail</th>
+                                <th>Cidade/UF</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for medico in medicos %}
+                            <tr>
+                                <td><strong>{{ medico.nome }}</strong></td>
+                                <td><span class="med-badge med-badge--tipo">{{ medico.get_tipo_display }}</span></td>
+                                <td>{{ medico.especialidade|default:"—" }}</td>
+                                <td>{{ medico.crm_cnpj|default:"—" }}</td>
+                                <td>{{ medico.telefone|default:"—" }}</td>
+                                <td>{{ medico.email|default:"—" }}</td>
+                                <td>{{ medico.cidade|default:"—" }}{% if medico.uf %}/{{ medico.uf }}{% endif %}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="7" class="med-table__empty">{% if busca %}Nenhum médico encontrado para "{{ busca }}".{% else %}Nenhum médico cadastrado ainda.{% endif %}</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+{% if user.is_familiar %}
+<!-- Popup: Novo Médico -->
+<div class="modal" id="modal-medico" {% if not modal_aberto %}hidden{% endif %}>
+    <div class="modal__overlay" data-close></div>
+    <div class="modal__card modal__card--wide" role="dialog" aria-modal="true" aria-labelledby="modal-medico-title">
+        <button type="button" class="modal__close" data-close aria-label="Fechar">&times;</button>
+
+        <div class="modal__icon" aria-hidden="true">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 15a6 6 0 0 0 12 0v-3"/><path d="M8 15v-9M20 12a2 2 0 1 0 0-.1"/><path d="M6 3v3a4 4 0 0 0 8 0V3"/></svg>
+        </div>
+
+        <h2 id="modal-medico-title">Novo Médico</h2>
+        <p class="modal__subtitle">Cadastre um médico, clínica ou laboratório do paciente.</p>
+
+        <form method="post" action="{% url 'medicos:novo' paciente.id %}" novalidate>
+            {% csrf_token %}
+
+            <div class="field-grid">
+                <div class="field">
+                    <label for="id_nome">Nome:</label>
+                    {{ medico_form.nome }}
+                    {% for e in medico_form.nome.errors %}<span class="field__error">{{ e }}</span>{% endfor %}
+                </div>
+                <div class="field">
+                    <label for="id_tipo">Tipo:</label>
+                    {{ medico_form.tipo }}
+                </div>
+            </div>
+
+            <div class="field-grid">
+                <div class="field">
+                    <label for="id_especialidade">Especialidade:</label>
+                    {{ medico_form.especialidade }}
+                </div>
+                <div class="field">
+                    <label for="id_crm_cnpj">CRM/CNPJ:</label>
+                    {{ medico_form.crm_cnpj }}
+                </div>
+            </div>
+
+            <div class="field-grid">
+                <div class="field">
+                    <label for="id_telefone">Telefone:</label>
+                    {{ medico_form.telefone }}
+                    {% for e in medico_form.telefone.errors %}<span class="field__error">{{ e }}</span>{% endfor %}
+                </div>
+                <div class="field">
+                    <label for="id_email">E-mail:</label>
+                    {{ medico_form.email }}
+                    {% for e in medico_form.email.errors %}<span class="field__error">{{ e }}</span>{% endfor %}
+                </div>
+            </div>
+
+            <div class="field">
+                <label for="id_endereco">Endereço:</label>
+                {{ medico_form.endereco }}
+            </div>
+
+            <div class="field-grid">
+                <div class="field">
+                    <label for="id_cidade">Cidade:</label>
+                    {{ medico_form.cidade }}
+                </div>
+                <div class="field">
+                    <label for="id_uf">UF:</label>
+                    {{ medico_form.uf }}
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn--primary btn--block btn--lg">Cadastrar médico</button>
+        </form>
+    </div>
+</div>
+
+<!-- Popup: Editar Médico (compartilhado, preenchido via JS) -->
+<div class="modal" id="modal-editar" {% if not edit_modal_aberto %}hidden{% endif %}>
+    <div class="modal__overlay" data-close></div>
+    <div class="modal__card modal__card--wide" role="dialog" aria-modal="true" aria-labelledby="modal-editar-title">
+        <button type="button" class="modal__close" data-close aria-label="Fechar">&times;</button>
+
+        <div class="modal__icon" aria-hidden="true">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        </div>
+
+        <h2 id="modal-editar-title">Editar Médico</h2>
+        <p class="modal__subtitle">Atualize os dados do médico.</p>
+
+        <form method="post" action="{{ edit_action }}" id="form-editar" novalidate>
+            {% csrf_token %}
+
+            <div class="field-grid">
+                <div class="field">
+                    <label for="edit_nome">Nome:</label>
+                    <input type="text" name="nome" id="edit_nome" value="{{ edit_values.nome|default:'' }}">
+                    {% for e in edit_errors.nome %}<span class="field__error">{{ e }}</span>{% endfor %}
+                </div>
+                <div class="field">
+                    <label for="edit_tipo">Tipo:</label>
+                    <select name="tipo" id="edit_tipo">
+                        <option value="medico" {% if edit_values.tipo == 'medico' %}selected{% endif %}>Médico</option>
+                        <option value="clinica" {% if edit_values.tipo == 'clinica' %}selected{% endif %}>Clínica</option>
+                        <option value="laboratorio" {% if edit_values.tipo == 'laboratorio' %}selected{% endif %}>Laboratório</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="field-grid">
+                <div class="field">
+                    <label for="edit_especialidade">Especialidade:</label>
+                    <input type="text" name="especialidade" id="edit_especialidade" value="{{ edit_values.especialidade|default:'' }}">
+                </div>
+                <div class="field">
+                    <label for="edit_crm_cnpj">CRM/CNPJ:</label>
+                    <input type="text" name="crm_cnpj" id="edit_crm_cnpj" value="{{ edit_values.crm_cnpj|default:'' }}">
+                </div>
+            </div>
+
+            <div class="field-grid">
+                <div class="field">
+                    <label for="edit_telefone">Telefone:</label>
+                    <input type="text" name="telefone" id="edit_telefone" class="js-digits" inputmode="numeric" maxlength="11" value="{{ edit_values.telefone|default:'' }}">
+                    {% for e in edit_errors.telefone %}<span class="field__error">{{ e }}</span>{% endfor %}
+                </div>
+                <div class="field">
+                    <label for="edit_email">E-mail:</label>
+                    <input type="email" name="email" id="edit_email" value="{{ edit_values.email|default:'' }}">
+                    {% for e in edit_errors.email %}<span class="field__error">{{ e }}</span>{% endfor %}
+                </div>
+            </div>
+
+            <div class="field">
+                <label for="edit_endereco">Endereço:</label>
+                <input type="text" name="endereco" id="edit_endereco" value="{{ edit_values.endereco|default:'' }}">
+            </div>
+
+            <div class="field-grid">
+                <div class="field">
+                    <label for="edit_cidade">Cidade:</label>
+                    <input type="text" name="cidade" id="edit_cidade" value="{{ edit_values.cidade|default:'' }}">
+                </div>
+                <div class="field">
+                    <label for="edit_uf">UF:</label>
+                    <input type="text" name="uf" id="edit_uf" maxlength="2" style="text-transform:uppercase" value="{{ edit_values.uf|default:'' }}">
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn--primary btn--block btn--lg">Salvar alterações</button>
+        </form>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}<script src="{% static 'js/medicos.js' %}"></script>{% endblock %}

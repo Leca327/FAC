@@ -22,8 +22,8 @@ Sidebar do contexto do paciente. Requer:
     <nav class="vg__nav" aria-label="Menu do paciente">
         <p class="vg__nav-group">Gestão</p>
         <a href="{% url 'pacientes:visao_geral' paciente.id %}" {% if menu_ativo == 'visao_geral' %}class="is-active"{% endif %}>Visão Geral</a>
-        <a href="#">Medicamentos</a>
-        <a href="#">Médicos</a>
+        <a href="{% url 'medicamentos:lista' paciente.id %}" {% if menu_ativo == 'medicamentos' %}class="is-active"{% endif %}>Medicamentos</a>
+        <a href="{% url 'medicos:lista' paciente.id %}" {% if menu_ativo == 'medicos' %}class="is-active"{% endif %}>Médicos</a>
 
         <p class="vg__nav-group">Equipe</p>
         <a href="#">Família</a>

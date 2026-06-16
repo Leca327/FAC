@@ -15,6 +15,10 @@ urlpatterns = [
     path("conta/", include("usuarios.urls")),
     # Pacientes (tela gerencial)
     path("pacientes/", include("pacientes.urls")),
+    # Medicamentos do paciente
+    path("medicamentos/", include("medicamentos.urls")),
+    # Médicos do paciente
+    path("medicos/", include("medicos.urls")),
     # Apps do projeto (habilitados conforme implementados):
     # path("agenda/", include("agenda.urls")),
     # path("ponto/", include("ponto.urls")),

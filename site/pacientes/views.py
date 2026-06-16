@@ -69,13 +69,15 @@ class VisaoGeralPacienteView(LoginRequiredMixin, View):
             messages.error(request, "Paciente não encontrado ou sem acesso.")
             return redirect("pacientes:dashboard")
 
+        from medicamentos.services import MedicamentoService
+
         equipe = PacienteService.equipe_do_paciente(paciente)
         context = {
             "paciente": paciente,
             "cuidadores": equipe["cuidadores"],
             "familiares": equipe["familiares"],
+            "medicamentos_hoje": MedicamentoService.medicamentos_do_dia(paciente),
             # Placeholders até os apps de domínio existirem:
-            "medicamentos_hoje": [],
             "proxima_consulta": None,
             "cuidador_plantao": None,
             "atividades": [],

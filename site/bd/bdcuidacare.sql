@@ -162,44 +162,39 @@ CREATE TABLE `consulta` (
 
 -- =====================================================
 -- TABELA: MEDICAMENTO
+-- Modelo enxuto: apenas os campos exibidos na tela "Medicamentos".
+-- (Consolidou as antigas tabelas `medicamento` + `prescricao_medicamento`,
+--  removendo princípio ativo, laboratório e a FK para médico_clínica —
+--  o médico passou a ser um simples campo de texto.)
 -- =====================================================
 
 CREATE TABLE `medicamento` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `nome` VARCHAR(255) NOT NULL,
-  `principio_ativo` VARCHAR(255),
-  `dosagem` VARCHAR(50),  -- ex: 500mg, 10ml, 1 comprimido
-  `forma_farmaceutica` VARCHAR(100),  -- comprimido, líquido, injeção, etc
-  `laboratorio` VARCHAR(255),
-  `data_criacao` DATETIME DEFAULT CURRENT_TIMESTAMP,
-  
-  INDEX idx_nome (nome),
-  INDEX idx_principio (principio_ativo)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- =====================================================
--- TABELA: PRESCRICAO_MEDICAMENTO (Pertence e Ingerir)
--- =====================================================
-
-CREATE TABLE `prescricao_medicamento` (
-  `id` INT AUTO_INCREMENT PRIMARY KEY,
   `paciente_id` INT NOT NULL,
-  `medicamento_id` INT NOT NULL,
-  `medico_clinica_id` INT NOT NULL,
-  `frequencia` VARCHAR(100),  -- 2x ao dia, 8 em 8 horas, etc
-  `horarios` VARCHAR(255),  -- 08:00, 20:00 (separados por vírgula)
-  `quantidade_dose` VARCHAR(50),  -- 1 comprimido, 10ml, etc
+  `nome` VARCHAR(255) NOT NULL,             -- remédio (ex: Losartana)
+  `dosagem` VARCHAR(50) NOT NULL,           -- ex: 50mg
+  `forma_farmaceutica` VARCHAR(100),        -- comprimido, líquido, etc
+  `frequencia` VARCHAR(100),                -- 2x ao dia, a cada 6h
+  `horarios` VARCHAR(255),                  -- 08:00,20:00 (separados por vírgula)
+  `quantidade_dose` VARCHAR(50),            -- 1 comprimido, 10ml, etc
+  `medico` VARCHAR(255),                    -- texto (ex: Dr. Carlos)
   `data_inicio` DATE NOT NULL,
-  `data_fim` DATE,  -- NULL = contínuo
+  `data_fim` DATE,                          -- NULL = contínuo
+  -- Controle por dia da semana (segunda a domingo)
+  `seg` BOOLEAN DEFAULT TRUE,
+  `ter` BOOLEAN DEFAULT TRUE,
+  `qua` BOOLEAN DEFAULT TRUE,
+  `qui` BOOLEAN DEFAULT TRUE,
+  `sex` BOOLEAN DEFAULT TRUE,
+  `sab` BOOLEAN DEFAULT TRUE,
+  `dom` BOOLEAN DEFAULT TRUE,
   `observacoes` TEXT,
   `status` ENUM('ativo', 'descontinuado') DEFAULT 'ativo',
   `data_criacao` DATETIME DEFAULT CURRENT_TIMESTAMP,
-  
+
   FOREIGN KEY (paciente_id) REFERENCES paciente(id) ON DELETE CASCADE,
-  FOREIGN KEY (medicamento_id) REFERENCES medicamento(id) ON DELETE RESTRICT,
-  FOREIGN KEY (medico_clinica_id) REFERENCES medico_clinica(id) ON DELETE RESTRICT,
   INDEX idx_paciente (paciente_id),
-  INDEX idx_medicamento (medicamento_id),
+  INDEX idx_nome (nome),
   INDEX idx_status (status),
   INDEX idx_data_inicio (data_inicio)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -277,7 +272,7 @@ CREATE INDEX idx_usuario_ativo ON usuario(ativo);
 CREATE INDEX idx_paciente_ativo ON paciente(ativo);
 CREATE INDEX idx_participacao_usuario_paciente ON participacao(usuario_id, paciente_id);
 CREATE INDEX idx_plantao_cuidador_data ON plantao(cuidador_id, data_plantao);
-CREATE INDEX idx_prescricao_status ON prescricao_medicamento(status, data_inicio);
+CREATE INDEX idx_medicamento_status ON medicamento(status, data_inicio);
 
 -- =====================================================
 -- VIEWS ÚTEIS (CORRIGIDAS)
@@ -299,21 +294,21 @@ WHERE p.ativo = TRUE;
 
 -- View: Medicamentos ativos de um paciente (CORRIGIDA)
 CREATE OR REPLACE VIEW vw_medicamentos_ativos AS
-SELECT 
-  pm.id,
+SELECT
+  m.id,
   p.id as paciente_id,
   p.nome as paciente,
   m.nome as medicamento,
   m.dosagem,
-  pm.frequencia,
-  pm.horarios,
-  pm.quantidade_dose,
-  pm.data_inicio,
-  pm.data_fim
-FROM prescricao_medicamento pm
-INNER JOIN paciente p ON pm.paciente_id = p.id
-INNER JOIN medicamento m ON pm.medicamento_id = m.id
-WHERE pm.status = 'ativo' AND (pm.data_fim IS NULL OR pm.data_fim >= CURDATE());
+  m.frequencia,
+  m.horarios,
+  m.quantidade_dose,
+  m.medico,
+  m.data_inicio,
+  m.data_fim
+FROM medicamento m
+INNER JOIN paciente p ON m.paciente_id = p.id
+WHERE m.status = 'ativo' AND (m.data_fim IS NULL OR m.data_fim >= CURDATE());
 
 -- View: Próximas consultas (CORRIGIDA)
 CREATE OR REPLACE VIEW vw_proximas_consultas AS
@@ -423,9 +418,9 @@ DELIMITER ;
 -- ALTER TABLE consulta 
 -- ADD CONSTRAINT chk_consulta_data CHECK (data_hora >= NOW());
 
--- Validação: Data fim de prescrição deve ser posterior a data início
-ALTER TABLE prescricao_medicamento 
-ADD CONSTRAINT chk_prescricao_datas CHECK (data_fim IS NULL OR data_fim >= data_inicio);
+-- Validação: Data fim do medicamento deve ser posterior a data início
+ALTER TABLE medicamento
+ADD CONSTRAINT chk_medicamento_datas CHECK (data_fim IS NULL OR data_fim >= data_inicio);
 
 -- Validação: Hora de saída deve ser posterior a hora de entrada
 ALTER TABLE plantao 
@@ -457,17 +452,13 @@ VALUES ('Conceição Silva', '11111111111', '1950-05-15', 1, 'Rua C, 789', 'Diab
 INSERT INTO medico_clinica (nome, tipo, crm_cnpj, especialidade, telefone, endereco)
 VALUES ('Dr. Carlos', 'medico', '123456/SP', 'Cardiologia', '21988888888', 'Av. Paulista, 1000');
 
--- Inserir medicamento
-INSERT INTO medicamento (nome, principio_ativo, dosagem, forma_farmaceutica, laboratorio)
-VALUES ('Losartana', 'Losartana Potássica', '50mg', 'Comprimido', 'Laboratório X');
-
 -- Inserir consulta
 INSERT INTO consulta (paciente_id, medico_clinica_id, tipo_consulta, data_hora, local, motivo, familiar_marcou_id)
 VALUES (1, 1, 'Consulta de Rotina', '2026-06-20 14:00:00', 'Clínica Centro', 'Acompanhamento Cardiológico', 1);
 
--- Inserir prescrição de medicamento
-INSERT INTO prescricao_medicamento (paciente_id, medicamento_id, medico_clinica_id, frequencia, horarios, quantidade_dose, data_inicio, data_fim, status)
-VALUES (1, 1, 1, '2x ao dia', '08:00,20:00', '1 comprimido', '2026-01-01', NULL, 'ativo');
+-- Inserir medicamento (modelo enxuto: já com posologia e período de uso)
+INSERT INTO medicamento (paciente_id, nome, dosagem, forma_farmaceutica, frequencia, horarios, quantidade_dose, medico, data_inicio, data_fim, observacoes, status)
+VALUES (1, 'Losartana', '50mg', 'Comprimido', '2x ao dia', '08:00,20:00', '1 comprimido', 'Dr. Carlos', '2026-01-01', NULL, 'Apenas em caso de dor ou febre', 'ativo');
 
 -- =====================================================
 -- VERIFICAÇÃO FINAL
@@ -482,7 +473,6 @@ SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'cuidacare
 SELECT COUNT(*) as total_usuarios FROM usuario;
 SELECT COUNT(*) as total_pacientes FROM paciente;
 SELECT COUNT(*) as total_medicamentos FROM medicamento;
-SELECT COUNT(*) as total_prescricoes FROM prescricao_medicamento;
 
 -- Testar view
 SELECT * FROM vw_medicamentos_ativos;
