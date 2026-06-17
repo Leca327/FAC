@@ -1,0 +1,286 @@
+/* =====================================================
+   CuidaCare — familia.css
+   Tela "Família" (cards + tabela). Reaproveita .vg (pacientes.css)
+   e .med-grid/.med-tabs/.med-table/modal (medicamentos.css).
+   ===================================================== */
+
+/* ---------- Barra: filtro (menu suspenso) + abas ---------- */
+.fam-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+.fam-filtro {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.fam-filtro label {
+    font-weight: 600;
+    color: var(--text);
+    font-size: 0.95rem;
+}
+
+.fam-filtro select {
+    padding: 10px 14px;
+    border: 1.5px solid var(--line);
+    border-radius: 12px;
+    font-family: var(--font-sans);
+    font-size: 0.95rem;
+    background: var(--white);
+    color: var(--text);
+    cursor: pointer;
+}
+
+.fam-filtro select:focus {
+    outline: none;
+    border-color: var(--pac-accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--pac-accent) 18%, transparent);
+}
+
+.fam-bar .med-tabs {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+/* ---------- Card de membro ---------- */
+.fam-card {
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-left: 5px solid var(--text-muted);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: var(--transition);
+}
+
+.fam-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.fam-card--aceito {
+    border-left-color: #2e9e6b;
+}
+
+.fam-card--pendente {
+    border-left-color: #e0a73a;
+}
+
+.fam-card__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+}
+
+.fam-card__avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--white);
+    background: var(--pac-accent);
+}
+
+.fam-avatar--a { background: #d8447a; }
+.fam-avatar--b { background: #1f9e7a; }
+.fam-avatar--c { background: #6d63e0; }
+.fam-avatar--d { background: #e08a2a; }
+
+.fam-badge {
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 999px;
+    white-space: nowrap;
+}
+
+.fam-badge--aceito {
+    background: #e3f5e9;
+    color: #2e7d4f;
+}
+
+.fam-badge--pendente {
+    background: #fdf3d6;
+    color: #9a7b1a;
+}
+
+.fam-card__name {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--ink);
+}
+
+.fam-card__vinculo {
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    margin-top: -6px;
+}
+
+.fam-card__lines {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 12px;
+    border-top: 1px solid var(--line);
+}
+
+.fam-card__lines p {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    color: var(--text);
+}
+
+.fam-card__lines .icon {
+    flex-shrink: 0;
+    color: var(--pac-accent);
+    opacity: 0.85;
+}
+
+.fam-card__label {
+    color: var(--text-muted);
+}
+
+.fam-card__actions {
+    display: flex;
+    gap: 10px;
+    margin-top: auto;
+    padding-top: 6px;
+}
+
+.fam-card__actions .btn,
+.fam-card__actions form {
+    flex: 1;
+}
+
+.fam-card__actions .btn {
+    width: 100%;
+    padding: 9px 12px;
+    font-size: 0.88rem;
+    background: var(--white);
+    color: var(--pac-accent-dark);
+    border-color: color-mix(in srgb, var(--pac-accent) 35%, transparent);
+}
+
+.fam-card__actions .btn:hover {
+    background: var(--pac-soft);
+}
+
+/* ---------- Ações na tabela ---------- */
+.fam-table__acoes {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.fam-table__acoes form {
+    display: inline;
+}
+
+.btn--xs {
+    padding: 5px 12px;
+    font-size: 0.8rem;
+    background: var(--white);
+    color: var(--pac-accent-dark);
+    border-color: color-mix(in srgb, var(--pac-accent) 35%, transparent);
+}
+
+.btn--xs:hover {
+    background: var(--pac-soft);
+}
+
+/* ---------- Modal: select de vínculo ---------- */
+.modal__card .field select {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    font-family: var(--font-sans);
+    font-size: 0.95rem;
+    background: var(--white);
+    color: var(--text);
+    cursor: pointer;
+}
+
+.modal__card .field select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 18%, transparent);
+}
+
+/* ---------- Página pública de aceite ---------- */
+.fam-convite {
+    min-height: 70vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+}
+
+.fam-convite__card {
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    padding: 40px;
+    max-width: 460px;
+    text-align: center;
+}
+
+.fam-convite__card h1 {
+    font-size: 1.6rem;
+    margin: 12px 0;
+    color: var(--ink);
+}
+
+.fam-convite__card p {
+    color: var(--text);
+    margin-bottom: 10px;
+}
+
+.fam-convite__sub {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.fam-convite__icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: #e3f5e9;
+    color: #2e9e6b;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+}
+
+.fam-convite__icon--erro {
+    background: #fbe0e2;
+    color: #b1303a;
+}
+
+.fam-convite__card .btn {
+    margin-top: 16px;
+}
+
+@media (max-width: 860px) {
+    .fam-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}

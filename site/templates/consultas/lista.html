@@ -1,0 +1,291 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Consultas e Exames — {{ paciente.nome }} — CuidaCare{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/pacientes.css' %}">
+<link rel="stylesheet" href="{% static 'css/medicamentos.css' %}">
+<link rel="stylesheet" href="{% static 'css/consultas.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="vg {% if user.is_familiar %}pac--familiar{% else %}pac--cuidador{% endif %}">
+    <div class="vg__layout">
+        {% include "pacientes/_sidebar.html" with menu_ativo="consultas" %}
+
+        <main class="vg__main">
+            <a href="{% url 'pacientes:visao_geral' paciente.id %}" class="vg__back">← Voltar ao paciente</a>
+
+            <div class="med__top">
+                <div>
+                    <h1 class="med__title">
+                        <span class="med__title-icon" aria-hidden="true">
+                            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2h6a1 1 0 0 1 1 1v1h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2V3a1 1 0 0 1 1-1Z"/><path d="M9 4h6"/><path d="M8 11h8M8 15h5"/></svg>
+                        </span>
+                        Consultas e Exames
+                    </h1>
+                    <p class="vg__subtitle">Acompanhe consultas, exames e procedimentos marcados para {{ paciente.nome }}</p>
+                </div>
+                <button type="button" class="btn btn--primary med__new" id="abrir-consulta">
+                    <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                    Novo Agendamento
+                </button>
+            </div>
+
+            <!-- Filtro por período -->
+            <form class="dia-filtro" method="get">
+                <div class="dia-filtro__campo">
+                    <label for="filtro-de">De:</label>
+                    <input type="date" id="filtro-de" name="de" value="{{ de|date:'Y-m-d' }}">
+                </div>
+                <div class="dia-filtro__campo">
+                    <label for="filtro-ate">Até:</label>
+                    <input type="date" id="filtro-ate" name="ate" value="{{ ate|date:'Y-m-d' }}">
+                </div>
+                <button type="submit" class="btn btn--primary">Filtrar</button>
+                <a href="{% url 'consultas:lista' paciente.id %}" class="btn dia-filtro__limpar">Limpar</a>
+            </form>
+
+            <!-- Agendamentos agrupados por dia -->
+            {% for dia in dias %}
+            <section class="dia-grupo">
+                <header class="dia-grupo__head {% if dia.is_hoje %}is-hoje{% endif %}">
+                    <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                    {{ dia.label }}
+                </header>
+
+                <div class="dia-grupo__body">
+                    {% for c in dia.consultas %}
+                    <div class="cons cons--{{ c.status }}">
+                        <span class="cons__hora">{{ c.data_hora|date:"H:i" }}</span>
+
+                        <div class="cons__info">
+                            <strong class="cons__titulo">
+                                {% if c.tipo == 'exame' %}
+                                <svg class="icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v6.5L5 19a2 2 0 0 0 1.8 3h10.4A2 2 0 0 0 19 19l-5-9.5V3"/><path d="M7.5 15h9"/></svg>
+                                {% else %}
+                                <svg class="icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+                                {% endif %}
+                                {{ c.titulo }}
+                            </strong>
+                            {% if c.medico %}<span class="cons__prof">{{ c.medico.nome }}{% if c.medico.especialidade %} · {{ c.medico.especialidade }}{% endif %}</span>{% endif %}
+
+                            <div class="cons__meta">
+                                {% if c.medico.localizacao %}<span><svg class="icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg> {{ c.medico.localizacao }}</span>{% endif %}
+                                {% if c.medico.crm_cnpj %}<span><svg class="icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 9h4M7 13h6"/></svg> {% if c.medico.tipo == 'medico' %}CRM{% else %}CNPJ{% endif %}: {{ c.medico.crm_cnpj }}</span>{% endif %}
+                            </div>
+
+                            {% if c.observacao %}
+                            <div class="cons__obs">
+                                <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>
+                                {{ c.observacao }}
+                            </div>
+                            {% endif %}
+
+                            {% if c.is_realizada and c.resultado %}
+                            <div class="cons__resultado">
+                                <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                                <span><strong>Resultado:</strong> {{ c.resultado }}</span>
+                            </div>
+                            {% endif %}
+
+                            <span class="cons__por">
+                                <svg class="icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+                                Agendado por {{ c.agendada_por.get_full_name|default:c.agendada_por.email|default:"—" }} às {{ c.data_criacao|date:"H:i" }}
+                            </span>
+                            {% if c.is_realizada and c.realizada_por %}
+                            <span class="cons__por cons__por--ok">
+                                <svg class="icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                                Realizada por {{ c.realizada_por.get_full_name|default:c.realizada_por.email }}{% if c.realizada_em %} às {{ c.realizada_em|date:"H:i" }}{% endif %}
+                            </span>
+                            {% endif %}
+                        </div>
+
+                        <div class="cons__acoes">
+                            <div class="cons__status">
+                                {% if c.is_realizada %}
+                                <form method="post" action="{% url 'consultas:realizada' paciente.id c.id %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="desmarcar" value="1">
+                                    <input type="hidden" name="de" value="{{ de|date:'Y-m-d' }}">
+                                    <input type="hidden" name="ate" value="{{ ate|date:'Y-m-d' }}">
+                                    <button type="submit" class="cons__check" title="Desmarcar (voltar para Agendada)" aria-label="Desmarcar">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                                    </button>
+                                </form>
+                                <span class="cons__status-label">Realizada</span>
+                                {% else %}
+                                <button type="button" class="cons__check cons__marcar"
+                                        data-action="{% url 'consultas:realizada' paciente.id c.id %}"
+                                        data-titulo="{{ c.titulo }}"
+                                        title="Marcar como realizada" aria-label="Marcar como realizada"></button>
+                                <span class="cons__status-label">Agendada</span>
+                                {% endif %}
+                            </div>
+
+                            <button type="button" class="btn btn--soft cons__editar"
+                                    data-action="{% url 'consultas:editar' paciente.id c.id %}"
+                                    data-tipo="{{ c.tipo }}"
+                                    data-titulo="{{ c.titulo }}"
+                                    data-medico="{{ c.medico_id|default:'' }}"
+                                    data-data="{{ c.data_hora|date:'Y-m-d' }}"
+                                    data-hora="{{ c.data_hora|date:'H:i' }}"
+                                    data-obs="{{ c.observacao }}">
+                                <svg class="icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                                Editar
+                            </button>
+                            <form method="post" action="{% url 'consultas:deletar' paciente.id c.id %}" onsubmit="return confirm('Remover {{ c.titulo|escapejs }}?');">
+                                {% csrf_token %}
+                                <input type="hidden" name="de" value="{{ de|date:'Y-m-d' }}">
+                                <input type="hidden" name="ate" value="{{ ate|date:'Y-m-d' }}">
+                                <button type="submit" class="btn btn--soft dose__lixeira" aria-label="Remover">
+                                    <svg class="icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M6 6l1 14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-14"/></svg>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+            {% empty %}
+            <p class="med__empty">Nenhuma consulta ou exame no período selecionado.</p>
+            {% endfor %}
+        </main>
+    </div>
+</div>
+
+<!-- Popup: Novo Agendamento -->
+<div class="modal" id="modal-consulta" {% if not modal_aberto %}hidden{% endif %}>
+    <div class="modal__overlay" data-close></div>
+    <div class="modal__card modal__card--wide" role="dialog" aria-modal="true" aria-labelledby="modal-consulta-title">
+        <button type="button" class="modal__close" data-close aria-label="Fechar">&times;</button>
+        <div class="modal__icon" aria-hidden="true">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        </div>
+        <h2 id="modal-consulta-title">Novo Agendamento</h2>
+        <p class="modal__subtitle">Agende uma consulta ou exame para o paciente.</p>
+
+        <form method="post" action="{% url 'consultas:nova' paciente.id %}" novalidate>
+            {% csrf_token %}
+            <input type="hidden" name="de" value="{{ de|date:'Y-m-d' }}">
+            <input type="hidden" name="ate" value="{{ ate|date:'Y-m-d' }}">
+
+            <div class="field">
+                <label for="id_medico">Médico / Clínica:</label>
+                <select name="medico" id="id_medico" class="js-medico-select" data-titulo-campo="novo-campo-titulo" data-titulo-label="novo-label-titulo" required>
+                    <option value="">Selecione um médico/clínica…</option>
+                    {% for m in medicos %}
+                    <option value="{{ m.id }}" data-tipo="{{ m.tipo }}" {% if consulta_form.medico.value|stringformat:'s' == m.id|stringformat:'s' %}selected{% endif %}>{{ m.nome }}{% if m.especialidade %} · {{ m.especialidade }}{% endif %}</option>
+                    {% endfor %}
+                </select>
+                {% for e in consulta_form.medico.errors %}<span class="field__error">{{ e }}</span>{% endfor %}
+                {% if not medicos %}<span class="field__hint">Nenhum cadastrado. Cadastre em <a href="{% url 'medicos:lista' paciente.id %}">Médicos</a>.</span>{% else %}<span class="field__hint">Médico → consulta (título = especialidade). Clínica/laboratório → exame.</span>{% endif %}
+            </div>
+
+            <div class="field" id="novo-campo-titulo" hidden>
+                <label for="id_titulo" id="novo-label-titulo">Qual Exame?</label>
+                {{ consulta_form.titulo }}
+                {% for e in consulta_form.titulo.errors %}<span class="field__error">{{ e }}</span>{% endfor %}
+            </div>
+
+            <div class="field-grid">
+                <div class="field">
+                    <label for="id_data">Data:</label>
+                    {{ consulta_form.data }}
+                    {% for e in consulta_form.data.errors %}<span class="field__error">{{ e }}</span>{% endfor %}
+                </div>
+                <div class="field">
+                    <label for="id_hora">Hora:</label>
+                    {{ consulta_form.hora }}
+                    {% for e in consulta_form.hora.errors %}<span class="field__error">{{ e }}</span>{% endfor %}
+                </div>
+            </div>
+
+            <div class="field">
+                <label for="id_observacao">Observação:</label>
+                {{ consulta_form.observacao }}
+            </div>
+
+            <button type="submit" class="btn btn--primary btn--block btn--lg">Agendar</button>
+        </form>
+    </div>
+</div>
+
+<!-- Popup: Editar Agendamento (preenchido via JS) -->
+<div class="modal" id="modal-consulta-editar" hidden>
+    <div class="modal__overlay" data-close></div>
+    <div class="modal__card modal__card--wide" role="dialog" aria-modal="true" aria-labelledby="modal-consulta-editar-title">
+        <button type="button" class="modal__close" data-close aria-label="Fechar">&times;</button>
+        <div class="modal__icon" aria-hidden="true">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        </div>
+        <h2 id="modal-consulta-editar-title">Editar Agendamento</h2>
+        <p class="modal__subtitle">Atualize os dados da consulta ou exame.</p>
+
+        <form method="post" action="" id="form-consulta-editar" novalidate>
+            {% csrf_token %}
+            <input type="hidden" name="de" value="{{ de|date:'Y-m-d' }}">
+            <input type="hidden" name="ate" value="{{ ate|date:'Y-m-d' }}">
+
+            <div class="field">
+                <label for="ec_medico">Médico / Clínica:</label>
+                <select name="medico" id="ec_medico" class="js-medico-select" data-titulo-campo="editar-campo-titulo" data-titulo-label="editar-label-titulo">
+                    <option value="">Selecione um médico/clínica…</option>
+                    {% for m in medicos %}
+                    <option value="{{ m.id }}" data-tipo="{{ m.tipo }}">{{ m.nome }}{% if m.especialidade %} · {{ m.especialidade }}{% endif %}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="field" id="editar-campo-titulo" hidden>
+                <label for="ec_titulo" id="editar-label-titulo">Qual Exame?</label>
+                <input type="text" name="titulo" id="ec_titulo" placeholder="Ex.: Eletrocardiograma, Ultrassom">
+            </div>
+
+            <div class="field-grid">
+                <div class="field">
+                    <label for="ec_data">Data:</label>
+                    <input type="date" name="data" id="ec_data">
+                </div>
+                <div class="field">
+                    <label for="ec_hora">Hora:</label>
+                    <input type="time" name="hora" id="ec_hora">
+                </div>
+            </div>
+
+            <div class="field">
+                <label for="ec_obs">Observação:</label>
+                <textarea name="observacao" id="ec_obs" rows="2"></textarea>
+            </div>
+
+            <button type="submit" class="btn btn--primary btn--block btn--lg">Salvar alterações</button>
+        </form>
+    </div>
+</div>
+
+<!-- Popup: Marcar como realizada (resultado) -->
+<div class="modal" id="modal-resultado" hidden>
+    <div class="modal__overlay" data-close></div>
+    <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="modal-resultado-title">
+        <button type="button" class="modal__close" data-close aria-label="Fechar">&times;</button>
+        <div class="modal__icon" aria-hidden="true">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+        </div>
+        <h2 id="modal-resultado-title">Marcar como realizada</h2>
+        <p class="modal__subtitle" id="modal-resultado-sub">Registre o resultado do compromisso.</p>
+
+        <form method="post" action="" id="form-resultado" novalidate>
+            {% csrf_token %}
+            <input type="hidden" name="de" value="{{ de|date:'Y-m-d' }}">
+            <input type="hidden" name="ate" value="{{ ate|date:'Y-m-d' }}">
+            <div class="field">
+                <label for="res_texto">Resultado:</label>
+                <textarea name="resultado" id="res_texto" rows="4" placeholder="Ex.: Exame normal. Pressão controlada. Retorno em 3 meses."></textarea>
+            </div>
+            <button type="submit" class="btn btn--primary btn--block btn--lg">Confirmar como realizada</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}<script src="{% static 'js/consultas.js' %}"></script>{% endblock %}

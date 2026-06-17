@@ -113,6 +113,34 @@ CREATE TABLE `participacao` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =====================================================
+-- TABELA: MEMBRO_FAMILIA — tela "Família" (sistema de convites)
+-- Diferente de `participacao` (que exige um usuario já cadastrado), aqui
+-- o convite guarda nome/e-mail/telefone/vínculo da pessoa ANTES de ela ter
+-- conta. Fica 'pendente' até aceitar pelo link do e-mail (token), quando
+-- vira 'aceito' e, se houver conta com o mesmo e-mail, é vinculada.
+-- =====================================================
+
+CREATE TABLE `membro_familia` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `paciente_id` INT NOT NULL,
+  `nome` VARCHAR(255) NOT NULL,
+  `email` VARCHAR(255) NOT NULL,
+  `telefone` VARCHAR(20),
+  `vinculo` VARCHAR(100) NOT NULL,            -- Filha, Marido, Filho, etc.
+  `status` ENUM('pendente', 'aceito') DEFAULT 'pendente',
+  `token` VARCHAR(40) NOT NULL UNIQUE,        -- link de aceite do convite
+  `usuario_id` INT,                           -- vinculado quando aceita (se tiver conta)
+  `convidado_por_id` INT,                     -- quem enviou o convite
+  `data_convite` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `data_resposta` DATETIME DEFAULT NULL,      -- quando aceitou
+
+  FOREIGN KEY (paciente_id) REFERENCES paciente(id) ON DELETE CASCADE,
+  FOREIGN KEY (usuario_id) REFERENCES usuario(id) ON DELETE SET NULL,
+  FOREIGN KEY (convidado_por_id) REFERENCES usuario(id) ON DELETE SET NULL,
+  INDEX idx_membro_pac_status (paciente_id, status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =====================================================
 -- TABELA: MEDICO (médico, clínica ou laboratório do paciente)
 -- (Antes `medico_clinica`, global; agora vinculado ao paciente,
 --  conforme a tela "Médicos". Todos os campos aparecem na tela.)
@@ -140,29 +168,39 @@ CREATE TABLE `medico` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =====================================================
--- TABELA: CONSULTA (Marcar)
+-- TABELA: CONSULTA (Marcar) — tela "Consultas e Exames"
+-- Ajustes em relação ao DER original:
+--   - `motivo` virou `observacao`;
+--   - removido `proximo_agendamento`;
+--   - `familiar_marcou_id` virou `agendada_por_id` (familiar OU cuidador);
+--   - adicionados `realizada_por_id` + `realizada_em` (quem marcou como
+--     realizada e quando — mesma lógica de medicamento_tomado);
+--   - o médico/clínica é ESCOLHIDO entre os cadastrados do paciente
+--     (FK `medico_id` → tabela `medico`); nome, CRM/CNPJ e endereço vêm
+--     de lá (sem campos próprios de profissional/local). Sem convênio.
 -- =====================================================
 
 CREATE TABLE `consulta` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `paciente_id` INT NOT NULL,
-  `medico_id` INT NOT NULL,
-  `tipo_consulta` VARCHAR(100),  -- consulta, exame, ultrassom, etc
+  `medico_id` INT,                       -- médico/clínica escolhido (FK)
+  `tipo` ENUM('consulta', 'exame') DEFAULT 'consulta',  -- categoria/ícone
+  `titulo` VARCHAR(255) NOT NULL,        -- Cardiologia / Eletrocardiograma
   `data_hora` DATETIME NOT NULL,
-  `local` VARCHAR(255),
-  `motivo` TEXT,
-  `resultado` TEXT,
+  `observacao` TEXT,                     -- (substitui o antigo `motivo`)
   `status` ENUM('agendada', 'realizada', 'cancelada') DEFAULT 'agendada',
-  `proximo_agendamento` DATE,
-  `familiar_marcou_id` INT NOT NULL,
+  `resultado` TEXT,                      -- preenchido ao marcar como realizada
+  `agendada_por_id` INT,                 -- quem agendou (familiar ou cuidador)
+  `realizada_por_id` INT,                -- quem marcou como realizada
+  `realizada_em` DATETIME DEFAULT NULL,  -- quando foi marcada como realizada
   `data_criacao` DATETIME DEFAULT CURRENT_TIMESTAMP,
-  
+
   FOREIGN KEY (paciente_id) REFERENCES paciente(id) ON DELETE CASCADE,
-  FOREIGN KEY (medico_id) REFERENCES medico(id) ON DELETE RESTRICT,
-  FOREIGN KEY (familiar_marcou_id) REFERENCES usuario(id) ON DELETE RESTRICT,
-  INDEX idx_paciente (paciente_id),
-  INDEX idx_data (data_hora),
-  INDEX idx_status (status)
+  FOREIGN KEY (medico_id) REFERENCES medico(id) ON DELETE SET NULL,
+  FOREIGN KEY (agendada_por_id) REFERENCES usuario(id) ON DELETE SET NULL,
+  FOREIGN KEY (realizada_por_id) REFERENCES usuario(id) ON DELETE SET NULL,
+  INDEX idx_consulta_pac_data (paciente_id, data_hora),
+  INDEX idx_consulta_status (status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =====================================================
@@ -206,6 +244,35 @@ CREATE TABLE `medicamento` (
   INDEX idx_nome (nome),
   INDEX idx_status (status),
   INDEX idx_data_inicio (data_inicio)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =====================================================
+-- TABELA: MEDICAMENTO_TOMADO
+-- Registra se uma dose de medicamento foi tomada, na tela "Medicação Diária".
+-- Cada linha = uma dose única (medicamento + dia + horário previsto) e guarda:
+--   `tomado`           -> se a pessoa tomou (booleano);
+--   `horario_previsto` -> a hora em que a dose DEVERIA ser tomada;
+--   `tomado_em`        -> a data/hora em que foi MARCADA como tomada;
+--   `marcado_por_id`   -> QUEM marcou (familiar ou cuidador).
+-- É o que permite derivar o status da rotina:
+--   existe registro tomado                 -> 'Tomado'
+--   não tomado e o horário já passou        -> 'Atrasado'
+--   não tomado e o horário ainda não chegou -> 'Pendente'
+-- =====================================================
+
+CREATE TABLE `medicamento_tomado` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `medicamento_id` INT NOT NULL,
+  `data` DATE NOT NULL,                       -- dia da dose
+  `horario_previsto` VARCHAR(5) NOT NULL,     -- hora que deveria ser tomada (HH:MM)
+  `tomado` BOOLEAN NOT NULL DEFAULT TRUE,     -- se a pessoa tomou
+  `tomado_em` DATETIME DEFAULT NULL,          -- quando foi marcada como tomada
+  `marcado_por_id` INT DEFAULT NULL,          -- quem marcou (familiar ou cuidador)
+
+  FOREIGN KEY (medicamento_id) REFERENCES medicamento(id) ON DELETE CASCADE,
+  FOREIGN KEY (marcado_por_id) REFERENCES usuario(id) ON DELETE SET NULL,
+  UNIQUE KEY uq_tomado_med_data_horario (medicamento_id, data, horario_previsto),
+  INDEX idx_tomado_med_data (medicamento_id, data)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =====================================================
@@ -321,19 +388,18 @@ WHERE m.status = 'ativo' AND (m.data_fim IS NULL OR m.data_fim >= CURDATE());
 
 -- View: Próximas consultas (CORRIGIDA)
 CREATE OR REPLACE VIEW vw_proximas_consultas AS
-SELECT 
+SELECT
   c.id,
   c.paciente_id,
   p.nome as paciente,
-  mc.nome as medico,
-  mc.especialidade,
+  c.tipo,
+  c.titulo,
+  c.profissional,
   c.data_hora,
   c.local,
-  c.tipo_consulta,
   DATEDIFF(c.data_hora, NOW()) as dias_para_consulta
 FROM consulta c
 INNER JOIN paciente p ON c.paciente_id = p.id
-INNER JOIN medico mc ON c.medico_id = mc.id
 WHERE c.status = 'agendada' AND c.data_hora >= NOW()
 ORDER BY c.data_hora ASC;
 
@@ -457,17 +523,36 @@ INSERT INTO cuidador (id, numero_registro, especialidade, usuario_id) VALUES (2,
 INSERT INTO paciente (nome, cpf, data_nascimento, familiar_responsavel_id, endereco, condicoes_saude, alergias)
 VALUES ('Conceição Silva', '11111111111', '1950-05-15', 1, 'Rua C, 789', 'Diabetes', 'Penicilina');
 
--- Inserir médico (vinculado ao paciente)
+-- Inserir médico (id 1) e laboratório (id 2), vinculados ao paciente
 INSERT INTO medico (paciente_id, nome, tipo, crm_cnpj, especialidade, telefone, email, endereco, cidade, uf)
-VALUES (1, 'Dr. Carlos', 'medico', '123456/SP', 'Cardiologia', '21988888888', 'carlos@clinica.com', 'Av. Paulista, 1000', 'São Paulo', 'SP');
+VALUES (1, 'Dr. Carlos Silva', 'medico', '123456/SP', 'Cardiologia', '21988888888', 'carlos@clinica.com', 'Av. Paulista, 1000', 'São Paulo', 'SP');
+INSERT INTO medico (paciente_id, nome, tipo, crm_cnpj, especialidade, telefone, email, endereco, cidade, uf)
+VALUES (1, 'Laboratório São Lucas', 'laboratorio', '12.345.678/0001-90', 'Exames', '2133334444', 'contato@saolucas.com', 'Rua das Flores, 50', 'São Paulo', 'SP');
 
--- Inserir consulta
-INSERT INTO consulta (paciente_id, medico_id, tipo_consulta, data_hora, local, motivo, familiar_marcou_id)
-VALUES (1, 1, 'Consulta de Rotina', '2026-06-20 14:00:00', 'Clínica Centro', 'Acompanhamento Cardiológico', 1);
+-- Inserir consulta (médico escolhido = id 1; agendada pela cuidadora, usuario id 2)
+INSERT INTO consulta (paciente_id, medico_id, tipo, titulo, data_hora, observacao, status, agendada_por_id)
+VALUES (1, 1, 'consulta', 'Cardiologia', '2026-06-20 14:30:00', 'Acompanhamento cardiológico de rotina', 'agendada', 2);
+
+-- Inserir exame (laboratório escolhido = id 2)
+INSERT INTO consulta (paciente_id, medico_id, tipo, titulo, data_hora, observacao, status, agendada_por_id)
+VALUES (1, 2, 'exame', 'Eletrocardiograma', '2026-06-25 09:00:00', 'Comparecer em jejum. Levar documentos pessoais e cartão de convênio.', 'agendada', 1);
+
+-- Inserir membros da família (convites): 2 aceitos e 1 pendente
+INSERT INTO membro_familia (paciente_id, nome, email, telefone, vinculo, status, token, convidado_por_id, data_resposta)
+VALUES (1, 'Joana Silva', 'joana@example.com', '(21) 98765-4321', 'Filha', 'aceito', 'tok_joana_0001', 1, NOW());
+INSERT INTO membro_familia (paciente_id, nome, email, telefone, vinculo, status, token, convidado_por_id, data_resposta)
+VALUES (1, 'Carlos Silva', 'carlos@example.com', '(21) 98765-1234', 'Marido', 'aceito', 'tok_carlos_0002', 1, NOW());
+INSERT INTO membro_familia (paciente_id, nome, email, telefone, vinculo, status, token, convidado_por_id)
+VALUES (1, 'Pedro Silva', 'pedro@example.com', '(21) 99876-5432', 'Filho', 'pendente', 'tok_pedro_0003', 1);
 
 -- Inserir medicamento (modelo enxuto: já com posologia e período de uso)
 INSERT INTO medicamento (paciente_id, nome, dosagem, forma_farmaceutica, frequencia, horarios, quantidade_dose, medico, data_inicio, data_fim, observacoes, status)
-VALUES (1, 'Losartana', '50mg', 'Comprimido', '2x ao dia', '08:00,20:00', '1 comprimido', 'Dr. Carlos', '2026-01-01', NULL, 'Apenas em caso de dor ou febre', 'ativo');
+VALUES (1, 'Losartana', '50mg', 'Comprimido', '2x ao dia', '08:00,20:00', '1 comprimido', 'Dr. Carlos', '2026-01-01', NULL, 'Tomar com água, de manhã', 'ativo');
+
+-- Registrar uma dose como tomada (dose prevista p/ 08:00 de hoje da Losartana),
+-- marcada pela cuidadora (usuario id 2)
+INSERT INTO medicamento_tomado (medicamento_id, data, horario_previsto, tomado, tomado_em, marcado_por_id)
+VALUES (1, CURDATE(), '08:00', TRUE, NOW(), 2);
 
 -- =====================================================
 -- VERIFICAÇÃO FINAL
@@ -482,6 +567,7 @@ SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'cuidacare
 SELECT COUNT(*) as total_usuarios FROM usuario;
 SELECT COUNT(*) as total_pacientes FROM paciente;
 SELECT COUNT(*) as total_medicamentos FROM medicamento;
+SELECT COUNT(*) as total_doses_tomadas FROM medicamento_tomado WHERE tomado = TRUE;
 
 -- Testar view
 SELECT * FROM vw_medicamentos_ativos;

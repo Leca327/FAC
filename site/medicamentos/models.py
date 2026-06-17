@@ -13,6 +13,7 @@ em um único modelo `Medicamento` com apenas os campos usados na página,
 e o médico vira um simples campo de texto.
 """
 
+from django.conf import settings
 from django.db import models
 from django.utils import timezone
 
@@ -90,6 +91,16 @@ class Medicamento(models.Model):
 
     # ---------- Helpers para a tela ----------
     @property
+    def na_rotina(self):
+        """
+        True quando o remédio está na "Medicação Diária": tem posologia
+        definida (horários + data de início). Ao remover da rotina, esses
+        campos são limpos, mas o cadastro do remédio (nome, dosagem, forma,
+        médico) permanece.
+        """
+        return bool(self.horarios.strip() and self.data_inicio)
+
+    @property
     def is_continuo(self):
         """True quando não há data de fim (uso contínuo)."""
         return self.data_fim is None
@@ -159,3 +170,64 @@ class Medicamento(models.Model):
             "proximo": "Próximo",
             "passou": "Passou",
         }.get(self.situacao)
+
+
+class MedicamentoTomado(models.Model):
+    """
+    Registro de que uma dose de medicamento foi tomada (tela "Medicação
+    Diária"). Cada linha representa uma única dose, identificada pelo
+    medicamento, pela data e pelo horário previsto (ex.: Losartana,
+    16/06/2026, previsto "08:00").
+
+    Guarda os três dados pedidos:
+    - `tomado`           → se a pessoa tomou (booleano);
+    - `horario_previsto` → a hora em que a dose DEVERIA ser tomada;
+    - `tomado_em`        → a data/hora em que foi MARCADA como tomada.
+
+    É o que permite derivar o status da rotina:
+    - existe registro tomado            → "tomado";
+    - não tomado e o horário já passou   → "atrasado";
+    - não tomado e o horário não chegou  → "pendente".
+    """
+
+    medicamento = models.ForeignKey(
+        Medicamento,
+        on_delete=models.CASCADE,
+        related_name="registros_tomado",
+        verbose_name="medicamento",
+    )
+    data = models.DateField("data da dose")
+    horario_previsto = models.CharField(  # "HH:MM" — hora que deveria ser tomada
+        "horário previsto", max_length=5
+    )
+    tomado = models.BooleanField("tomado", default=True)
+    tomado_em = models.DateTimeField(  # quando foi marcada como tomada
+        "marcado como tomado em", null=True, blank=True
+    )
+    marcado_por = models.ForeignKey(  # quem marcou (familiar ou cuidador)
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="doses_marcadas",
+        verbose_name="marcado por",
+    )
+
+    class Meta:
+        db_table = "medicamento_tomado"
+        verbose_name = "medicamento tomado"
+        verbose_name_plural = "medicamentos tomados"
+        ordering = ["data", "horario_previsto"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["medicamento", "data", "horario_previsto"],
+                name="uq_tomado_med_data_horario",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["medicamento", "data"], name="idx_tomado_med_data"),
+        ]
+
+    def __str__(self):
+        situacao = "tomado" if self.tomado else "não tomado"
+        return f"{self.medicamento.nome} {self.data} {self.horario_previsto} ({situacao})"

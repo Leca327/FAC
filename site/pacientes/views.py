@@ -12,6 +12,7 @@ from datetime import date
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import redirect, render
+from django.utils import timezone
 from django.views import View
 from django.views.generic import TemplateView
 
@@ -69,6 +70,7 @@ class VisaoGeralPacienteView(LoginRequiredMixin, View):
             messages.error(request, "Paciente não encontrado ou sem acesso.")
             return redirect("pacientes:dashboard")
 
+        from consultas.services import ConsultaService
         from medicamentos.services import MedicamentoService
 
         equipe = PacienteService.equipe_do_paciente(paciente)
@@ -77,8 +79,11 @@ class VisaoGeralPacienteView(LoginRequiredMixin, View):
             "cuidadores": equipe["cuidadores"],
             "familiares": equipe["familiares"],
             "medicamentos_hoje": MedicamentoService.medicamentos_do_dia(paciente),
+            "doses_pendentes": MedicamentoService.contar_doses_pendentes(paciente),
+            "proximas_doses": MedicamentoService.proximas_doses(paciente),
+            "consultas_hoje": ConsultaService.contar_agendadas_hoje(paciente),
+            "hoje": timezone.localdate(),
             # Placeholders até os apps de domínio existirem:
-            "proxima_consulta": None,
             "cuidador_plantao": None,
             "atividades": [],
         }
@@ -119,6 +124,11 @@ class AgendaPacienteView(LoginRequiredMixin, View):
             dia_sel = hoje.day if (ano == hoje.year and mes == hoje.month) else 1
         data_sel = date(ano, mes, dia_sel)
 
+        # Consultas do mês (para mostrar os títulos no calendário).
+        from consultas.services import ConsultaService
+
+        consultas_mes = ConsultaService.consultas_do_mes(paciente, ano, mes)
+
         # Monta as semanas do mês (segunda a domingo)
         cal = calendar.Calendar(firstweekday=0)
         semanas = []
@@ -129,6 +139,10 @@ class AgendaPacienteView(LoginRequiredMixin, View):
                     "hoje": d == hoje,
                     "mes_atual": d.month == mes,
                     "selecionado": d == data_sel,
+                    "eventos": (
+                        [c.titulo for c in consultas_mes.get(d.day, [])]
+                        if d.month == mes else []
+                    ),
                 }
                 for d in semana
             ])
@@ -153,9 +167,17 @@ class AgendaPacienteView(LoginRequiredMixin, View):
             "nav_anterior": {"ano": ano_anterior, "mes": mes_anterior},
             "nav_seguinte": {"ano": ano_seguinte, "mes": mes_seguinte},
             "painel_label": painel_label,
-            # Placeholders até os apps agenda/ponto existirem:
+            "eventos_dia": [
+                {
+                    "titulo": c.titulo,
+                    "hora": timezone.localtime(c.data_hora).strftime("%H:%M"),
+                    "tipo": c.get_tipo_display(),
+                    "realizada": c.is_realizada,
+                }
+                for c in ConsultaService.consultas_do_dia(paciente, data_sel)
+            ],
+            # Placeholder até o app ponto existir:
             "plantoes_semana": [],
-            "eventos_dia": [],
         }
         return render(request, self.template_name, context)
 

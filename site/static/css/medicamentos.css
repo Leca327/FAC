@@ -454,3 +454,376 @@
         flex-direction: column;
     }
 }
+
+/* =====================================================
+   Tela "Medicação Diária" (rotina por período)
+   ===================================================== */
+
+/* ---------- Filtro de período ---------- */
+.dia-filtro {
+    display: flex;
+    align-items: flex-end;
+    gap: 14px;
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    padding: 16px 18px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+}
+
+.dia-filtro__campo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.dia-filtro__campo label {
+    font-weight: 600;
+    color: var(--text);
+    font-size: 0.95rem;
+}
+
+.dia-filtro__campo input {
+    padding: 10px 12px;
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    font-family: var(--font-sans);
+    font-size: 0.95rem;
+    background: var(--white);
+    color: var(--text);
+}
+
+.dia-filtro__campo input:focus {
+    outline: none;
+    border-color: var(--pac-accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--pac-accent) 18%, transparent);
+}
+
+.dia-filtro .btn {
+    padding: 10px 22px;
+    line-height: 1.2;
+    box-sizing: border-box;
+    align-self: flex-end;
+}
+
+.dia-filtro .btn--primary {
+    background: var(--pac-accent);
+    border-color: var(--pac-accent);
+}
+
+.dia-filtro .btn--primary:hover {
+    background: var(--pac-accent-dark);
+}
+
+.dia-filtro__limpar {
+    background: #6f6c87;
+    border-color: #6f6c87;
+    color: var(--white);
+}
+
+.dia-filtro__limpar:hover {
+    background: #57546e;
+}
+
+/* ---------- Grupo de dia ---------- */
+.dia-grupo {
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    margin-bottom: 22px;
+}
+
+.dia-grupo__head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 20px;
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--white);
+    background: linear-gradient(90deg, var(--pac-accent), var(--pac-accent-dark));
+}
+
+/* Dia de hoje em destaque (verde) */
+.dia-grupo__head.is-hoje {
+    background: linear-gradient(90deg, #1c9e6b, #15875a);
+}
+
+.dia-grupo__body {
+    display: flex;
+    flex-direction: column;
+}
+
+.dia-grupo__vazio {
+    padding: 18px 20px;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+/* ---------- Linha de dose ---------- */
+.dose {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--line);
+}
+
+.dose:last-child {
+    border-bottom: none;
+}
+
+.dose__hora {
+    flex-shrink: 0;
+    min-width: 64px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--white);
+    background: var(--pac-accent);
+    border-radius: 12px;
+    padding: 12px 10px;
+}
+
+/* Cor do horário conforme o status da dose */
+.dose--tomado .dose__hora {
+    background: #6fcf97;
+}
+
+.dose--atrasado .dose__hora {
+    background: #d64550;
+}
+
+.dose__info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.dose__nome {
+    font-size: 1.02rem;
+    color: var(--ink);
+    font-weight: 700;
+}
+
+.dose__detalhe {
+    font-size: 0.88rem;
+    color: var(--text-muted);
+}
+
+.dose__obs {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.84rem;
+    color: var(--text-muted);
+}
+
+.dose__obs .icon {
+    flex-shrink: 0;
+    opacity: 0.7;
+}
+
+/* Quem marcou a dose como tomada */
+.dose__por {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #2e7d4f;
+}
+
+.dose__por .icon {
+    flex-shrink: 0;
+    opacity: 0.85;
+}
+
+/* Doses já tomadas ficam levemente esmaecidas */
+.dose--tomado .dose__nome,
+.dose--tomado .dose__detalhe {
+    color: var(--text-muted);
+}
+
+.dose__acoes {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+/* Círculo de marcar como tomado */
+.dose__check {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 2px solid var(--pac-accent);
+    background: var(--white);
+    color: var(--white);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    transition: var(--transition);
+}
+
+.dose__check:hover {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--pac-accent) 22%, transparent);
+}
+
+.dose--tomado .dose__check {
+    background: #2e9e6b;
+    border-color: #2e9e6b;
+}
+
+.dose--atrasado .dose__check {
+    border-color: #d64550;
+}
+
+/* Pílula de status */
+.dose__status {
+    font-size: 0.74rem;
+    font-weight: 700;
+    padding: 5px 12px;
+    border-radius: 999px;
+    white-space: nowrap;
+    min-width: 78px;
+    text-align: center;
+}
+
+.dose--pendente .dose__status {
+    background: #fdf3d6;
+    color: #9a7b1a;
+}
+
+.dose--tomado .dose__status {
+    background: #e3f5e9;
+    color: #2e7d4f;
+}
+
+.dose--atrasado .dose__status {
+    background: #fbe0e2;
+    color: #b1303a;
+}
+
+/* Botões de ação por linha */
+.dose__acoes .btn {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    background: var(--white);
+    color: var(--pac-accent-dark);
+    border-color: color-mix(in srgb, var(--pac-accent) 35%, transparent);
+}
+
+.dose__acoes .btn:hover {
+    background: var(--pac-soft);
+}
+
+.dose__lixeira {
+    color: #b1303a !important;
+    border-color: color-mix(in srgb, #d64550 40%, transparent) !important;
+}
+
+/* Nome do remédio (somente leitura) no modal de editar rotina */
+.rotina-remedio {
+    padding: 12px 14px;
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    background: var(--pac-soft);
+    font-weight: 700;
+    color: var(--ink);
+}
+
+/* ---------- Tag-input de horários (estilo marcadores) ---------- */
+.taginput {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    min-height: 46px;
+    padding: 8px 10px;
+    border: 1.5px solid color-mix(in srgb, var(--pac-accent) 45%, transparent);
+    border-radius: 12px;
+    /* Fundo pastel claro no tom do tema (rosa p/ familiar, azul p/ cuidador) */
+    background: color-mix(in srgb, var(--pac-soft) 70%, var(--white));
+    cursor: text;
+    transition: var(--transition);
+}
+
+.taginput:focus-within {
+    border-color: var(--pac-accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--pac-accent) 18%, transparent);
+}
+
+.taginput__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 6px 5px 12px;
+    background: color-mix(in srgb, var(--pac-accent) 16%, var(--white));
+    border: 1.5px solid var(--pac-accent);
+    border-radius: 999px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--pac-accent-dark);
+    white-space: nowrap;
+}
+
+.taginput__remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--pac-accent) 22%, transparent);
+    color: var(--pac-accent-dark);
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.taginput__remove:hover {
+    background: var(--pac-accent);
+    color: var(--white);
+}
+
+.taginput__entry {
+    flex: 1;
+    min-width: 120px;
+    border: none !important;
+    outline: none;
+    padding: 4px 2px !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    background: transparent;
+    font-family: var(--font-sans);
+    font-size: 0.95rem;
+    color: var(--text);
+}
+
+@media (max-width: 720px) {
+    .dose {
+        flex-wrap: wrap;
+    }
+    .dose__info {
+        flex-basis: 60%;
+    }
+    .dose__acoes {
+        flex-basis: 100%;
+        justify-content: flex-end;
+    }
+    .dia-filtro {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}

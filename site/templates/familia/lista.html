@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Família — {{ paciente.nome }} — CuidaCare{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/pacientes.css' %}">
+<link rel="stylesheet" href="{% static 'css/medicamentos.css' %}">
+<link rel="stylesheet" href="{% static 'css/familia.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="vg {% if user.is_familiar %}pac--familiar{% else %}pac--cuidador{% endif %}">
+    <div class="vg__layout">
+        {% include "pacientes/_sidebar.html" with menu_ativo="familia" %}
+
+        <main class="vg__main">
+            <a href="{% url 'pacientes:visao_geral' paciente.id %}" class="vg__back">← Voltar ao paciente</a>
+
+            <div class="med__top">
+                <div>
+                    <h1 class="med__title">
+                        <span class="med__title-icon" aria-hidden="true">
+                            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><circle cx="17" cy="9" r="2.6"/><path d="M3 20c0-3.3 2.7-5 6-5s6 1.7 6 5"/><path d="M15.5 15c2.6.2 4.5 1.8 4.5 5"/></svg>
+                        </span>
+                        Família
+                    </h1>
+                    <p class="vg__subtitle">Gerencie os membros da família de {{ paciente.nome }}</p>
+                </div>
+                {% if user.is_familiar %}
+                <button type="button" class="btn btn--primary med__new" id="abrir-convidar">
+                    <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                    Convidar Membro
+                </button>
+                {% endif %}
+            </div>
+
+            <!-- Barra de ferramentas: filtro de status (menu suspenso) + abas -->
+            <div class="fam-bar">
+                <form method="get" class="fam-filtro">
+                    <label for="filtro-status">Filtrar:</label>
+                    <select name="status" id="filtro-status" onchange="this.form.submit()">
+                        <option value="todos" {% if status == 'todos' %}selected{% endif %}>Todos ({{ contagens.todos }})</option>
+                        <option value="aceito" {% if status == 'aceito' %}selected{% endif %}>Aceitos ({{ contagens.aceitos }})</option>
+                        <option value="pendente" {% if status == 'pendente' %}selected{% endif %}>Pendentes ({{ contagens.pendentes }})</option>
+                    </select>
+                </form>
+
+                <div class="med-tabs" role="tablist">
+                    <button type="button" class="med-tab is-active" data-view="cards" role="tab">
+                        <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                        Cards
+                    </button>
+                    <button type="button" class="med-tab" data-view="tabela" role="tab">
+                        <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18M3 12h18M3 19h18"/></svg>
+                        Tabela
+                    </button>
+                </div>
+            </div>
+
+            <!-- VISÃO: CARDS -->
+            <div class="med-view" id="view-cards">
+                <div class="med-grid">
+                    {% for m in membros %}
+                    <article class="fam-card fam-card--{{ m.status }}">
+                        <header class="fam-card__head">
+                            <span class="fam-card__avatar fam-avatar--{% cycle 'a' 'b' 'c' 'd' %}">{{ m.iniciais }}</span>
+                            <span class="fam-badge fam-badge--{{ m.status }}">{{ m.get_status_display }}</span>
+                        </header>
+
+                        <h3 class="fam-card__name">{{ m.nome }}</h3>
+                        <p class="fam-card__vinculo">{{ m.vinculo }}</p>
+
+                        <div class="fam-card__lines">
+                            <p><svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg> <span class="fam-card__label">Email:</span> <strong>{{ m.email }}</strong></p>
+                            <p><svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg> <span class="fam-card__label">Telefone:</span> <strong>{{ m.telefone|default:"—" }}</strong></p>
+                            <p><svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg> <span class="fam-card__label">Vínculo:</span> <strong>{{ m.vinculo }}</strong></p>
+                            {% if not m.is_aceito %}
+                            <p><svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg> <span class="fam-card__label">Convite enviado:</span> <strong>{{ m.data_convite|date:"d/m/Y" }}</strong></p>
+                            {% endif %}
+                        </div>
+
+                        {% if user.is_familiar %}
+                        <footer class="fam-card__actions">
+                            {% if m.is_aceito %}
+                            <button type="button" class="btn btn--soft fam-edit"
+                                    data-action="{% url 'familia:editar' paciente.id m.id %}"
+                                    data-nome="{{ m.nome }}" data-telefone="{{ m.telefone }}" data-vinculo="{{ m.vinculo }}">
+                                <svg class="icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                                Editar
+                            </button>
+                            <form method="post" action="{% url 'familia:remover' paciente.id m.id %}" onsubmit="return confirm('Remover {{ m.nome|escapejs }} da família?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn--soft">
+                                    <svg class="icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M6 6l1 14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-14"/></svg>
+                                    Remover
+                                </button>
+                            </form>
+                            {% else %}
+                            <form method="post" action="{% url 'familia:reenviar' paciente.id m.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn--soft">
+                                    <svg class="icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/></svg>
+                                    Reenviar
+                                </button>
+                            </form>
+                            <form method="post" action="{% url 'familia:remover' paciente.id m.id %}" onsubmit="return confirm('Cancelar o convite de {{ m.nome|escapejs }}?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn--soft">
+                                    <svg class="icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M6 6l1 14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-14"/></svg>
+                                    Cancelar
+                                </button>
+                            </form>
+                            {% endif %}
+                        </footer>
+                        {% endif %}
+                    </article>
+                    {% empty %}
+                    <p class="med__empty">Nenhum membro {% if status != 'todos' %}{{ status }}{% endif %} na família ainda.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- VISÃO: TABELA -->
+            <div class="med-view" id="view-tabela" hidden>
+                <div class="med-tablewrap">
+                    <table class="med-table">
+                        <thead>
+                            <tr><th>Nome</th><th>Vínculo</th><th>Email</th><th>Telefone</th><th>Status</th>{% if user.is_familiar %}<th>Ações</th>{% endif %}</tr>
+                        </thead>
+                        <tbody>
+                            {% for m in membros %}
+                            <tr>
+                                <td><strong>{{ m.nome }}</strong></td>
+                                <td>{{ m.vinculo }}</td>
+                                <td>{{ m.email }}</td>
+                                <td>{{ m.telefone|default:"—" }}</td>
+                                <td><span class="fam-badge fam-badge--{{ m.status }}">{{ m.get_status_display }}</span></td>
+                                {% if user.is_familiar %}
+                                <td class="fam-table__acoes">
+                                    {% if m.is_aceito %}
+                                    <button type="button" class="btn btn--soft btn--xs fam-edit" data-action="{% url 'familia:editar' paciente.id m.id %}" data-nome="{{ m.nome }}" data-telefone="{{ m.telefone }}" data-vinculo="{{ m.vinculo }}">Editar</button>
+                                    <form method="post" action="{% url 'familia:remover' paciente.id m.id %}" onsubmit="return confirm('Remover {{ m.nome|escapejs }}?');">{% csrf_token %}<button type="submit" class="btn btn--soft btn--xs">Remover</button></form>
+                                    {% else %}
+                                    <form method="post" action="{% url 'familia:reenviar' paciente.id m.id %}">{% csrf_token %}<button type="submit" class="btn btn--soft btn--xs">Reenviar</button></form>
+                                    <form method="post" action="{% url 'familia:remover' paciente.id m.id %}" onsubmit="return confirm('Cancelar o convite de {{ m.nome|escapejs }}?');">{% csrf_token %}<button type="submit" class="btn btn--soft btn--xs">Cancelar</button></form>
+                                    {% endif %}
+                                </td>
+                                {% endif %}
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="{% if user.is_familiar %}6{% else %}5{% endif %}" class="med-table__empty">Nenhum membro na família ainda.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+{% if user.is_familiar %}
+<!-- Popup: Convidar Membro -->
+<div class="modal" id="modal-convidar" {% if not modal_aberto %}hidden{% endif %}>
+    <div class="modal__overlay" data-close></div>
+    <div class="modal__card modal__card--wide" role="dialog" aria-modal="true" aria-labelledby="modal-convidar-title">
+        <button type="button" class="modal__close" data-close aria-label="Fechar">&times;</button>
+        <div class="modal__icon" aria-hidden="true">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-5 6-5s6 1.7 6 5"/><path d="M19 8v6M16 11h6"/></svg>
+        </div>
+        <h2 id="modal-convidar-title">Convidar Membro</h2>
+        <p class="modal__subtitle">Envie um convite por e-mail para um familiar.</p>
+
+        <form method="post" action="{% url 'familia:convidar' paciente.id %}" novalidate>
+            {% csrf_token %}
+            <div class="field-grid">
+                <div class="field">
+                    <label for="id_nome">Nome:</label>
+                    {{ convidar_form.nome }}
+                    {% for e in convidar_form.nome.errors %}<span class="field__error">{{ e }}</span>{% endfor %}
+                </div>
+                <div class="field">
+                    <label for="id_vinculo">Vínculo:</label>
+                    {{ convidar_form.vinculo }}
+                    {% for e in convidar_form.vinculo.errors %}<span class="field__error">{{ e }}</span>{% endfor %}
+                </div>
+            </div>
+            <div class="field-grid">
+                <div class="field">
+                    <label for="id_email">E-mail:</label>
+                    {{ convidar_form.email }}
+                    {% for e in convidar_form.email.errors %}<span class="field__error">{{ e }}</span>{% endfor %}
+                </div>
+                <div class="field">
+                    <label for="id_telefone">Telefone:</label>
+                    {{ convidar_form.telefone }}
+                </div>
+            </div>
+            <button type="submit" class="btn btn--primary btn--block btn--lg">Enviar convite</button>
+        </form>
+    </div>
+</div>
+
+<!-- Popup: Editar Membro (preenchido via JS) -->
+<div class="modal" id="modal-editar" hidden>
+    <div class="modal__overlay" data-close></div>
+    <div class="modal__card modal__card--wide" role="dialog" aria-modal="true" aria-labelledby="modal-editar-title">
+        <button type="button" class="modal__close" data-close aria-label="Fechar">&times;</button>
+        <div class="modal__icon" aria-hidden="true">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        </div>
+        <h2 id="modal-editar-title">Editar Membro</h2>
+        <p class="modal__subtitle">Atualize os dados do membro da família.</p>
+
+        <form method="post" action="" id="form-editar" novalidate>
+            {% csrf_token %}
+            <div class="field-grid">
+                <div class="field">
+                    <label for="ed_nome">Nome:</label>
+                    <input type="text" name="nome" id="ed_nome">
+                </div>
+                <div class="field">
+                    <label for="ed_vinculo">Vínculo:</label>
+                    <select name="vinculo" id="ed_vinculo">
+                        {% for v, rotulo in convidar_form.vinculo.field.choices %}
+                        <option value="{{ v }}">{{ rotulo }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="field">
+                <label for="ed_telefone">Telefone:</label>
+                <input type="text" name="telefone" id="ed_telefone">
+            </div>
+            <button type="submit" class="btn btn--primary btn--block btn--lg">Salvar alterações</button>
+        </form>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}<script src="{% static 'js/familia.js' %}"></script>{% endblock %}

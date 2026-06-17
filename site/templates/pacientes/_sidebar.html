@@ -26,13 +26,13 @@ Sidebar do contexto do paciente. Requer:
         <a href="{% url 'medicos:lista' paciente.id %}" {% if menu_ativo == 'medicos' %}class="is-active"{% endif %}>Médicos</a>
 
         <p class="vg__nav-group">Equipe</p>
-        <a href="#">Família</a>
+        <a href="{% url 'familia:lista' paciente.id %}" {% if menu_ativo == 'familia' %}class="is-active"{% endif %}>Família</a>
         <a href="#">Cuidadores</a>
 
         <p class="vg__nav-group">Rotina</p>
         <a href="{% url 'pacientes:agenda' paciente.id %}" {% if menu_ativo == 'agenda' %}class="is-active"{% endif %}>Agenda</a>
-        <a href="#">Consultas e Exames</a>
-        <a href="#">Medicação Diária</a>
+        <a href="{% url 'consultas:lista' paciente.id %}" {% if menu_ativo == 'consultas' %}class="is-active"{% endif %}>Consultas e Exames</a>
+        <a href="{% url 'medicamentos:diaria' paciente.id %}" {% if menu_ativo == 'diaria' %}class="is-active"{% endif %}>Medicação Diária</a>
         <a href="#">Escala</a>
 
         <p class="vg__nav-group">&nbsp;</p>

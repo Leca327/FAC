@@ -52,6 +52,8 @@ LOCAL_APPS = [
     "pacientes",     # Cadastro de pacientes e participações (seção 2.6.1)
     "medicamentos",  # Medicamentos agendados do paciente (seção 2.6.1)
     "medicos",       # Médicos/clínicas/laboratórios do paciente
+    "consultas",     # Consultas e exames do paciente
+    "familia",       # Membros da família e convites do paciente
     # "agenda",
     # "ponto",
     # "diario",

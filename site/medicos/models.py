@@ -49,3 +49,14 @@ class Medico(models.Model):
 
     def __str__(self):
         return self.nome
+
+    @property
+    def localizacao(self):
+        """Endereço resumido para exibição (ex.: 'Av. Paulista, 1000 - São Paulo/SP')."""
+        cidade_uf = ""
+        if self.cidade and self.uf:
+            cidade_uf = f"{self.cidade}/{self.uf}"
+        else:
+            cidade_uf = self.cidade or self.uf
+        partes = [p for p in [self.endereco, cidade_uf] if p]
+        return " - ".join(partes)

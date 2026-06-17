@@ -22,21 +22,16 @@
                     <span class="vg-stat__icon" aria-hidden="true">
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 20.5 3.5 13.5a5 5 0 0 1 7-7l7 7a5 5 0 0 1-7 7Z"/><path d="m8.5 8.5 7 7"/></svg>
                     </span>
-                    <strong class="vg-stat__big">{{ medicamentos_hoje|length }}</strong>
-                    <span class="vg-stat__label">Medicamentos para Hoje</span>
+                    <strong class="vg-stat__big">{{ doses_pendentes }}</strong>
+                    <span class="vg-stat__label">Medicamentos pendentes para Hoje</span>
                 </div>
 
                 <div class="vg-stat">
                     <span class="vg-stat__icon" aria-hidden="true">
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
                     </span>
-                    {% if proxima_consulta %}
-                    <strong class="vg-stat__big">{{ proxima_consulta.data_hora|date:"d M" }}</strong>
-                    <span class="vg-stat__label">{{ proxima_consulta.medico }} · Próxima Consulta</span>
-                    {% else %}
-                    <strong class="vg-stat__big">—</strong>
-                    <span class="vg-stat__label">Nenhuma consulta agendada</span>
-                    {% endif %}
+                    <strong class="vg-stat__big">{{ consultas_hoje }}</strong>
+                    <span class="vg-stat__label">Consultas agendadas para hoje</span>
                 </div>
 
                 <div class="vg-stat">
@@ -58,12 +53,26 @@
                 <section class="vg-panel">
                     <header class="vg-panel__head">
                         <h2><svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 20.5 3.5 13.5a5 5 0 0 1 7-7l7 7a5 5 0 0 1-7 7Z"/><path d="m8.5 8.5 7 7"/></svg> Medicamentos do Dia</h2>
-                        <a href="{% url 'medicamentos:lista' paciente.id %}">Ver todos</a>
+                        <a href="{% url 'medicamentos:diaria' paciente.id %}">Ver rotina</a>
                     </header>
-                    {% for med in medicamentos_hoje %}
-                    <div class="vg-panel__row">
-                        <div><strong>{{ med.nome }} · {{ med.dosagem }}</strong><small>{{ med.horarios_lista|join:", "|default:"Sem horário" }}</small></div>
-                        {% if med.situacao %}<span class="vg-badge">{{ med.situacao_label }}</span>{% endif %}
+                    {% for dose in proximas_doses %}
+                    <div class="vg-dose vg-dose--{{ dose.status }}">
+                        <span class="vg-dose__hora">{{ dose.horario }}</span>
+                        <div class="vg-dose__info">
+                            <strong>{{ dose.medicamento.nome }}</strong>
+                            <small>{{ dose.medicamento.dosagem }}</small>
+                        </div>
+                        <span class="vg-dose__tag">{{ dose.status_label }}</span>
+                        <form method="post" action="{% url 'medicamentos:marcar_dose' paciente.id %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="medicamento_id" value="{{ dose.medicamento.id }}">
+                            <input type="hidden" name="data" value="{{ dose.data|date:'Y-m-d' }}">
+                            <input type="hidden" name="horario" value="{{ dose.horario }}">
+                            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                            <button type="submit" class="vg-dose__check" aria-label="{% if dose.status == 'tomado' %}Desmarcar dose{% else %}Marcar como tomado{% endif %}" title="{% if dose.status == 'tomado' %}Desmarcar{% else %}Marcar como tomado{% endif %}">
+                                {% if dose.status == 'tomado' %}<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>{% endif %}
+                            </button>
+                        </form>
                     </div>
                     {% empty %}
                     <p class="vg-panel__empty">Nenhum medicamento para hoje.</p>

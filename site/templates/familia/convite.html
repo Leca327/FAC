@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Convite — CuidaCare{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/familia.css' %}">{% endblock %}
+
+{% block content %}
+<section class="fam-convite">
+    <div class="fam-convite__card">
+        {% if membro %}
+        <div class="fam-convite__icon" aria-hidden="true">
+            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+        </div>
+        <h1>Convite aceito!</h1>
+        <p>Olá, <strong>{{ membro.nome }}</strong>. Você agora faz parte da família de
+           <strong>{{ membro.paciente.nome }}</strong> como <strong>{{ membro.vinculo }}</strong>.</p>
+        <p class="fam-convite__sub">Acesse a plataforma com seu e-mail ({{ membro.email }}) para acompanhar o cuidado.</p>
+        <a href="{% url 'usuarios:login' %}" class="btn btn--primary btn--lg">Entrar no CuidaCare</a>
+        {% else %}
+        <div class="fam-convite__icon fam-convite__icon--erro" aria-hidden="true">
+            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </div>
+        <h1>Convite inválido</h1>
+        <p>Este link de convite não é válido ou já expirou.</p>
+        <a href="{% url 'core:home' %}" class="btn btn--primary btn--lg">Ir para o início</a>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

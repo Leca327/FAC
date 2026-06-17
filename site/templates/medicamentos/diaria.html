@@ -1,0 +1,298 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Medicação Diária — {{ paciente.nome }} — CuidaCare{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/pacientes.css' %}">
+<link rel="stylesheet" href="{% static 'css/medicamentos.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="vg {% if user.is_familiar %}pac--familiar{% else %}pac--cuidador{% endif %}">
+    <div class="vg__layout">
+        {% include "pacientes/_sidebar.html" with menu_ativo="diaria" %}
+
+        <main class="vg__main">
+            <a href="{% url 'pacientes:visao_geral' paciente.id %}" class="vg__back">← Voltar ao paciente</a>
+
+            <div class="med__top">
+                <div>
+                    <h1 class="med__title">
+                        <span class="med__title-icon" aria-hidden="true">
+                            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M5 3 2 6"/><path d="m22 6-3-3"/></svg>
+                        </span>
+                        Medicação Diária
+                    </h1>
+                    <p class="vg__subtitle">Rotina completa de medicamentos para {{ paciente.nome }}</p>
+                </div>
+                {% if user.is_familiar %}
+                <button type="button" class="btn btn--primary med__new" id="abrir-rotina">
+                    <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                    Adicionar remédio à rotina
+                </button>
+                {% endif %}
+            </div>
+
+            <!-- Filtro por período -->
+            <form class="dia-filtro" method="get">
+                <div class="dia-filtro__campo">
+                    <label for="filtro-de">De:</label>
+                    <input type="date" id="filtro-de" name="de" value="{{ de|date:'Y-m-d' }}">
+                </div>
+                <div class="dia-filtro__campo">
+                    <label for="filtro-ate">Até:</label>
+                    <input type="date" id="filtro-ate" name="ate" value="{{ ate|date:'Y-m-d' }}">
+                </div>
+                <button type="submit" class="btn btn--primary">Filtrar</button>
+                <a href="{% url 'medicamentos:diaria' paciente.id %}" class="btn dia-filtro__limpar">Limpar</a>
+            </form>
+
+            <!-- Rotina agrupada por dia -->
+            {% for dia in dias %}
+            <section class="dia-grupo">
+                <header class="dia-grupo__head {% if dia.is_hoje %}is-hoje{% endif %}">
+                    <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                    {{ dia.label }}
+                </header>
+
+                <div class="dia-grupo__body">
+                    {% for dose in dia.doses %}
+                    <div class="dose dose--{{ dose.status }}">
+                        <span class="dose__hora">{{ dose.horario }}</span>
+
+                        <div class="dose__info">
+                            <strong class="dose__nome">{{ dose.medicamento.nome }}</strong>
+                            <span class="dose__detalhe">{{ dose.medicamento.dosagem }}{% if dose.medicamento.quantidade_dose %} • {{ dose.medicamento.quantidade_dose }}{% endif %}</span>
+                            {% if dose.medicamento.observacoes %}
+                            <span class="dose__obs">
+                                <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>
+                                {{ dose.medicamento.observacoes }}
+                            </span>
+                            {% endif %}
+                            {% if dose.status == 'tomado' and dose.marcado_por %}
+                            <span class="dose__por">
+                                <svg class="icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+                                Marcado por {{ dose.marcado_por.get_full_name|default:dose.marcado_por.email }}{% if dose.tomado_em %} às {{ dose.tomado_em|date:"H:i" }}{% endif %}
+                            </span>
+                            {% endif %}
+                        </div>
+
+                        <div class="dose__acoes">
+                            <form method="post" action="{% url 'medicamentos:marcar_dose' paciente.id %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="medicamento_id" value="{{ dose.medicamento.id }}">
+                                <input type="hidden" name="data" value="{{ dia.data|date:'Y-m-d' }}">
+                                <input type="hidden" name="horario" value="{{ dose.horario }}">
+                                <input type="hidden" name="de" value="{{ de|date:'Y-m-d' }}">
+                                <input type="hidden" name="ate" value="{{ ate|date:'Y-m-d' }}">
+                                <button type="submit" class="dose__check" aria-label="{% if dose.status == 'tomado' %}Desmarcar dose{% else %}Marcar como tomado{% endif %}" title="{% if dose.status == 'tomado' %}Desmarcar dose{% else %}Marcar como tomado{% endif %}">
+                                    {% if dose.status == 'tomado' %}
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                                    {% endif %}
+                                </button>
+                            </form>
+
+                            <span class="dose__status">{{ dose.status_label }}</span>
+
+                            {% if user.is_familiar %}
+                            <button type="button" class="btn btn--soft dose__editar"
+                                    data-action="{% url 'medicamentos:rotina_editar' paciente.id dose.medicamento.id %}"
+                                    data-nome="{{ dose.medicamento.nome }}"
+                                    data-dosagem="{{ dose.medicamento.dosagem }}"
+                                    data-forma="{{ dose.medicamento.forma_farmaceutica }}"
+                                    data-medico="{{ dose.medicamento.medico }}"
+                                    data-quantidade="{{ dose.medicamento.quantidade_dose }}"
+                                    data-horarios="{{ dose.medicamento.horarios }}"
+                                    data-inicio="{{ dose.medicamento.data_inicio|date:'Y-m-d' }}"
+                                    data-fim="{{ dose.medicamento.data_fim|date:'Y-m-d' }}"
+                                    data-obs="{{ dose.medicamento.observacoes }}"
+                                    data-seg="{{ dose.medicamento.seg|yesno:'1,0' }}"
+                                    data-ter="{{ dose.medicamento.ter|yesno:'1,0' }}"
+                                    data-qua="{{ dose.medicamento.qua|yesno:'1,0' }}"
+                                    data-qui="{{ dose.medicamento.qui|yesno:'1,0' }}"
+                                    data-sex="{{ dose.medicamento.sex|yesno:'1,0' }}"
+                                    data-sab="{{ dose.medicamento.sab|yesno:'1,0' }}"
+                                    data-dom="{{ dose.medicamento.dom|yesno:'1,0' }}">
+                                <svg class="icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                                Editar
+                            </button>
+                            <form method="post" action="{% url 'medicamentos:rotina_remover' paciente.id dose.medicamento.id %}" onsubmit="return confirm('Remover {{ dose.medicamento.nome|escapejs }} da rotina? O remédio continua cadastrado em Medicamentos.');">
+                                {% csrf_token %}
+                                <input type="hidden" name="de" value="{{ de|date:'Y-m-d' }}">
+                                <input type="hidden" name="ate" value="{{ ate|date:'Y-m-d' }}">
+                                <button type="submit" class="btn btn--soft dose__lixeira" aria-label="Remover da rotina">
+                                    <svg class="icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M6 6l1 14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-14"/></svg>
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="dia-grupo__vazio">Nenhum medicamento para este dia.</p>
+                    {% endfor %}
+                </div>
+            </section>
+            {% empty %}
+            <p class="med__empty">Nenhum dia no período selecionado.</p>
+            {% endfor %}
+        </main>
+    </div>
+</div>
+
+{% if user.is_familiar %}
+<!-- Popup: Adicionar remédio à rotina -->
+<div class="modal" id="modal-rotina" {% if not modal_aberto %}hidden{% endif %}>
+    <div class="modal__overlay" data-close></div>
+    <div class="modal__card modal__card--wide" role="dialog" aria-modal="true" aria-labelledby="modal-rotina-title">
+        <button type="button" class="modal__close" data-close aria-label="Fechar">&times;</button>
+
+        <div class="modal__icon" aria-hidden="true">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/></svg>
+        </div>
+
+        <h2 id="modal-rotina-title">Adicionar remédio à rotina</h2>
+        <p class="modal__subtitle">Escolha um remédio cadastrado e defina a posologia.</p>
+
+        <form method="post" action="{% url 'medicamentos:rotina_adicionar' paciente.id %}" novalidate>
+            {% csrf_token %}
+            <input type="hidden" name="de" value="{{ de|date:'Y-m-d' }}">
+            <input type="hidden" name="ate" value="{{ ate|date:'Y-m-d' }}">
+
+            <div class="field">
+                <label for="sel_medicamento">Remédio:</label>
+                <select name="medicamento" id="sel_medicamento" required>
+                    <option value="">Selecione um remédio cadastrado…</option>
+                    {% for m in medicamentos_disponiveis %}
+                    <option value="{{ m.id }}" {% if medicamento_selecionado == m.id|stringformat:'s' %}selected{% endif %}>{{ m.nome }}{% if m.dosagem %} — {{ m.dosagem }}{% endif %}{% if m.forma_farmaceutica %} ({{ m.forma_farmaceutica }}){% endif %}</option>
+                    {% endfor %}
+                </select>
+                {% if medicamentos_disponiveis %}
+                <span class="field__hint">Não está na lista? Cadastre em <a href="{% url 'medicamentos:lista' paciente.id %}">Medicamentos</a>.</span>
+                {% else %}
+                <span class="field__hint">Nenhum remédio disponível. Cadastre primeiro em <a href="{% url 'medicamentos:lista' paciente.id %}">Medicamentos</a>.</span>
+                {% endif %}
+            </div>
+
+            <div class="field-grid">
+                <div class="field">
+                    <label for="id_quantidade_dose">Quantidade por dose:</label>
+                    {{ rotina_form.quantidade_dose }}
+                    {% for e in rotina_form.quantidade_dose.errors %}<span class="field__error">{{ e }}</span>{% endfor %}
+                </div>
+                <div class="field">
+                    <label for="id_horarios">Horários:</label>
+                    {{ rotina_form.horarios }}
+                    <span class="field__hint">Tecle espaço, vírgula ou Enter para virar um marcador.</span>
+                    {% for e in rotina_form.horarios.errors %}<span class="field__error">{{ e }}</span>{% endfor %}
+                </div>
+            </div>
+
+            <div class="field-grid">
+                <div class="field">
+                    <label for="id_data_inicio">Início:</label>
+                    {{ rotina_form.data_inicio }}
+                    {% for e in rotina_form.data_inicio.errors %}<span class="field__error">{{ e }}</span>{% endfor %}
+                </div>
+                <div class="field">
+                    <label for="id_data_fim">Fim (em branco = contínuo):</label>
+                    {{ rotina_form.data_fim }}
+                    {% for e in rotina_form.data_fim.errors %}<span class="field__error">{{ e }}</span>{% endfor %}
+                </div>
+            </div>
+
+            <div class="field">
+                <label>Dias da semana:</label>
+                <div class="med-daypick">
+                    <label class="med-daypick__item">{{ rotina_form.seg }} Seg</label>
+                    <label class="med-daypick__item">{{ rotina_form.ter }} Ter</label>
+                    <label class="med-daypick__item">{{ rotina_form.qua }} Qua</label>
+                    <label class="med-daypick__item">{{ rotina_form.qui }} Qui</label>
+                    <label class="med-daypick__item">{{ rotina_form.sex }} Sex</label>
+                    <label class="med-daypick__item">{{ rotina_form.sab }} Sáb</label>
+                    <label class="med-daypick__item">{{ rotina_form.dom }} Dom</label>
+                </div>
+            </div>
+
+            <div class="field">
+                <label for="id_observacoes">Observação:</label>
+                {{ rotina_form.observacoes }}
+            </div>
+
+            <button type="submit" class="btn btn--primary btn--block btn--lg">Adicionar à rotina</button>
+        </form>
+    </div>
+</div>
+
+<!-- Popup: Editar rotina (compartilhado, preenchido via JS) -->
+<div class="modal" id="modal-rotina-editar" hidden>
+    <div class="modal__overlay" data-close></div>
+    <div class="modal__card modal__card--wide" role="dialog" aria-modal="true" aria-labelledby="modal-rotina-editar-title">
+        <button type="button" class="modal__close" data-close aria-label="Fechar">&times;</button>
+
+        <div class="modal__icon" aria-hidden="true">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        </div>
+
+        <h2 id="modal-rotina-editar-title">Editar rotina</h2>
+        <p class="modal__subtitle">Atualize a posologia deste remédio.</p>
+
+        <form method="post" action="" id="form-rotina-editar" novalidate>
+            {% csrf_token %}
+            <input type="hidden" name="de" value="{{ de|date:'Y-m-d' }}">
+            <input type="hidden" name="ate" value="{{ ate|date:'Y-m-d' }}">
+
+            <div class="field">
+                <label>Remédio:</label>
+                <p class="rotina-remedio" id="ed_remedio">—</p>
+                <span class="field__hint">Para alterar dosagem, forma ou médico, edite em <a href="{% url 'medicamentos:lista' paciente.id %}">Medicamentos</a>.</span>
+            </div>
+
+            <div class="field-grid">
+                <div class="field">
+                    <label for="ed_quantidade">Quantidade por dose:</label>
+                    <input type="text" name="quantidade_dose" id="ed_quantidade">
+                </div>
+                <div class="field">
+                    <label for="ed_horarios">Horários:</label>
+                    <input type="text" name="horarios" id="ed_horarios" class="js-taginput" placeholder="Digite um horário e tecle espaço (ex.: 08:00)">
+                    <span class="field__hint">Tecle espaço, vírgula ou Enter para virar um marcador.</span>
+                </div>
+            </div>
+
+            <div class="field-grid">
+                <div class="field">
+                    <label for="ed_inicio">Início:</label>
+                    <input type="date" name="data_inicio" id="ed_inicio">
+                </div>
+                <div class="field">
+                    <label for="ed_fim">Fim (em branco = contínuo):</label>
+                    <input type="date" name="data_fim" id="ed_fim">
+                </div>
+            </div>
+
+            <div class="field">
+                <label>Dias da semana:</label>
+                <div class="med-daypick">
+                    <label class="med-daypick__item"><input type="checkbox" name="seg" id="ed_seg"> Seg</label>
+                    <label class="med-daypick__item"><input type="checkbox" name="ter" id="ed_ter"> Ter</label>
+                    <label class="med-daypick__item"><input type="checkbox" name="qua" id="ed_qua"> Qua</label>
+                    <label class="med-daypick__item"><input type="checkbox" name="qui" id="ed_qui"> Qui</label>
+                    <label class="med-daypick__item"><input type="checkbox" name="sex" id="ed_sex"> Sex</label>
+                    <label class="med-daypick__item"><input type="checkbox" name="sab" id="ed_sab"> Sáb</label>
+                    <label class="med-daypick__item"><input type="checkbox" name="dom" id="ed_dom"> Dom</label>
+                </div>
+            </div>
+
+            <div class="field">
+                <label for="ed_obs">Observação:</label>
+                <textarea name="observacoes" id="ed_obs" rows="2"></textarea>
+            </div>
+
+            <button type="submit" class="btn btn--primary btn--block btn--lg">Salvar alterações</button>
+        </form>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}<script src="{% static 'js/diaria.js' %}"></script>{% endblock %}

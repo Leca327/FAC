@@ -51,6 +51,7 @@
                                         {% if d.mes_atual %}
                                         <a href="?ano={{ ano }}&mes={{ mes }}&dia={{ d.dia }}" class="ag-cal__cell">
                                             <span class="ag-cal__day">{{ d.dia }}</span>
+                                            {% for ev in d.eventos %}<span class="ag-cal__ev" title="{{ ev }}">{{ ev }}</span>{% endfor %}
                                         </a>
                                         {% else %}
                                         <span class="ag-cal__cell ag-cal__cell--off"><span class="ag-cal__day">{{ d.dia }}</span></span>
@@ -92,8 +93,12 @@
                 <aside class="vg-panel ag-today">
                     <h2 class="ag-today__title">{{ painel_label }}</h2>
                     {% for ev in eventos_dia %}
-                    <div class="vg-panel__row">
-                        <div><strong>{{ ev.titulo }}</strong><small>{{ ev.hora }}</small></div>
+                    <div class="ag-evento {% if ev.realizada %}ag-evento--ok{% endif %}">
+                        <span class="ag-evento__hora">{{ ev.hora }}</span>
+                        <div class="ag-evento__info">
+                            <strong>{{ ev.titulo }}</strong>
+                            <small>{{ ev.tipo }}{% if ev.realizada %} · Realizada{% endif %}</small>
+                        </div>
                     </div>
                     {% empty %}
                     <p class="vg-panel__empty">Nenhum compromisso para este dia.</p>
