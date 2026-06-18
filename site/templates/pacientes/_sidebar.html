@@ -24,16 +24,15 @@ Sidebar do contexto do paciente. Requer:
         <a href="{% url 'pacientes:visao_geral' paciente.id %}" {% if menu_ativo == 'visao_geral' %}class="is-active"{% endif %}>Visão Geral</a>
         <a href="{% url 'medicamentos:lista' paciente.id %}" {% if menu_ativo == 'medicamentos' %}class="is-active"{% endif %}>Medicamentos</a>
         <a href="{% url 'medicos:lista' paciente.id %}" {% if menu_ativo == 'medicos' %}class="is-active"{% endif %}>Médicos</a>
-
-        <p class="vg__nav-group">Equipe</p>
-        <a href="{% url 'familia:lista' paciente.id %}" {% if menu_ativo == 'familia' %}class="is-active"{% endif %}>Família</a>
-        <a href="#">Cuidadores</a>
+        {% if request.session.modo != 'cuidador' %}
+        <a href="{% url 'equipe:lista' paciente.id %}" {% if menu_ativo == 'equipe' %}class="is-active"{% endif %}>Equipe</a>
+        {% endif %}
 
         <p class="vg__nav-group">Rotina</p>
         <a href="{% url 'pacientes:agenda' paciente.id %}" {% if menu_ativo == 'agenda' %}class="is-active"{% endif %}>Agenda</a>
         <a href="{% url 'consultas:lista' paciente.id %}" {% if menu_ativo == 'consultas' %}class="is-active"{% endif %}>Consultas e Exames</a>
         <a href="{% url 'medicamentos:diaria' paciente.id %}" {% if menu_ativo == 'diaria' %}class="is-active"{% endif %}>Medicação Diária</a>
-        <a href="#">Escala</a>
+        <a href="{% url 'escala:semanal' paciente.id %}" {% if menu_ativo == 'escala' %}class="is-active"{% endif %}>Escala</a>
 
         <p class="vg__nav-group">&nbsp;</p>
         <a href="#">Prontuário</a>

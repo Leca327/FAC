@@ -30,6 +30,53 @@
     background: linear-gradient(180deg, #fff 0%, #f1f6fc 100%);
 }
 
+/* ---------- Toggle de modo: Familiar (rosa) / Cuidador (azul) ---------- */
+.modo-toggle {
+    display: inline-flex;
+    gap: 10px;
+    margin: 4px 0 24px;
+}
+
+.modo-toggle__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 22px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 0.98rem;
+    text-decoration: none;
+    cursor: pointer;
+    border: 1.5px solid transparent;
+    transition: background .15s, color .15s, border-color .15s, box-shadow .15s;
+}
+
+.modo-toggle__btn .icon { flex-shrink: 0; }
+
+.modo-toggle__btn--familiar {
+    color: #b83564;
+    background: #fdeef3;
+    border-color: #f7c9d9;
+}
+.modo-toggle__btn--familiar.is-active {
+    color: #fff;
+    background: #d8447a;
+    border-color: #d8447a;
+    box-shadow: 0 4px 12px rgba(216, 68, 122, .28);
+}
+
+.modo-toggle__btn--cuidador {
+    color: #3a679f;
+    background: #eef4fb;
+    border-color: #bcd4ef;
+}
+.modo-toggle__btn--cuidador.is-active {
+    color: #fff;
+    background: #4a7fc4;
+    border-color: #4a7fc4;
+    box-shadow: 0 4px 12px rgba(74, 127, 196, .28);
+}
+
 /* ---------- Título ---------- */
 .pac__title {
     font-size: clamp(2rem, 4vw, 2.8rem);

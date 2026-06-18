@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Editar Padrão — Escala — CuidaCare{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/pacientes.css' %}">
+<link rel="stylesheet" href="{% static 'css/medicamentos.css' %}">
+<link rel="stylesheet" href="{% static 'css/escala.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="vg {% if request.session.modo == 'cuidador' %}pac--cuidador{% else %}pac--familiar{% endif %}">
+    <div class="vg__layout">
+        {% include "pacientes/_sidebar.html" with menu_ativo="escala" %}
+
+        <main class="vg__main">
+            <a href="{% url 'escala:semanal' paciente.id %}" class="vg__back">← Voltar à escala</a>
+
+            <div class="med__top">
+                <div>
+                    <h1 class="med__title">
+                        <span class="med__title-icon" aria-hidden="true">
+                            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>
+                        </span>
+                        Editar Padrão
+                    </h1>
+                    <p class="vg__subtitle">Defina o padrão de cada turno para {{ paciente.nome }}</p>
+                </div>
+            </div>
+
+            {% if not cuidadores %}
+            <p class="med__empty">Nenhum cuidador na equipe ainda. Convide cuidadores na tela <strong>Equipe</strong> antes de montar a escala.</p>
+            {% else %}
+            <form method="post" class="esc-edit">
+                {% csrf_token %}
+                {% for t in turnos %}
+                <fieldset class="esc-edit__turno" data-turno="{{ t.valor }}">
+                    <legend>{{ t.label }} <span class="esc-turno__h">({{ t.horario }})</span></legend>
+
+                    <div class="esc-edit__tipo">
+                        <label><input type="radio" name="tipo_{{ t.valor }}" value="rodizio" {% if t.tipo == 'rodizio' %}checked{% endif %} class="js-tipo" data-turno="{{ t.valor }}"> Rodízio (X dias por pessoa)</label>
+                        <label><input type="radio" name="tipo_{{ t.valor }}" value="semanal" {% if t.tipo == 'semanal' %}checked{% endif %} class="js-tipo" data-turno="{{ t.valor }}"> Por dia da semana</label>
+                    </div>
+
+                    <!-- RODÍZIO -->
+                    <div class="esc-edit__rodizio js-bloco-rodizio" data-turno="{{ t.valor }}">
+                        <div class="field-grid">
+                            <div class="field">
+                                <label>Dias por pessoa:</label>
+                                <input type="number" name="dias_{{ t.valor }}" min="1" value="{{ t.dias_por_pessoa }}">
+                            </div>
+                            <div class="field">
+                                <label>Início do rodízio:</label>
+                                <input type="date" name="inicio_{{ t.valor }}" value="{{ t.data_inicio }}">
+                            </div>
+                        </div>
+                        <label class="esc-edit__lbl">Sequência de cuidadores (na ordem):</label>
+                        <div class="esc-seq" data-turno="{{ t.valor }}">
+                            {% for cid in t.rodizio_ids %}
+                            <div class="esc-seq__row">
+                                <select name="rodizio_{{ t.valor }}">
+                                    {% for c in cuidadores %}<option value="{{ c.id }}" {% if c.id|stringformat:'s' == cid %}selected{% endif %}>{{ c.get_full_name|default:c.email }}</option>{% endfor %}
+                                </select>
+                                <button type="button" class="btn btn--soft btn--xs js-seq-rm">✕</button>
+                            </div>
+                            {% empty %}
+                            <div class="esc-seq__row">
+                                <select name="rodizio_{{ t.valor }}">
+                                    {% for c in cuidadores %}<option value="{{ c.id }}">{{ c.get_full_name|default:c.email }}</option>{% endfor %}
+                                </select>
+                                <button type="button" class="btn btn--soft btn--xs js-seq-rm">✕</button>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <button type="button" class="btn btn--soft btn--xs js-seq-add" data-turno="{{ t.valor }}">+ Adicionar pessoa</button>
+                    </div>
+
+                    <!-- SEMANAL -->
+                    <div class="esc-edit__semanal js-bloco-semanal" data-turno="{{ t.valor }}">
+                        <div class="esc-semana-grid">
+                            {% for s in t.semanal %}
+                            <div class="field">
+                                <label>{{ s.label }}:</label>
+                                <select name="semanal_{{ t.valor }}_{{ s.dia }}">
+                                    <option value="">— folga</option>
+                                    {% for c in cuidadores %}<option value="{{ c.id }}" {% if s.sel == c.id|stringformat:'s' %}selected{% endif %}>{{ c.get_full_name|default:c.email }}</option>{% endfor %}
+                                </select>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </fieldset>
+                {% endfor %}
+
+                <!-- Template de linha do rodízio (clonado pelo JS) -->
+                <template id="esc-seq-template">
+                    <div class="esc-seq__row">
+                        <select>
+                            {% for c in cuidadores %}<option value="{{ c.id }}">{{ c.get_full_name|default:c.email }}</option>{% endfor %}
+                        </select>
+                        <button type="button" class="btn btn--soft btn--xs js-seq-rm">✕</button>
+                    </div>
+                </template>
+
+                <div class="esc-edit__acoes">
+                    <button type="submit" class="btn btn--primary btn--lg">Salvar padrão</button>
+                    <a href="{% url 'escala:semanal' paciente.id %}" class="btn btn--soft btn--lg">Cancelar</a>
+                </div>
+            </form>
+            {% endif %}
+        </main>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}<script src="{% static 'js/escala.js' %}"></script>{% endblock %}

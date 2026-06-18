@@ -8,7 +8,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="vg {% if user.is_familiar %}pac--familiar{% else %}pac--cuidador{% endif %}">
+<div class="vg {% if request.session.modo == 'cuidador' %}pac--cuidador{% else %}pac--familiar{% endif %}">
     <div class="vg__layout">
         {% include "pacientes/_sidebar.html" with menu_ativo="medicos" %}
 

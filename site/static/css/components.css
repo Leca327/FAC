@@ -237,6 +237,12 @@
     background: var(--white);
 }
 
+/* Botão compacto (tamanho) — cor herdada de btn--primary/btn--soft */
+.btn--xs {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+}
+
 /* ---------- Badge ---------- */
 .badge {
     display: inline-flex;

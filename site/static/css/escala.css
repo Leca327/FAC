@@ -1,0 +1,265 @@
+/* =====================================================
+   CuidaCare — escala.css
+   Tela "Escala de Cuidadores". Reaproveita .vg (pacientes.css),
+   .med__top/.modal (medicamentos.css) e as vars --pac-* do tema.
+   ===================================================== */
+
+.esc-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* ---------- Abas ---------- */
+.esc-tabs {
+    display: flex;
+    gap: 28px;
+    border-bottom: 1px solid var(--line);
+    margin: 8px 0 22px;
+}
+
+.esc-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 2px 14px;
+    font-weight: 600;
+    color: var(--text-muted);
+    border-bottom: 3px solid transparent;
+    margin-bottom: -1px;
+}
+
+.esc-tab:hover { color: var(--pac-accent-dark); }
+
+.esc-tab.is-active {
+    color: var(--pac-accent-dark);
+    border-bottom-color: var(--pac-accent);
+}
+
+/* ---------- Card ---------- */
+.esc-card {
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: var(--shadow-sm);
+    padding: 22px;
+}
+
+.esc-week {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+}
+
+.esc-week__title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.esc-week__nav { display: flex; gap: 8px; }
+
+/* ---------- Tabela ---------- */
+.esc-tablewrap { overflow-x: auto; }
+
+.esc-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border: 1px solid var(--pac-accent);
+    border-radius: 12px;
+    overflow: hidden;
+    min-width: 820px;
+}
+
+.esc-table th,
+.esc-table td {
+    padding: 14px 10px;
+    text-align: center;
+    border-bottom: 1px solid var(--line);
+    border-right: 1px solid var(--line);
+}
+
+.esc-table thead th {
+    background: var(--pac-accent);
+    color: #fff;
+    font-weight: 600;
+    border-color: color-mix(in srgb, var(--pac-accent) 70%, #fff);
+}
+
+.esc-th__data {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 500;
+    opacity: 0.85;
+}
+
+.esc-table thead th.is-hoje { background: var(--pac-accent-dark); }
+
+.esc-table__turno { width: 130px; }
+
+.esc-turno {
+    background: var(--white);
+    text-align: left;
+    white-space: nowrap;
+}
+
+.esc-turno__h {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 400;
+    color: var(--text-muted);
+}
+
+.esc-cell {
+    position: relative;
+    background: #fff;
+    font-size: 0.9rem;
+    color: var(--text);
+    vertical-align: middle;
+}
+
+.esc-cell--click { cursor: pointer; }
+.esc-cell--click:hover { background: var(--pac-soft); }
+
+.esc-cell--alt {
+    background: #fff7e6;
+    box-shadow: inset 0 0 0 2px #f0a500;
+}
+
+.esc-alt {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: #f0a500;
+    color: #fff;
+    font-size: 0.62rem;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 6px;
+}
+
+/* última coluna/linha sem borda dupla */
+.esc-table tr td:last-child,
+.esc-table tr th:last-child { border-right: none; }
+.esc-table tbody tr:last-child td,
+.esc-table tbody tr:last-child th { border-bottom: none; }
+
+/* ---------- Legenda ---------- */
+.esc-legend {
+    display: flex;
+    gap: 28px;
+    flex-wrap: wrap;
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+    font-size: 0.9rem;
+    color: var(--text);
+}
+
+.esc-legend__item { display: inline-flex; align-items: center; gap: 8px; }
+
+.esc-swatch {
+    width: 26px;
+    height: 18px;
+    border-radius: 5px;
+    background: #fff;
+    border: 1px solid var(--line);
+    display: inline-block;
+}
+
+.esc-swatch--alt {
+    background: #fff7e6;
+    border: 2px solid #f0a500;
+}
+
+/* ---------- Aba Padrão Base (resumo) ---------- */
+.esc-padrao {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 18px;
+    margin-bottom: 18px;
+}
+
+.esc-padrao__turno {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px;
+}
+
+.esc-padrao__turno h3 { font-size: 1.02rem; margin-bottom: 6px; }
+.esc-padrao__tipo { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px; }
+.esc-padrao__vazio { font-size: 0.88rem; color: var(--text-muted); }
+.esc-padrao__lista { padding-left: 18px; font-size: 0.9rem; line-height: 1.7; }
+.esc-padrao__lista--semana { list-style: none; padding-left: 0; }
+
+/* ---------- Editor de padrão ---------- */
+.esc-edit__turno {
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 18px 20px;
+    margin-bottom: 20px;
+}
+
+.esc-edit__turno legend {
+    font-weight: 700;
+    padding: 0 8px;
+    color: var(--pac-accent-dark);
+}
+
+.esc-edit__tipo {
+    display: flex;
+    gap: 22px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+}
+
+.esc-edit__tipo label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.esc-edit__lbl {
+    display: block;
+    font-weight: 600;
+    margin: 12px 0 8px;
+}
+
+.esc-edit .field label { display: block; font-weight: 600; font-size: 0.9rem; margin-bottom: 6px; }
+.esc-edit select,
+.esc-edit input[type="number"],
+.esc-edit input[type="date"] {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1.5px solid var(--line);
+    border-radius: 9px;
+    font: inherit;
+    background: #fff;
+}
+.esc-edit .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+.esc-seq { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+
+.esc-seq__row { display: flex; gap: 8px; align-items: center; }
+.esc-seq__row select { flex: 1; }
+
+.esc-semana-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+}
+
+.esc-edit__acoes {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+}
+
+.esc-modal-acoes { display: flex; flex-direction: column; gap: 10px; }

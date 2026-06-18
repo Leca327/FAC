@@ -5,7 +5,7 @@
 {% block extra_css %}<link rel="stylesheet" href="{% static 'css/pacientes.css' %}">{% endblock %}
 
 {% block content %}
-<div class="vg {% if user.is_familiar %}pac--familiar{% else %}pac--cuidador{% endif %}">
+<div class="vg {% if request.session.modo == 'cuidador' %}pac--cuidador{% else %}pac--familiar{% endif %}">
     <div class="vg__layout">
         <!-- Sidebar -->
         {% include "pacientes/_sidebar.html" with menu_ativo="visao_geral" %}

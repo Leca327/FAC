@@ -33,22 +33,38 @@ MESES_PT = [
 DIAS_SEMANA_PT = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"]
 
 
+def modo_atual(request):
+    """
+    Modo de uso escolhido na tela de pacientes (familiar/cuidador), guardado
+    na sessão. Pode ser alterado via ?modo=. Padrão: familiar (tema rosa).
+    """
+    novo = request.GET.get("modo")
+    if novo in ("familiar", "cuidador"):
+        request.session["modo"] = novo
+    return request.session.get("modo", "familiar")
+
+
 class PacientesDashboardView(LoginRequiredMixin, TemplateView):
-    """Lista os pacientes vinculados ao usuário (visão Familiar ou Cuidador)."""
+    """
+    Lista os pacientes do usuário conforme o MODO escolhido (Familiar/Cuidador).
+    O toggle define quais pacientes aparecem e o layout/tema da tela.
+    """
 
     def get_template_names(self):
-        if self.request.user.is_familiar:
-            return ["pacientes/dashboard_familiar.html"]
-        return ["pacientes/dashboard_cuidador.html"]
+        if self.request.session.get("modo") == "cuidador":
+            return ["pacientes/dashboard_cuidador.html"]
+        return ["pacientes/dashboard_familiar.html"]
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        modo = modo_atual(self.request)
         busca = self.request.GET.get("busca", "").strip()
+        context["modo"] = modo
         context["busca"] = busca
         context["pacientes"] = PacienteService.pacientes_do_usuario(
-            self.request.user, busca
+            self.request.user, busca, modo
         )
-        # Formulário do popup "Novo Paciente" (apenas familiares cadastram)
+        # Formulário do popup "Novo Paciente" (cadastro no modo familiar)
         context.setdefault("paciente_form", PacienteForm())
         context.setdefault("modal_aberto", False)
         return context
@@ -183,11 +199,11 @@ class AgendaPacienteView(LoginRequiredMixin, View):
 
 
 class NovoPacienteView(LoginRequiredMixin, View):
-    """Cria um novo paciente via popup (RF03 — exclusivo de familiares)."""
+    """Cria um novo paciente via popup (RF03 — no modo familiar)."""
 
     def post(self, request):
-        if not request.user.is_familiar:
-            messages.error(request, "Apenas familiares podem cadastrar pacientes.")
+        if modo_atual(request) != "familiar":
+            messages.error(request, "Só é possível cadastrar pacientes no modo Familiar.")
             return redirect("pacientes:dashboard")
 
         form = PacienteForm(request.POST)
@@ -200,8 +216,9 @@ class NovoPacienteView(LoginRequiredMixin, View):
 
         # Erros de validação → reabre o dashboard com o popup aberto
         context = {
+            "modo": "familiar",
             "busca": "",
-            "pacientes": PacienteService.pacientes_do_usuario(request.user),
+            "pacientes": PacienteService.pacientes_do_usuario(request.user, modo="familiar"),
             "paciente_form": form,
             "modal_aberto": True,
         }

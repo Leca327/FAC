@@ -1,0 +1,14 @@
+{% comment %}
+Toggle de modo na tela de pacientes: Familiar (rosa) / Cuidador (azul).
+Define quais pacientes aparecem e o tema. Requer a variável `modo`.
+{% endcomment %}
+<div class="modo-toggle" role="tablist" aria-label="Modo de uso">
+    <a href="?modo=familiar" class="modo-toggle__btn modo-toggle__btn--familiar {% if modo != 'cuidador' %}is-active{% endif %}" role="tab" aria-selected="{% if modo != 'cuidador' %}true{% else %}false{% endif %}">
+        <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><circle cx="17" cy="9" r="2.6"/><path d="M3 20c0-3.3 2.7-5 6-5s6 1.7 6 5"/><path d="M15.5 15c2.6.2 4.5 1.8 4.5 5"/></svg>
+        Familiar
+    </a>
+    <a href="?modo=cuidador" class="modo-toggle__btn modo-toggle__btn--cuidador {% if modo == 'cuidador' %}is-active{% endif %}" role="tab" aria-selected="{% if modo == 'cuidador' %}true{% else %}false{% endif %}">
+        <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v6a6 6 0 0 0 12 0V3"/><path d="M6 3H4M18 3h2"/><path d="M12 15v3a4 4 0 0 0 8 0v-1"/><circle cx="20" cy="13" r="2"/></svg>
+        Cuidador
+    </a>
+</div>

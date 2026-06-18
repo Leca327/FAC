@@ -34,33 +34,9 @@ CREATE TABLE `usuario` (
   INDEX idx_cpf (cpf)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- =====================================================
--- TABELA: FAMILIAR (Especialização de User)
--- =====================================================
-
-CREATE TABLE `familiar` (
-  `id` INT PRIMARY KEY,
-  `vinculo` VARCHAR(100),  -- pai, filho, cônjuge, etc
-  `usuario_id` INT UNIQUE NOT NULL,
-  
-  FOREIGN KEY (usuario_id) REFERENCES usuario(id) ON DELETE CASCADE,
-  FOREIGN KEY (id) REFERENCES usuario(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- =====================================================
--- TABELA: CUIDADOR (Especialização de User)
--- =====================================================
-
-CREATE TABLE `cuidador` (
-  `id` INT PRIMARY KEY,
-  `numero_registro` VARCHAR(50) UNIQUE,
-  `especialidade` VARCHAR(150),
-  `data_ultima_atividade` DATETIME,
-  `usuario_id` INT UNIQUE NOT NULL,
-  
-  FOREIGN KEY (usuario_id) REFERENCES usuario(id) ON DELETE CASCADE,
-  FOREIGN KEY (id) REFERENCES usuario(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- (Observação: NÃO há mais as tabelas de especialização `familiar` e
+--  `cuidador`. Tudo fica em `usuario`; o papel de cada um em relação a um
+--  paciente — familiar/cuidador e o vínculo — vive em `participacao`.)
 
 -- =====================================================
 -- TABELA: PACIENTE
@@ -90,7 +66,11 @@ CREATE TABLE `paciente` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =====================================================
--- TABELA: PARTICIPACAO (Gerencia - Usuário e Paciente)
+-- TABELA: PARTICIPACAO (tela "Equipe" — vínculo Usuário ↔ Paciente)
+-- Tabela ÚNICA que intermedeia usuário e paciente para toda a equipe
+-- (familiares e cuidadores). Também governa o controle de acesso. O convite
+-- só é criado para quem já tem conta; fica 'pendente' até a pessoa aceitar
+-- pelo link do e-mail (token), quando vira 'aceito'.
 -- =====================================================
 
 CREATE TABLE `participacao` (
@@ -98,46 +78,20 @@ CREATE TABLE `participacao` (
   `usuario_id` INT NOT NULL,
   `paciente_id` INT NOT NULL,
   `tipo_participacao` ENUM('familiar', 'cuidador') NOT NULL,
+  `vinculo` VARCHAR(100) DEFAULT '',          -- Filha, Marido... (só p/ tipo familiar)
   `status_convite` ENUM('pendente', 'aceito', 'rejeitado') DEFAULT 'pendente',
+  `token` VARCHAR(40) NOT NULL UNIQUE,        -- link de aceite do convite
   `data_convite` DATETIME DEFAULT CURRENT_TIMESTAMP,
   `data_resposta` DATETIME,
   `permissao_leitura` BOOLEAN DEFAULT TRUE,
   `permissao_escrita` BOOLEAN DEFAULT FALSE,
-  
+
   FOREIGN KEY (usuario_id) REFERENCES usuario(id) ON DELETE CASCADE,
   FOREIGN KEY (paciente_id) REFERENCES paciente(id) ON DELETE CASCADE,
   UNIQUE KEY unique_participacao (usuario_id, paciente_id),
   INDEX idx_status (status_convite),
   INDEX idx_usuario (usuario_id),
   INDEX idx_paciente (paciente_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- =====================================================
--- TABELA: MEMBRO_FAMILIA — tela "Família" (sistema de convites)
--- Diferente de `participacao` (que exige um usuario já cadastrado), aqui
--- o convite guarda nome/e-mail/telefone/vínculo da pessoa ANTES de ela ter
--- conta. Fica 'pendente' até aceitar pelo link do e-mail (token), quando
--- vira 'aceito' e, se houver conta com o mesmo e-mail, é vinculada.
--- =====================================================
-
-CREATE TABLE `membro_familia` (
-  `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `paciente_id` INT NOT NULL,
-  `nome` VARCHAR(255) NOT NULL,
-  `email` VARCHAR(255) NOT NULL,
-  `telefone` VARCHAR(20),
-  `vinculo` VARCHAR(100) NOT NULL,            -- Filha, Marido, Filho, etc.
-  `status` ENUM('pendente', 'aceito') DEFAULT 'pendente',
-  `token` VARCHAR(40) NOT NULL UNIQUE,        -- link de aceite do convite
-  `usuario_id` INT,                           -- vinculado quando aceita (se tiver conta)
-  `convidado_por_id` INT,                     -- quem enviou o convite
-  `data_convite` DATETIME DEFAULT CURRENT_TIMESTAMP,
-  `data_resposta` DATETIME DEFAULT NULL,      -- quando aceitou
-
-  FOREIGN KEY (paciente_id) REFERENCES paciente(id) ON DELETE CASCADE,
-  FOREIGN KEY (usuario_id) REFERENCES usuario(id) ON DELETE SET NULL,
-  FOREIGN KEY (convidado_por_id) REFERENCES usuario(id) ON DELETE SET NULL,
-  INDEX idx_membro_pac_status (paciente_id, status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =====================================================
@@ -341,6 +295,57 @@ CREATE TABLE `atividade` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =====================================================
+-- ESCALA DE CUIDADORES (tela "Escala")
+-- O padrão de cada turno gera a escala; pode ser rodízio (N dias por pessoa
+-- a partir de uma data) ou por dia da semana. Exceções pontuais sobrepõem.
+-- =====================================================
+
+CREATE TABLE `padrao_turno` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `paciente_id` INT NOT NULL,
+  `turno` ENUM('manha', 'tarde', 'noite') NOT NULL,
+  `tipo_padrao` ENUM('rodizio', 'semanal') NOT NULL DEFAULT 'rodizio',
+  `dias_por_pessoa` SMALLINT UNSIGNED NOT NULL DEFAULT 1,   -- só rodízio
+  `data_inicio` DATE DEFAULT NULL,                          -- âncora do rodízio
+
+  FOREIGN KEY (paciente_id) REFERENCES paciente(id) ON DELETE CASCADE,
+  UNIQUE KEY unique_padrao_turno (paciente_id, turno)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `rodizio_item` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `padrao_id` INT NOT NULL,
+  `ordem` SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+  `cuidador_id` INT NOT NULL,
+
+  FOREIGN KEY (padrao_id) REFERENCES padrao_turno(id) ON DELETE CASCADE,
+  FOREIGN KEY (cuidador_id) REFERENCES usuario(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `semanal_item` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `padrao_id` INT NOT NULL,
+  `dia_semana` SMALLINT UNSIGNED NOT NULL,   -- 0=Seg ... 6=Dom
+  `cuidador_id` INT DEFAULT NULL,            -- NULL = folga
+
+  FOREIGN KEY (padrao_id) REFERENCES padrao_turno(id) ON DELETE CASCADE,
+  FOREIGN KEY (cuidador_id) REFERENCES usuario(id) ON DELETE SET NULL,
+  UNIQUE KEY unique_semanal_dia (padrao_id, dia_semana)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `excecao_dia` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `paciente_id` INT NOT NULL,
+  `data` DATE NOT NULL,
+  `turno` ENUM('manha', 'tarde', 'noite') NOT NULL,
+  `cuidador_id` INT DEFAULT NULL,            -- NULL = folga
+
+  FOREIGN KEY (paciente_id) REFERENCES paciente(id) ON DELETE CASCADE,
+  FOREIGN KEY (cuidador_id) REFERENCES usuario(id) ON DELETE SET NULL,
+  UNIQUE KEY unique_excecao_dia (paciente_id, data, turno)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =====================================================
 -- ÍNDICES ADICIONAIS PARA PERFORMANCE
 -- =====================================================
 
@@ -361,11 +366,10 @@ SELECT
   p.nome,
   p.data_nascimento,
   p.endereco,
-  f.id as familiar_id,
+  u.id as familiar_id,
   u.email as familiar_email
 FROM paciente p
 INNER JOIN usuario u ON p.familiar_responsavel_id = u.id
-INNER JOIN familiar f ON f.usuario_id = u.id
 WHERE p.ativo = TRUE;
 
 -- View: Medicamentos ativos de um paciente (CORRIGIDA)
@@ -513,12 +517,6 @@ VALUES ('maria@example.com', 'senha_hash_aqui', 'Maria', 'Silva', 'familiar', '1
 INSERT INTO usuario (email, password, first_name, last_name, tipo_usuario, cpf, telefone, endereco)
 VALUES ('joao@example.com', 'senha_hash_aqui', 'João', 'Santos', 'cuidador', '98765432101', '21912345678', 'Rua B, 456');
 
--- Inserir familiar
-INSERT INTO familiar (id, vinculo, usuario_id) VALUES (1, 'filha', 1);
-
--- Inserir cuidador
-INSERT INTO cuidador (id, numero_registro, especialidade, usuario_id) VALUES (2, 'COREN123456', 'Enfermagem', 2);
-
 -- Inserir paciente
 INSERT INTO paciente (nome, cpf, data_nascimento, familiar_responsavel_id, endereco, condicoes_saude, alergias)
 VALUES ('Conceição Silva', '11111111111', '1950-05-15', 1, 'Rua C, 789', 'Diabetes', 'Penicilina');
@@ -537,13 +535,13 @@ VALUES (1, 1, 'consulta', 'Cardiologia', '2026-06-20 14:30:00', 'Acompanhamento 
 INSERT INTO consulta (paciente_id, medico_id, tipo, titulo, data_hora, observacao, status, agendada_por_id)
 VALUES (1, 2, 'exame', 'Eletrocardiograma', '2026-06-25 09:00:00', 'Comparecer em jejum. Levar documentos pessoais e cartão de convênio.', 'agendada', 1);
 
--- Inserir membros da família (convites): 2 aceitos e 1 pendente
-INSERT INTO membro_familia (paciente_id, nome, email, telefone, vinculo, status, token, convidado_por_id, data_resposta)
-VALUES (1, 'Joana Silva', 'joana@example.com', '(21) 98765-4321', 'Filha', 'aceito', 'tok_joana_0001', 1, NOW());
-INSERT INTO membro_familia (paciente_id, nome, email, telefone, vinculo, status, token, convidado_por_id, data_resposta)
-VALUES (1, 'Carlos Silva', 'carlos@example.com', '(21) 98765-1234', 'Marido', 'aceito', 'tok_carlos_0002', 1, NOW());
-INSERT INTO membro_familia (paciente_id, nome, email, telefone, vinculo, status, token, convidado_por_id)
-VALUES (1, 'Pedro Silva', 'pedro@example.com', '(21) 99876-5432', 'Filho', 'pendente', 'tok_pedro_0003', 1);
+-- Inserir a EQUIPE do paciente (participacao — exige contas já cadastradas):
+--   - o familiar responsável (usuario 1) como familiar, vínculo Filha (aceito);
+--   - a cuidadora (usuario 2) como cuidador (aceito, com permissão de escrita).
+INSERT INTO participacao (usuario_id, paciente_id, tipo_participacao, vinculo, status_convite, token, data_resposta, permissao_leitura, permissao_escrita)
+VALUES (1, 1, 'familiar', 'Filha', 'aceito', 'tok_familiar_0001', NOW(), TRUE, TRUE);
+INSERT INTO participacao (usuario_id, paciente_id, tipo_participacao, vinculo, status_convite, token, data_resposta, permissao_leitura, permissao_escrita)
+VALUES (2, 1, 'cuidador', '', 'aceito', 'tok_cuidador_0002', NOW(), TRUE, TRUE);
 
 -- Inserir medicamento (modelo enxuto: já com posologia e período de uso)
 INSERT INTO medicamento (paciente_id, nome, dosagem, forma_farmaceutica, frequencia, horarios, quantidade_dose, medico, data_inicio, data_fim, observacoes, status)

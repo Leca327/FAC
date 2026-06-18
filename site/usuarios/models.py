@@ -1,10 +1,10 @@
 """
-Models do app usuarios (seções 2.6.2 e 2.6.3).
+Models do app usuarios (seção 2.6.2).
 
-Usuario é a superclasse de autenticação (herda de AbstractUser), com login
-por e-mail e um discriminador tipo_usuario que diferencia Familiar e Cuidador.
-Familiar e Cuidador são especializações (herança por tabela), implementadas
-como OneToOne com chave primária compartilhada — espelhando o DER.
+Usuario é a única tabela de usuário (herda de AbstractUser), com login por
+e-mail e um discriminador tipo_usuario (familiar/cuidador). Não há mais
+especialização: o vínculo de cada usuário com um paciente (e seu papel) vive
+na tabela ``pacientes.Participacao``.
 """
 
 from django.contrib.auth.models import AbstractUser
@@ -64,52 +64,3 @@ class Usuario(AbstractUser):
     @property
     def is_cuidador(self):
         return self.tipo_usuario == self.Tipo.CUIDADOR
-
-
-class Familiar(models.Model):
-    """Especialização de Usuario (responsável pelo gerenciamento do cuidado)."""
-
-    usuario = models.OneToOneField(
-        Usuario,
-        on_delete=models.CASCADE,
-        primary_key=True,
-        related_name="familiar",
-    )
-    vinculo = models.CharField(
-        "vínculo", max_length=100, blank=True,
-        help_text="Relação com o paciente: pai, filho, cônjuge, etc.",
-    )
-
-    class Meta:
-        db_table = "familiar"
-        verbose_name = "familiar"
-        verbose_name_plural = "familiares"
-
-    def __str__(self):
-        return f"Familiar: {self.usuario.email}"
-
-
-class Cuidador(models.Model):
-    """Especialização de Usuario (profissional de cuidado domiciliar)."""
-
-    usuario = models.OneToOneField(
-        Usuario,
-        on_delete=models.CASCADE,
-        primary_key=True,
-        related_name="cuidador",
-    )
-    numero_registro = models.CharField(
-        "número de registro", max_length=50, blank=True, null=True, unique=True
-    )
-    especialidade = models.CharField("especialidade", max_length=150, blank=True)
-    data_ultima_atividade = models.DateTimeField(
-        "última atividade", null=True, blank=True
-    )
-
-    class Meta:
-        db_table = "cuidador"
-        verbose_name = "cuidador"
-        verbose_name_plural = "cuidadores"
-
-    def __str__(self):
-        return f"Cuidador: {self.usuario.email}"

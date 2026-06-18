@@ -10,6 +10,11 @@ from datetime import date
 
 from django.conf import settings
 from django.db import models
+from django.utils.crypto import get_random_string
+
+
+def _novo_token():
+    return get_random_string(40)
 
 
 class Paciente(models.Model):
@@ -62,7 +67,11 @@ class Paciente(models.Model):
 
 
 class Participacao(models.Model):
-    """Vínculo (convite) entre um usuário e um paciente."""
+    """
+    Vínculo (convite) entre um usuário e um paciente — tabela única que
+    intermedeia ``usuario`` e ``paciente`` para toda a Equipe do paciente
+    (familiares e cuidadores). É também o que governa o controle de acesso.
+    """
 
     class Tipo(models.TextChoices):
         FAMILIAR = "familiar", "Familiar"
@@ -84,8 +93,14 @@ class Participacao(models.Model):
         related_name="participacoes",
     )
     tipo_participacao = models.CharField(max_length=10, choices=Tipo.choices)
+    # Relação com o paciente (Filha, Marido, ...) — só faz sentido no tipo familiar.
+    vinculo = models.CharField("vínculo", max_length=100, blank=True)
     status_convite = models.CharField(
         max_length=10, choices=Status.choices, default=Status.PENDENTE
+    )
+    # Token do link de aceite enviado por e-mail.
+    token = models.CharField(
+        "token do convite", max_length=40, unique=True, default=_novo_token
     )
     data_convite = models.DateTimeField(auto_now_add=True)
     data_resposta = models.DateTimeField(null=True, blank=True)
@@ -104,3 +119,25 @@ class Participacao(models.Model):
 
     def __str__(self):
         return f"{self.usuario} → {self.paciente} ({self.get_status_convite_display()})"
+
+    @property
+    def is_aceito(self):
+        return self.status_convite == self.Status.ACEITO
+
+    @property
+    def nome(self):
+        """Nome de exibição do membro (vem da conta vinculada)."""
+        return self.usuario.get_full_name() or self.usuario.email
+
+    @property
+    def email(self):
+        return self.usuario.email
+
+    @property
+    def telefone(self):
+        return self.usuario.telefone
+
+    @property
+    def iniciais(self):
+        """Inicial do nome para o avatar."""
+        return (self.nome.strip()[:1] or "?").upper()

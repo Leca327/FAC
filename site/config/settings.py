@@ -54,6 +54,7 @@ LOCAL_APPS = [
     "medicos",       # Médicos/clínicas/laboratórios do paciente
     "consultas",     # Consultas e exames do paciente
     "familia",       # Membros da família e convites do paciente
+    "escala",        # Escala de cuidadores do paciente
     # "agenda",
     # "ponto",
     # "diario",
@@ -85,6 +86,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "familia.context_processors.convites",
             ],
         },
     },

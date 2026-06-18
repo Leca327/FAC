@@ -12,8 +12,9 @@
             <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
         </div>
         <h1>Convite aceito!</h1>
-        <p>Olá, <strong>{{ membro.nome }}</strong>. Você agora faz parte da família de
-           <strong>{{ membro.paciente.nome }}</strong> como <strong>{{ membro.vinculo }}</strong>.</p>
+        <p>Olá, <strong>{{ membro.nome }}</strong>. Você agora faz parte da equipe de
+           <strong>{{ membro.paciente.nome }}</strong> como
+           <strong>{% if membro.tipo_participacao == 'cuidador' %}cuidador(a){% else %}{{ membro.vinculo }}{% endif %}</strong>.</p>
         <p class="fam-convite__sub">Acesse a plataforma com seu e-mail ({{ membro.email }}) para acompanhar o cuidado.</p>
         <a href="{% url 'usuarios:login' %}" class="btn btn--primary btn--lg">Entrar no CuidaCare</a>
         {% else %}

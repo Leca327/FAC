@@ -10,7 +10,7 @@ from django.core.mail import send_mail
 from django.db import transaction
 from django.utils.crypto import get_random_string
 
-from .models import Cuidador, Familiar, Usuario
+from .models import Usuario
 
 
 class UsuarioService:
@@ -20,11 +20,8 @@ class UsuarioService:
     @transaction.atomic
     def criar_usuario(*, email, password, first_name, last_name,
                       tipo_usuario, cpf=None, cep="", telefone="", endereco=""):
-        """
-        Cria um Usuario e sua especialização (Familiar ou Cuidador),
-        garantindo atomicidade — ou cria tudo, ou nada.
-        """
-        usuario = Usuario.objects.create_user(
+        """Cria um Usuario (tabela única — sem especialização)."""
+        return Usuario.objects.create_user(
             email=email,
             password=password,
             first_name=first_name,
@@ -35,13 +32,6 @@ class UsuarioService:
             telefone=telefone,
             endereco=endereco,
         )
-
-        if usuario.is_familiar:
-            Familiar.objects.create(usuario=usuario)
-        else:
-            Cuidador.objects.create(usuario=usuario)
-
-        return usuario
 
     @staticmethod
     def email_disponivel(email):

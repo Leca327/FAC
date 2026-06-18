@@ -1,8 +1,76 @@
 /* =====================================================
    CuidaCare — familia.css
-   Tela "Família" (cards + tabela). Reaproveita .vg (pacientes.css)
+   Tela "Equipe" (cards + tabela). Reaproveita .vg (pacientes.css)
    e .med-grid/.med-tabs/.med-table/modal (medicamentos.css).
    ===================================================== */
+
+/* ---------- Toggle de visão: Familiar (rosa) / Cuidador (azul) ---------- */
+.eq-toggle {
+    display: inline-flex;
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
+.eq-toggle__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 20px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 0.98rem;
+    cursor: pointer;
+    text-decoration: none;
+    border: 1.5px solid transparent;
+    transition: background .15s, color .15s, border-color .15s, box-shadow .15s;
+}
+
+.eq-toggle__btn .icon { flex-shrink: 0; }
+
+/* Familiar — rosa */
+.eq-toggle__btn--familiar {
+    color: #b83564;
+    background: #fdeef3;
+    border-color: #f7c9d9;
+}
+.eq-toggle__btn--familiar.is-active {
+    color: #fff;
+    background: #d8447a;
+    border-color: #d8447a;
+    box-shadow: 0 4px 12px rgba(216, 68, 122, .28);
+}
+
+/* Cuidador — azul */
+.eq-toggle__btn--cuidador {
+    color: #3a679f;
+    background: #eef4fb;
+    border-color: #bcd4ef;
+}
+.eq-toggle__btn--cuidador.is-active {
+    color: #fff;
+    background: #4a7fc4;
+    border-color: #4a7fc4;
+    box-shadow: 0 4px 12px rgba(74, 127, 196, .28);
+}
+
+/* ---------- Badge de tipo (Família / Cuidador) na lista ---------- */
+.fam-tipo {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 0.74rem;
+    font-weight: 700;
+    letter-spacing: .02em;
+}
+.fam-tipo--familiar {
+    color: #b83564;
+    background: #fdeef3;
+}
+.fam-tipo--cuidador {
+    color: #3a679f;
+    background: #eef4fb;
+}
 
 /* ---------- Barra: filtro (menu suspenso) + abas ---------- */
 .fam-bar {

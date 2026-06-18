@@ -3,7 +3,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
-from .models import Cuidador, Familiar, Usuario
+from .models import Usuario
 
 
 @admin.register(Usuario)
@@ -29,7 +29,3 @@ class UsuarioAdmin(BaseUserAdmin):
             "fields": ("email", "tipo_usuario", "password1", "password2"),
         }),
     )
-
-
-admin.site.register(Familiar)
-admin.site.register(Cuidador)

@@ -65,6 +65,18 @@
         abrirConvidar.addEventListener("click", modalConvidar.abrir);
     }
 
+    // Mostra o campo "Vínculo" só quando o tipo do convite é Família.
+    var tipoSelect = document.getElementById("id_tipo");
+    var vinculoGroup = document.getElementById("vinculo-group");
+    function sincronizarVinculo() {
+        if (!tipoSelect || !vinculoGroup) return;
+        vinculoGroup.style.display = tipoSelect.value === "cuidador" ? "none" : "";
+    }
+    if (tipoSelect) {
+        tipoSelect.addEventListener("change", sincronizarVinculo);
+        sincronizarVinculo();
+    }
+
     // ---------- Editar ----------
     var modalEditarEl = document.getElementById("modal-editar");
     var modalEditar = configurarModal(modalEditarEl);

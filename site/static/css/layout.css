@@ -67,6 +67,7 @@
     display: flex;
     gap: 12px;
     align-items: center;
+    margin-left: auto;  /* fixa o bloco (menu + sininho) encostado à direita */
 }
 
 /* Menu suspenso do usuário ("Olá, ...") */
@@ -151,6 +152,119 @@
 .user-menu__item:hover {
     background: var(--bg-lavender-soft);
     color: var(--primary-dark);
+}
+
+/* ---------- Sininho de notificações ---------- */
+.notif {
+    position: relative;
+}
+
+.notif__trigger {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    background: var(--white);
+    color: var(--text);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.notif__trigger:hover {
+    color: var(--primary);
+    border-color: var(--primary);
+}
+
+.notif__badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 9px;
+    background: var(--primary);
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 700;
+    line-height: 18px;
+    text-align: center;
+}
+
+.notif__dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: 320px;
+    max-height: 70vh;
+    overflow-y: auto;
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    box-shadow: var(--shadow-md);
+    padding: 10px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-6px);
+    transition: opacity var(--transition), transform var(--transition), visibility var(--transition);
+    z-index: 60;
+}
+
+.notif__dropdown::before {
+    content: "";
+    position: absolute;
+    top: -10px;
+    left: 0;
+    right: 0;
+    height: 10px;
+}
+
+.notif:hover .notif__dropdown,
+.notif:focus-within .notif__dropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.notif__title {
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--text);
+    padding: 4px 8px 8px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 6px;
+}
+
+.notif__item {
+    padding: 10px 8px;
+    border-radius: 8px;
+}
+
+.notif__item + .notif__item {
+    border-top: 1px solid var(--line);
+}
+
+.notif__text {
+    font-size: 0.85rem;
+    line-height: 1.4;
+    color: var(--text);
+    margin-bottom: 10px;
+}
+
+.notif__acoes {
+    display: flex;
+    gap: 8px;
+}
+
+.notif__empty {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    padding: 12px 8px;
+    text-align: center;
 }
 
 .navbar__toggle {

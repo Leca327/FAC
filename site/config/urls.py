@@ -21,8 +21,10 @@ urlpatterns = [
     path("medicos/", include("medicos.urls")),
     # Consultas e exames do paciente
     path("consultas/", include("consultas.urls")),
-    # Família do paciente (membros e convites)
-    path("familia/", include("familia.urls")),
+    # Equipe do paciente (familiares e cuidadores)
+    path("equipe/", include("familia.urls")),
+    # Escala de cuidadores do paciente
+    path("escala/", include("escala.urls")),
     # Apps do projeto (habilitados conforme implementados):
     # path("agenda/", include("agenda.urls")),
     # path("ponto/", include("ponto.urls")),

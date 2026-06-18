@@ -34,28 +34,31 @@ class PacienteService:
         return paciente
 
     @staticmethod
-    def pacientes_do_usuario(usuario, busca=""):
+    def pacientes_do_usuario(usuario, busca="", modo="familiar"):
         """
-        Retorna os pacientes vinculados ao usuário, conforme o seu tipo:
+        Retorna os pacientes vinculados ao usuário conforme o MODO escolhido na
+        tela de pacientes (não mais o tipo da conta):
 
-        - Familiar: pacientes em que ele é o responsável OU em que possui
-          uma participação aceita (compartilhamento — RN06).
-        - Cuidador: pacientes em que possui uma participação de cuidador aceita.
+        - modo "familiar": pacientes em que é o responsável OU possui uma
+          participação de familiar aceita (compartilhamento — RN06).
+        - modo "cuidador": pacientes em que possui uma participação de cuidador
+          aceita.
         """
-        if usuario.is_familiar:
-            qs = Paciente.objects.filter(
-                Q(familiar_responsavel=usuario)
-                | Q(
-                    participacoes__usuario=usuario,
-                    participacoes__status_convite=Participacao.Status.ACEITO,
-                ),
-                ativo=True,
-            )
-        else:
+        if modo == Participacao.Tipo.CUIDADOR:
             qs = Paciente.objects.filter(
                 participacoes__usuario=usuario,
                 participacoes__tipo_participacao=Participacao.Tipo.CUIDADOR,
                 participacoes__status_convite=Participacao.Status.ACEITO,
+                ativo=True,
+            )
+        else:
+            qs = Paciente.objects.filter(
+                Q(familiar_responsavel=usuario)
+                | Q(
+                    participacoes__usuario=usuario,
+                    participacoes__tipo_participacao=Participacao.Tipo.FAMILIAR,
+                    participacoes__status_convite=Participacao.Status.ACEITO,
+                ),
                 ativo=True,
             )
 
@@ -66,8 +69,24 @@ class PacienteService:
 
     @staticmethod
     def paciente_acessivel(usuario, pk):
-        """Retorna o paciente se o usuário tem acesso a ele; senão None."""
-        return PacienteService.pacientes_do_usuario(usuario).filter(pk=pk).first()
+        """
+        Retorna o paciente se o usuário tem QUALQUER acesso a ele (responsável,
+        familiar aceito ou cuidador aceito); senão None. É permissivo de
+        propósito: as telas internas valem para os dois modos.
+        """
+        return (
+            Paciente.objects.filter(
+                Q(familiar_responsavel=usuario)
+                | Q(
+                    participacoes__usuario=usuario,
+                    participacoes__status_convite=Participacao.Status.ACEITO,
+                ),
+                ativo=True,
+                pk=pk,
+            )
+            .distinct()
+            .first()
+        )
 
     @staticmethod
     def equipe_do_paciente(paciente):

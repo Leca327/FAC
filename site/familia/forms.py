@@ -1,10 +1,10 @@
-"""Formulários do app familia (convite e edição de membros)."""
+"""Formulários da Equipe (convite por e-mail e edição de vínculo)."""
 
 from django import forms
 
-from .models import MembroFamilia
+from pacientes.models import Participacao
 
-# Vínculos comuns oferecidos no menu suspenso.
+# Vínculos comuns oferecidos no menu suspenso (apenas para familiares).
 VINCULO_CHOICES = [
     ("Cônjuge", "Cônjuge"),
     ("Marido", "Marido"),
@@ -22,39 +22,32 @@ VINCULO_CHOICES = [
     ("Outro", "Outro"),
 ]
 
+TIPO_CHOICES = [
+    (Participacao.Tipo.FAMILIAR, "Família"),
+    (Participacao.Tipo.CUIDADOR, "Cuidador"),
+]
 
-class ConvidarMembroForm(forms.ModelForm):
-    """Convite de um novo membro da família (popup "Convidar Membro")."""
+
+class ConvidarMembroForm(forms.Form):
+    """Convite de um membro da equipe — exige uma conta existente (e-mail)."""
+
+    tipo = forms.ChoiceField(choices=TIPO_CHOICES, label="Tipo")
+    email = forms.EmailField(
+        label="E-mail",
+        widget=forms.EmailInput(attrs={"placeholder": "e-mail da conta no CuidaCare"}),
+    )
+    vinculo = forms.ChoiceField(
+        choices=VINCULO_CHOICES, label="Vínculo", required=False
+    )
+
+    def clean(self):
+        dados = super().clean()
+        if dados.get("tipo") == Participacao.Tipo.FAMILIAR and not dados.get("vinculo"):
+            self.add_error("vinculo", "Informe o vínculo do familiar.")
+        return dados
+
+
+class EditarMembroForm(forms.Form):
+    """Edita apenas o vínculo de um familiar da equipe."""
 
     vinculo = forms.ChoiceField(choices=VINCULO_CHOICES, label="Vínculo")
-
-    class Meta:
-        model = MembroFamilia
-        fields = ["nome", "email", "telefone", "vinculo"]
-        widgets = {
-            "nome": forms.TextInput(attrs={"placeholder": "Ex.: Joana Silva"}),
-            "email": forms.EmailInput(attrs={"placeholder": "Ex.: joana@example.com"}),
-            "telefone": forms.TextInput(attrs={"placeholder": "Ex.: (21) 98765-4321"}),
-        }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        obrigatorios = {"nome", "email", "vinculo"}
-        for nome, campo in self.fields.items():
-            campo.required = nome in obrigatorios
-
-
-class EditarMembroForm(forms.ModelForm):
-    """Edita os dados de um membro (nome, telefone, vínculo)."""
-
-    vinculo = forms.ChoiceField(choices=VINCULO_CHOICES, label="Vínculo")
-
-    class Meta:
-        model = MembroFamilia
-        fields = ["nome", "telefone", "vinculo"]
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields["nome"].required = True
-        self.fields["vinculo"].required = True
-        self.fields["telefone"].required = False

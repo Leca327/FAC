@@ -61,6 +61,31 @@
                             </a>
                         </div>
                     </div>
+                    <div class="notif">
+                        <button type="button" class="notif__trigger" aria-haspopup="true" aria-expanded="false" aria-label="Notificações">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                            {% if convites_pendentes %}<span class="notif__badge">{{ convites_pendentes|length }}</span>{% endif %}
+                        </button>
+                        <div class="notif__dropdown" role="menu">
+                            <p class="notif__title">Convites</p>
+                            {% for cv in convites_pendentes %}
+                            <div class="notif__item">
+                                <p class="notif__text">
+                                    Convite para a equipe de <strong>{{ cv.paciente.nome }}</strong>
+                                    como <strong>{% if cv.tipo_participacao == 'cuidador' %}cuidador(a){% else %}{{ cv.vinculo|default:"familiar" }}{% endif %}</strong>.
+                                </p>
+                                <form method="post" action="{% url 'equipe:responder' cv.id %}" class="notif__acoes">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                    <button type="submit" name="acao" value="aceitar" class="btn btn--primary btn--xs">Aceitar</button>
+                                    <button type="submit" name="acao" value="recusar" class="btn btn--soft btn--xs">Recusar</button>
+                                </form>
+                            </div>
+                            {% empty %}
+                            <p class="notif__empty">Nenhum convite novo.</p>
+                            {% endfor %}
+                        </div>
+                    </div>
                 {% else %}
                     <a href="{% url 'usuarios:login' %}" class="btn btn--ghost">Entrar</a>
                     <a href="{% url 'usuarios:cadastro' %}" class="btn btn--primary">Cadastrar</a>

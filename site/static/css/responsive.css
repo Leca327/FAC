@@ -81,6 +81,35 @@
         min-width: 0;
     }
 
+    /* Sininho: vira lista inline no menu mobile */
+    .notif {
+        width: 100%;
+    }
+
+    .notif__trigger {
+        width: 100%;
+        height: auto;
+        border-radius: 10px;
+        gap: 8px;
+        padding: 10px 12px;
+    }
+
+    .notif__badge {
+        position: static;
+        margin-left: auto;
+    }
+
+    .notif__dropdown {
+        position: static;
+        width: 100%;
+        opacity: 1;
+        visibility: visible;
+        transform: none;
+        box-shadow: none;
+        border: none;
+        padding: 6px 0 0;
+    }
+
     .navbar__toggle {
         display: flex;
     }
