@@ -1,0 +1,66 @@
+========================================================================
+ ALTERACAO 07 - Ponto: check-in por GPS (RN01) e edição do dia atual
+ Documento alvo: "A4 Lab. Desenv. Web - FAC.docx"
+ Banco: site/bd/bdcuidacare.sql  (SEM mudança de schema)
+ Data: 2026-06-19
+========================================================================
+
+MOTIVO
+------------------------------------------------------------------------
+Duas evoluções na tela "Meu Ponto":
+1) A validação de check-in por GPS (RN01) foi implementada — antes estava
+   PENDENTE (ver ALTERACAO-06).
+2) Foi adicionada a edição dos horários do ponto, permitida SOMENTE para o
+   ponto do DIA ATUAL (nova regra de negócio).
+
+Sem mudança de banco (usa os campos que já existem em `paciente`:
+latitude_gps, longitude_gps, raio_validacao_gps; e `plantao`).
+
+
+------------------------------------------------------------------------
+ TRECHO 1 - RN01 (atualizar STATUS para implementado)
+------------------------------------------------------------------------
+Na "Tabela 1 - Regras de Negócio" (2.2) e na seção 2.6.6, o texto de RN01
+deve passar a refletir a implementação real:
+
+"RN01 - Check-in com GPS: o check-in só é permitido quando o cuidador está
+dentro do raio configurado da residência do paciente. A tela captura a
+localização do navegador (Geolocation API) e envia ao servidor; em
+PontoService.check_in(), a distância até paciente.latitude_gps/longitude_gps
+é calculada com geopy (geodesic) e comparada a paciente.raio_validacao_gps.
+Fora do raio (ou sem localização disponível), o check-in é recusado com
+ForaDoLocalError. Quando o paciente não tem coordenadas configuradas, a
+validação não se aplica (check-in liberado)."
+
+
+------------------------------------------------------------------------
+ TRECHO 2 - Nova regra: edição de ponto só do dia atual
+------------------------------------------------------------------------
+[ADICIONAR] na Tabela 1 (2.2) e na seção 2.6.6 (numeração após RN09 -
+ver ALTERACAO-05):
+
+"RN10 - Edição de ponto apenas do dia atual: o cuidador pode ajustar os
+horários (entrada/saída) somente do plantão de HOJE. Plantões de dias
+anteriores (histórico) não são editáveis. Implementado em
+PontoService.editar_hoje() e na EditarPontoView; a hora de entrada é
+obrigatória e, ao informar a saída, o plantão é fechado e a duração é
+recalculada."
+
+
+------------------------------------------------------------------------
+ TRECHO 3 - Views/Services (2.6.4 / 2.6.5)
+------------------------------------------------------------------------
+[ADICIONAR] EditarPontoView (edição do ponto de hoje). Em PontoService:
+_validar_local() (GPS, RN01), editar_hoje() (RN10), além de check_in/
+check_out/estado_hoje/historico_finalizados já citados na ALTERACAO-06.
+
+
+------------------------------------------------------------------------
+ RESUMO
+------------------------------------------------------------------------
+- RN01 (GPS) implementado (geopy + Geolocation do navegador).
+- Nova RN10: editar somente o ponto do dia atual.
+- Sem mudança no bdcuidacare.sql.
+- Pendências remanescentes: diário de plantão (app `diario`) e relatório
+  mensal de horas.
+========================================================================

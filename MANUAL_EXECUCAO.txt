@@ -1,0 +1,104 @@
+========================================================================
+ CUIDACARE - MANUAL DE EXECUCAO (como rodar e visualizar localmente)
+========================================================================
+
+Use este manual no DIA A DIA, depois que a instalacao ja foi feita
+(veja "MANUAL_INSTALACAO.txt" se for a primeira vez).
+
+O objetivo aqui e: subir o servidor e abrir o site no navegador.
+
+Sistema de referencia: Windows 10/11 + PowerShell.
+
+------------------------------------------------------------------------
+ ANTES DE COMECAR (checklist rapido)
+------------------------------------------------------------------------
+[ ] Python 3.12 instalado
+[ ] Ambiente virtual (venv) ja criado dentro de site/
+[ ] MySQL Server rodando na porta 3306 com o banco cuidacare_db
+    Para conferir o MySQL (PowerShell):
+        (Test-NetConnection -ComputerName 127.0.0.1 -Port 3306).TcpTestSucceeded
+        -> deve retornar "True"
+
+Se algum item falhar, volte ao MANUAL_INSTALACAO.txt.
+
+------------------------------------------------------------------------
+ PASSO 1 - ABRIR O TERMINAL NA PASTA DO PROJETO
+------------------------------------------------------------------------
+    cd "C:\Users\Let\Documents\Projetos Git\FAC\site"
+
+------------------------------------------------------------------------
+ PASSO 2 - SUBIR O SERVIDOR
+------------------------------------------------------------------------
+Forma simples (usando direto o python do venv, sem precisar "ativar"):
+
+    .\venv\Scripts\python.exe manage.py runserver 127.0.0.1:8000
+
+Vai aparecer algo como:
+    Starting development server at http://127.0.0.1:8000/
+    Quit the server with CTRL-BREAK.
+
+Deixe essa janela ABERTA - e o servidor rodando. Para parar, pressione
+CTRL+C nela.
+
+(Alternativa: ativar o venv antes e usar "python" direto:
+    .\venv\Scripts\Activate.ps1
+    python manage.py runserver
+ Se aparecer erro de permissao ao ativar, rode antes:
+    Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass )
+
+------------------------------------------------------------------------
+ PASSO 3 - VISUALIZAR NO NAVEGADOR
+------------------------------------------------------------------------
+Com o servidor no ar, abra no navegador:
+
+    http://127.0.0.1:8000/
+
+Paginas publicas para visualizar sem login:
+
+    Home (landing page) ....... http://127.0.0.1:8000/
+    Login ..................... http://127.0.0.1:8000/conta/login/
+    Cadastro .................. http://127.0.0.1:8000/conta/cadastro/
+
+Para ver as telas internas (pacientes, medicamentos, escala, etc.) e
+preciso fazer login com um usuario existente no banco, ou criar um novo
+pela tela de Cadastro.
+
+Rotas internas (exigem login):
+    Pacientes ................. http://127.0.0.1:8000/pacientes/
+    Medicamentos .............. http://127.0.0.1:8000/medicamentos/
+    Medicos ................... http://127.0.0.1:8000/medicos/
+    Consultas/Exames .......... http://127.0.0.1:8000/consultas/
+    Equipe (familia) .......... http://127.0.0.1:8000/equipe/
+    Escala .................... http://127.0.0.1:8000/escala/
+
+------------------------------------------------------------------------
+ PARA PARAR O SERVIDOR
+------------------------------------------------------------------------
+Na janela do terminal onde ele esta rodando, pressione:
+    CTRL + C
+
+------------------------------------------------------------------------
+ PROBLEMAS COMUNS
+------------------------------------------------------------------------
+* "No module named 'pymysql'"
+    -> O venv esta sem o driver. Instale:
+       .\venv\Scripts\python.exe -m pip install pymysql
+
+* Erro de conexao com o banco / "Can't connect to MySQL"
+    -> O MySQL nao esta rodando. Inicie o servico do MySQL e confira a
+       porta 3306 (checklist no inicio deste arquivo).
+
+* "Table 'usuario' already exists" ou erros de migracao
+    -> As migracoes nao foram preparadas. Veja o PASSO 6 do
+       MANUAL_INSTALACAO.txt.
+
+* "python" abre a Microsoft Store
+    -> O Python real nao esta no PATH. Use o caminho completo
+       .\venv\Scripts\python.exe (dentro de site/) ou reinstale o
+       Python marcando "Add to PATH".
+
+* A porta 8000 ja esta em uso
+    -> Suba em outra porta, ex.:
+       .\venv\Scripts\python.exe manage.py runserver 127.0.0.1:8001
+       e acesse http://127.0.0.1:8001/
+========================================================================

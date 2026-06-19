@@ -1,0 +1,94 @@
+========================================================================
+ ALTERACAO 04 - Novo app/tela PRONTUARIO (entidade ANOTACAO)
+ Documento alvo: "A4 Lab. Desenv. Web - FAC.docx"
+ Arquivo de banco alvo: site/bd/bdcuidacare.sql  (JA ATUALIZADO)
+ Data: 2026-06-19
+========================================================================
+
+MOTIVO
+------------------------------------------------------------------------
+Foi implementada a tela "Prontuario" (linha do tempo do dia do paciente).
+Ela:
+ - permite ao familiar/cuidador adicionar ANOTACOES manuais ("pontos" do
+   que aconteceu no dia);
+ - agrega automaticamente, na mesma linha do tempo (registros horizontais
+   ordenados por horario):
+     * medicamentos TOMADOS, no horario indicado da dose
+       (origem: tabela medicamento_tomado);
+     * consultas REALIZADAS, no horario marcado da consulta
+       (origem: tabela consulta).
+
+Apenas a anotacao manual e persistida (nova tabela `anotacao`); os demais
+eventos sao montados em tempo de exibicao, sem duplicar dados.
+
+Isto introduz um app novo (`prontuario`) e uma entidade nova (ANOTACAO),
+que precisam constar na documentacao.
+
+
+------------------------------------------------------------------------
+ O QUE MUDOU NO BANCO (ja aplicado em bdcuidacare.sql e no banco vivo)
+------------------------------------------------------------------------
+Nova tabela `anotacao`:
+  id            INT (PK)
+  paciente_id   INT  FK -> paciente(id)  ON DELETE CASCADE
+  data_hora     DATETIME(6)              -- quando o evento aconteceu
+  titulo        VARCHAR(255)
+  descricao     TEXT
+  autor_id      INT  FK -> usuario(id)   ON DELETE SET NULL (quem registrou)
+  data_criacao  DATETIME(6)
+  INDEX idx_anotacao_pac_data (paciente_id, data_hora)
+
+Observacao tecnica: como o restante do projeto, as FKs usam INT
+(compativel com usuario.id/paciente.id). A migracao Django do app
+prontuario e aplicada como --fake (a tabela vem do dump), igual aos
+demais apps.
+
+
+------------------------------------------------------------------------
+ TRECHO 1 - Secao "2.5.1" e "2.6.3" (entidades): ADICIONAR ANOTACAO
+------------------------------------------------------------------------
+[ADICIONAR] nova entidade ao DER/descricao:
+
+"ANOTACAO: registro manual do prontuario digital. Cada anotacao pertence
+a um paciente, tem data/hora, titulo e descricao, e guarda o autor
+(familiar ou cuidador que registrou). Em conjunto com os medicamentos
+tomados e as consultas realizadas, compoe a linha do tempo diaria do
+paciente (tela Prontuario)."
+
+(Isto substitui, na pratica, parte do que a documentacao antiga previa em
+DIARIO_PLANTAO — ver ALTERACAO-03. O DIARIO_PLANTAO seguia atrelado ao
+recurso de plantao/ponto, ainda PENDENTE; a ANOTACAO e a versao
+implementada, independente de plantao.)
+
+
+------------------------------------------------------------------------
+ TRECHO 2 - Secao "2.6.1" (apps): ADICIONAR app `prontuario`
+------------------------------------------------------------------------
+[ADICIONAR] a lista de apps (ver ALTERACAO-03):
+
+"App Prontuario: monta a linha do tempo diaria do paciente, agregando
+anotacoes manuais, medicamentos tomados e consultas realizadas. Permite
+registrar novas anotacoes."
+
+(O item de menu "Prontuario" da barra lateral, antes sem link, agora
+aponta para esta tela.)
+
+
+------------------------------------------------------------------------
+ TRECHO 3 - Secao "2.6.4/2.6.5" (views/services)
+------------------------------------------------------------------------
+[ADICIONAR]:
+ - Views: ProntuarioView (linha do tempo do dia) e AdicionarAnotacaoView
+   (popup de nova anotacao).
+ - Service: ProntuarioService, com eventos_do_dia() (agrega e ordena os
+   eventos), contagens() (numeros do topo) e criar_anotacao().
+
+
+------------------------------------------------------------------------
+ RESUMO
+------------------------------------------------------------------------
+- Nova tabela `anotacao` (ja no bdcuidacare.sql e no banco).
+- Adicionar entidade ANOTACAO ao DER e a descricao dos models.
+- Adicionar o app `prontuario` (views/service) a documentacao.
+- DIARIO_PLANTAO permanece PENDENTE (atrelado a ponto/plantao).
+========================================================================

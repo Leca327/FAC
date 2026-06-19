@@ -9,6 +9,11 @@ from django.utils import timezone
 
 from .models import Medicamento, MedicamentoTomado
 
+
+class DoseFuturaError(Exception):
+    """Regra de negócio: não é permitido marcar doses de dias futuros."""
+
+
 # Campo booleano do model correspondente a cada dia da semana (0 = segunda).
 CAMPO_DIA = ["seg", "ter", "qua", "qui", "sex", "sab", "dom"]
 
@@ -321,6 +326,11 @@ class MedicamentoService:
         if registro:
             registro.delete()
             return False
+        # RN: não é permitido marcar uma dose como tomada em dia futuro.
+        if data > timezone.localdate():
+            raise DoseFuturaError(
+                "Não é permitido marcar doses de dias futuros."
+            )
         MedicamentoTomado.objects.create(
             medicamento=medicamento,
             data=data,

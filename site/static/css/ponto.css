@@ -1,0 +1,178 @@
+/* =====================================================
+   CuidaCare — ponto.css
+   Tela "Meu Ponto": cartão de check-in/out do dia e
+   histórico horizontal dos últimos plantões finalizados.
+   Reaproveita o layout .vg (sidebar/main) de pacientes.css.
+   ===================================================== */
+
+/* ---------- Cartão do ponto do dia ---------- */
+.pt-hoje {
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    padding: 28px 24px 32px;
+    margin-bottom: 22px;
+    text-align: center;
+}
+.pt-hoje__titulo {
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    margin-bottom: 22px;
+}
+
+/* Botão circular grande de check-in / check-out */
+.pt-btn {
+    width: 168px;
+    height: 168px;
+    border-radius: 50%;
+    border: 0;
+    cursor: pointer;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: var(--white);
+    background: var(--pac-accent);
+    box-shadow: 0 14px 30px color-mix(in srgb, var(--pac-accent) 45%, transparent);
+    transition: transform var(--transition), box-shadow var(--transition);
+}
+.pt-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 18px 38px color-mix(in srgb, var(--pac-accent) 55%, transparent);
+}
+.pt-btn--in { background: #2e9e6b; box-shadow: 0 14px 30px rgba(46, 158, 107, .45); }
+.pt-btn--in:hover { box-shadow: 0 18px 38px rgba(46, 158, 107, .55); }
+.pt-btn--done {
+    background: var(--pac-soft);
+    color: var(--pac-accent-dark);
+    box-shadow: none;
+    cursor: default;
+    border: 2px solid color-mix(in srgb, var(--pac-accent) 30%, transparent);
+}
+.pt-btn__icon { font-size: 2rem; line-height: 1; }
+.pt-btn__label { font-size: 0.95rem; font-weight: 700; letter-spacing: .03em; }
+
+.pt-clock {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--pac-accent-dark);
+    margin: 18px 0 6px;
+    font-variant-numeric: tabular-nums;
+}
+.pt-hoje__info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+.pt-check { color: var(--ink); font-weight: 600; }
+.pt-hoje__aviso {
+    color: var(--text-muted);
+    background: var(--pac-soft);
+    border-radius: 12px;
+    padding: 16px;
+}
+
+/* ---------- Histórico de ponto ---------- */
+.pt-hist {
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    padding: 22px 24px;
+}
+.pt-hist__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+.pt-hist__head h2 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--ink);
+}
+.pt-hist__head .icon { color: var(--pac-accent); }
+.pt-hist__filtro {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--ink);
+}
+.pt-hist__filtro input {
+    border: 1.5px solid var(--line);
+    border-radius: 9px;
+    padding: 6px 8px;
+    font: inherit;
+}
+.pt-hist__filtro input:focus { border-color: var(--pac-accent); }
+.pt-hist__sub {
+    color: var(--text-muted);
+    font-size: 0.84rem;
+    margin: 4px 0 16px;
+}
+
+/* Linha horizontal com os 7 cards (rola se não couber) */
+.pt-hist__row {
+    display: flex;
+    gap: 14px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+}
+.pt-card {
+    flex: 0 0 150px;
+    background: var(--pac-soft);
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--pac-accent);
+    border-radius: 14px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    text-align: center;
+}
+.pt-card__head {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--line);
+}
+.pt-card__head strong { color: var(--ink); font-size: 0.98rem; }
+.pt-card__head span { color: var(--text-muted); font-size: 0.78rem; }
+.pt-card__linha { display: flex; flex-direction: column; gap: 1px; }
+.pt-card__label {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    color: var(--text-muted);
+}
+.pt-card__valor { font-weight: 700; color: var(--pac-accent-dark); }
+.pt-card__linha--horas .pt-card__valor { color: var(--ink); }
+.pt-badge {
+    margin-top: 2px;
+    align-self: center;
+    background: #e3f5e9;
+    color: #2e7d4f;
+    font-size: 0.74rem;
+    font-weight: 700;
+    padding: 3px 12px;
+    border-radius: 999px;
+}
+.pt-hist__empty {
+    color: var(--text-muted);
+    padding: 20px 0;
+}

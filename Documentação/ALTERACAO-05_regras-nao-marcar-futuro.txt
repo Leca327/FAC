@@ -1,0 +1,60 @@
+========================================================================
+ ALTERACAO 05 - Novas regras de negocio: nada em data futura
+ Documento alvo: "A4 Lab. Desenv. Web - FAC.docx"
+ Data: 2026-06-19
+========================================================================
+
+MOTIVO
+------------------------------------------------------------------------
+Foram adicionadas tres regras de negocio que impedem registrar/confirmar
+eventos em datas futuras. Elas precisam constar na documentacao, tanto na
+"Tabela 1 - Regras de Negocio" (secao 2.2) quanto na secao 2.6.6
+(Validacoes e Regras de Negocio). A numeracao atual vai ate RN06, entao
+as novas sao RN07, RN08 e RN09.
+
+Tambem foram adicionadas setas de navegacao (dia anterior / proximo dia)
+no campo de data da tela Prontuario (apenas UI, sem regra nova).
+
+
+------------------------------------------------------------------------
+ TRECHO 1 - Secao "2.2. Regras de Negocio" (Tabela 1): ADICIONAR LINHAS
+------------------------------------------------------------------------
+[ADICIONAR] tres linhas na Tabela 1:
+
+RN07 - Anotacao nao futura:
+  Nao e permitido registrar uma anotacao do prontuario com data/hora no
+  futuro.
+
+RN08 - Dose nao futura:
+  Nao e permitido marcar um medicamento como tomado em um dia futuro.
+
+RN09 - Consulta nao futura:
+  Nao e permitido marcar uma consulta/exame como realizada antes da sua
+  data/hora marcada (data futura).
+
+
+------------------------------------------------------------------------
+ TRECHO 2 - Secao "2.6.6. Validacoes e Regras de Negocio": ADICIONAR
+------------------------------------------------------------------------
+[ADICIONAR] apos o item RN06:
+
+RN07 - Anotacao nao futura: validado em AnotacaoForm.clean_data_hora()
+  (app prontuario), que rejeita data_hora > agora.
+
+RN08 - Dose nao futura: validado em MedicamentoService.alternar_dose(),
+  que levanta DoseFuturaError quando a data da dose e posterior a hoje
+  (a view exibe a mensagem ao usuario). Desmarcar uma dose nao tem essa
+  restricao.
+
+RN09 - Consulta nao futura: validado em ConsultaService.marcar_realizada(),
+  que levanta ConsultaFuturaError quando a data_hora da consulta e
+  posterior a agora.
+
+
+------------------------------------------------------------------------
+ RESUMO
+------------------------------------------------------------------------
+- Adicionar RN07/RN08/RN09 na Tabela 1 (2.2) e na secao 2.6.6.
+- Regras implementadas na camada de Services/Forms (sem mudanca de banco).
+- UI: setas de navegacao de data no Prontuario (sem impacto no DER).
+========================================================================

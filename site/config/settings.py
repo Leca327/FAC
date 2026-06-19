@@ -55,9 +55,9 @@ LOCAL_APPS = [
     "consultas",     # Consultas e exames do paciente
     "familia",       # Membros da família e convites do paciente
     "escala",        # Escala de cuidadores do paciente
+    "prontuario",    # Prontuário: linha do tempo diária do paciente
+    "ponto",         # Ponto: check-in/check-out do cuidador (plantões)
     # "agenda",
-    # "ponto",
-    # "diario",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + LOCAL_APPS

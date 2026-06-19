@@ -19,7 +19,7 @@ from medicos.services import MedicoService
 from pacientes.services import PacienteService
 
 from .forms import ConsultaForm
-from .services import ConsultaService
+from .services import ConsultaFuturaError, ConsultaService
 
 __all__ = [
     "ConsultasView",
@@ -164,11 +164,14 @@ class MarcarRealizadaView(LoginRequiredMixin, View):
             ConsultaService.desmarcar_realizada(paciente=paciente, pk=consulta_id)
             messages.success(request, "Agendamento voltou para 'Agendada'.")
         else:
-            ConsultaService.marcar_realizada(
-                paciente=paciente,
-                pk=consulta_id,
-                resultado=request.POST.get("resultado", ""),
-                usuario=request.user,
-            )
-            messages.success(request, "Agendamento marcado como realizado.")
+            try:
+                ConsultaService.marcar_realizada(
+                    paciente=paciente,
+                    pk=consulta_id,
+                    resultado=request.POST.get("resultado", ""),
+                    usuario=request.user,
+                )
+                messages.success(request, "Agendamento marcado como realizado.")
+            except ConsultaFuturaError as erro:
+                messages.error(request, str(erro))
         return redirect(_url_lista(paciente, de, ate))

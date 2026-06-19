@@ -88,6 +88,7 @@ class VisaoGeralPacienteView(LoginRequiredMixin, View):
 
         from consultas.services import ConsultaService
         from medicamentos.services import MedicamentoService
+        from prontuario.services import ProntuarioService
 
         equipe = PacienteService.equipe_do_paciente(paciente)
         context = {
@@ -99,9 +100,10 @@ class VisaoGeralPacienteView(LoginRequiredMixin, View):
             "proximas_doses": MedicamentoService.proximas_doses(paciente),
             "consultas_hoje": ConsultaService.contar_agendadas_hoje(paciente),
             "hoje": timezone.localdate(),
-            # Placeholders até os apps de domínio existirem:
+            # "Atividades Recentes": as 3 anotações mais recentes do prontuário.
+            "atividades": ProntuarioService.ultimas_anotacoes(paciente, 3),
+            # Placeholder até o app de ponto/plantão existir:
             "cuidador_plantao": None,
-            "atividades": [],
         }
         return render(request, "pacientes/visao_geral.html", context)
 

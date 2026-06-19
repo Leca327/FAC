@@ -1,0 +1,199 @@
+========================================================================
+ ALTERACAO 03 - Divergencias restantes entre a documentacao e o sistema
+ Documento alvo: "A4 Lab. Desenv. Web - FAC.docx"
+ Data: 2026-06-19
+========================================================================
+
+MOTIVO
+------------------------------------------------------------------------
+A implementacao evoluiu em relacao ao desenho original descrito na A4.
+Este arquivo lista as divergencias ainda nao tratadas (a ALTERACAO-01
+cobriu o banco em desenvolvimento; a ALTERACAO-02 cobriu a tabela
+`usuario` e o fim da especializacao FAMILIAR/CUIDADOR).
+
+Cada item esta marcado como:
+  [CORRIGIR]  -> ja foi implementado diferente; ajustar o texto da doc.
+  [PENDENTE]  -> a doc descreve um recurso ainda NAO implementado;
+                 manter como planejado, mas sinalizar o status.
+  [ADICIONAR] -> existe na implementacao e falta na doc.
+
+Apps realmente implementados (settings.LOCAL_APPS):
+  core, usuarios, pacientes, medicamentos, medicos, consultas,
+  familia (Equipe), escala.
+Ainda NAO implementados: agenda, ponto, diario.
+
+
+========================================================================
+ SECAO 2.5.1 - DESCRICAO RESUMIDA (entidades do DER)
+========================================================================
+
+[CORRIGIR] Item "6. MEDICO_CLINICA"
+  ATUAL: "...identificacao profissional (CRM). Medicos realizam
+          prescricoes de medicamentos e sao responsaveis pelas consultas
+          agendadas."
+  CORRECAO: a entidade chama-se MEDICO (tabela `medico`) e tem um campo
+  `tipo` (medico / clinica / laboratorio), alem de email, cidade e UF.
+  NAO ha mais vinculo de prescricao: o medico NAO e mais responsavel por
+  medicamentos (ver item 8). Continua podendo ser associado a uma
+  consulta (FK opcional).
+
+[CORRIGIR] Item "7. CONSULTA"
+  ATUAL: "...armazena data/hora, tipo de consulta, local e status
+          (agendada...). Rastreia qual familiar marcou a consulta e
+          permite anotacoes pos-consulta."
+  CORRECAO: a tabela `consulta` NAO tem mais o campo `local` (nem
+  convenio/CRM). O campo `motivo` virou `observacao`. Quem agenda pode
+  ser familiar OU cuidador (campo `agendada_por`, antes "familiar_marcou").
+  Foram adicionados `realizada_por` e `realizada_em` (quem marcou como
+  realizada e quando) e `resultado`. O profissional vem da FK opcional
+  para MEDICO.
+
+[CORRIGIR] Item "8. MEDICAMENTO"
+  ATUAL: "...nome, dosagem, forma farmaceutica, principio ativo e
+          laboratorio fabricante. Vincula o medicamento ao medico que
+          prescreveu e ao paciente que o utiliza."
+  CORRECAO: a tabela `medicamento` foi consolidada e NAO tem mais
+  `principio ativo`, `laboratorio` nem FK para medico. O medico virou um
+  simples campo de texto. Passou a conter tambem a posologia (frequencia,
+  horarios, quantidade por dose), o periodo (data_inicio/data_fim), os
+  dias da semana (seg..dom) e o status (ativo/descontinuado) - campos que
+  antes ficariam em PRESCRICAO_MEDICAMENTO (ver item 9).
+
+[CORRIGIR] Item "9. PRESCRICAO_MEDICAMENTO"
+  ACAO: REMOVER a entidade. Ela foi descontinuada e seus campos foram
+  fundidos na entidade MEDICAMENTO (item 8).
+  Em seu lugar existe a entidade MEDICAMENTO_TOMADO: registra cada dose
+  marcada como tomada (medicamento, data, horario previsto, se foi
+  tomado, quando e por quem) - base da tela "Medicacao Diaria".
+
+[PENDENTE] Itens "10. PLANTAO" e "11. DIARIO_PLANTAO"
+  As tabelas existem no banco (bdcuidacare.sql), mas os recursos de
+  controle de ponto/plantao e diario AINDA NAO foram implementados (sem
+  apps/models correspondentes). Manter na doc como planejado, sinalizando
+  "previsto, ainda nao implementado".
+
+[ADICIONAR] Entidades da ESCALA de cuidadores (ja implementadas)
+  Faltam no DER as entidades da tela "Escala de Cuidadores":
+   - PADRAO_TURNO: padrao base de um turno (manha/tarde/noite) de um
+     paciente; tipo rodizio ou semanal.
+   - RODIZIO_ITEM: posicao de um cuidador na sequencia de um rodizio.
+   - SEMANAL_ITEM: cuidador fixo de um dia da semana (padrao semanal).
+   - EXCECAO_DIA: troca pontual de (dia, turno) que sobrepoe o padrao.
+
+
+========================================================================
+ SECAO 2.6.1 - ESTRUTURA E ORGANIZACAO DOS APPS
+========================================================================
+
+[CORRIGIR] Lista de apps (paragrafos "App ...")
+  - "App Agenda" NAO existe. Foi dividido em dois apps:
+      * `consultas` -> consultas e exames do paciente;
+      * `escala`    -> escala de cuidadores por turno (manha/tarde/noite).
+  - "App Medicamentos": remover a mencao a "prescricoes" como entidade
+    separada (foi consolidado em MEDICAMENTO).
+
+[PENDENTE] "App Ponto" e "App Diario"
+  Ainda nao implementados (estao comentados em settings.py). Manter como
+  planejados.
+
+[ADICIONAR] Apps implementados que faltam na doc:
+  - `core`     : paginas publicas (landing page / home).
+  - `medicos`  : cadastro de medicos, clinicas e laboratorios do paciente.
+  - `consultas`: consultas e exames (ver acima).
+  - `familia`  : "Equipe" do paciente - convites e gestao de familiares e
+                 cuidadores (participacoes).
+  - `escala`   : escala de cuidadores (ver acima).
+
+[CORRIGIR] Arvore de diretorios (o bloco "projeto_cuidacare/ ...")
+  Trocar os diretorios `agenda/`, `ponto/`, `diario/` pelos que existem
+  de fato: `core/`, `medicos/`, `consultas/`, `familia/`, `escala/`
+  (cada um com models.py, views.py, services.py, urls.py conforme o caso).
+  Observacao: o requirements.txt fica em `site/`, e o driver de banco em
+  desenvolvimento e o PyMySQL (ver ALTERACAO-01).
+
+
+========================================================================
+ SECAO 2.6.2 - AUTENTICACAO E CONTROLE DE ACESSO
+========================================================================
+
+[CORRIGIR] Paragrafo sobre o modelo de usuario
+  ATUAL: "...adicionando os campos: tipo_usuario ..., CPF, telefone,
+          endereco e status de atividade. Este modelo serve como
+          superclasse para as entidades Familiar e Cuidador, implementando
+          heranca de tabela unica..."
+  CORRECAO: o model adiciona tipo_usuario, CPF, telefone, endereco, CEP e
+  senha_temporaria (o "status de atividade" e o is_active do AbstractUser).
+  NAO ha mais especializacao em Familiar/Cuidador - ver ALTERACAO-02.
+
+[PENDENTE] Item "Familiares nao possuem permissao para registrar ponto ou
+  editar o diario (exclusivo de cuidadores)."
+  Refere-se aos recursos de ponto/diario (ainda nao implementados).
+
+
+========================================================================
+ SECAO 2.6.3 - MODELS (CAMADA DE DADOS)
+========================================================================
+Repete a lista de entidades. Aplicar AQUI as mesmas correcoes da 2.5.1:
+[CORRIGIR] "Familiar" e "Cuidador" como especializacoes -> remover.
+[CORRIGIR] "Medico_Clinica" -> entidade MEDICO com `tipo`.
+[CORRIGIR] "Consulta (... local ...)" -> sem `local`; ver item 7.
+[CORRIGIR] "Medicamento (... laboratorio ...)" e
+           "Prescricao_Medicamento" -> consolidados em MEDICAMENTO;
+           adicionar MEDICAMENTO_TOMADO.
+[ADICIONAR] entidades de escala (PADRAO_TURNO, RODIZIO_ITEM,
+           SEMANAL_ITEM, EXCECAO_DIA).
+[PENDENTE] "Plantao" e "Diario_Plantao".
+
+
+========================================================================
+ SECAO 2.6.4 - VIEWS (CONTROLADORES)
+========================================================================
+A lista de views descreve um desenho que mudou.
+
+[CORRIGIR] "DashboardFamiliarView" e "DashboardCuidadorView"
+  Nao ha dois dashboards separados. Ha UMA tela de pacientes que alterna
+  entre os MODOS "familiar" e "cuidador" (PacienteService.pacientes_do_
+  usuario com parametro `modo`).
+
+[CORRIGIR] "CadastroConsultaView" / "CadastroMedicamentoView"
+  Os nomes reais sao NovaConsultaView e NovoMedicamentoView (e existem
+  tambem as telas/edicao/remocao por paciente). Agendar consulta NAO e
+  exclusivo do familiar - cuidador tambem pode (ver item 7 da 2.5.1).
+
+[PENDENTE] "CheckInView", "CheckOutView", "AbrirPlantaoView",
+  "DiarioPlantaoView", "RelatorioMensalView"
+  Dependem de ponto/plantao/diario - ainda nao implementados.
+
+[ADICIONAR] Views ja implementadas que faltam citar:
+  telas por paciente de Medicos, Consultas/Exames, Medicacao Diaria,
+  Equipe (convites) e Escala de Cuidadores.
+
+
+========================================================================
+ SECAO 2.6.5 - SERVICES (CAMADA DE LOGICA DE NEGOCIO)
+========================================================================
+[CORRIGIR] PacienteService
+  Metodos reais: criar_paciente, pacientes_do_usuario, paciente_acessivel,
+  equipe_do_paciente. Os metodos "medicamentos_para_hoje" e
+  "proximas_consultas" citados na doc NAO ficam aqui: a logica de doses do
+  dia esta em MedicamentoService (medicamentos_do_dia / proximas_doses) e a
+  de consultas em ConsultaService.
+
+[CORRIGIR] "AgendaService" e "PontoService"
+  Nao existem com esses nomes. A escala e tratada por EscalaService
+  (salvar_padrao, semana, cuidador_do_padrao, definir_excecao...). O
+  PontoService depende do recurso de ponto (PENDENTE).
+
+[ADICIONAR] Services implementados que faltam citar:
+  ConsultaService, MedicoService, EquipeService (familia), EscalaService,
+  UsuarioService, alem do MedicamentoService.
+
+
+========================================================================
+ OBSERVACAO FINAL
+------------------------------------------------------------------------
+As correcoes [CORRIGIR]/[ADICIONAR] refletem o que JA esta no codigo e no
+banco (bdcuidacare.sql). Os itens [PENDENTE] (ponto, plantao, diario,
+relatorio mensal) continuam sendo objetivos validos do projeto - apenas
+ainda nao foram implementados; sugere-se marca-los na doc como "previsto".
+========================================================================

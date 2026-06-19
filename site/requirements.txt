@@ -5,8 +5,8 @@ Django>=5.0,<6.0
 python-dotenv>=1.0        # Carregamento de variáveis de ambiente (.env)
 
 # Banco de dados
-# SQLite é nativo do Python (desenvolvimento)
-psycopg2-binary>=2.9      # PostgreSQL (produção)
+PyMySQL>=1.1             # Driver MySQL puro em Python (desenvolvimento - registrado em config/__init__.py)
+psycopg2-binary>=2.9     # PostgreSQL (produção)
 
 # Regras de negócio
 geopy>=2.4               # Cálculo de distância GPS (RN01 - check-in)

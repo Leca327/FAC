@@ -136,7 +136,7 @@
 }
 
 .fam-card--aceito {
-    border-left-color: #2e9e6b;
+    border-left-color: var(--pac-accent);
 }
 
 .fam-card--pendente {
@@ -146,7 +146,13 @@
 .fam-card__head {
     display: flex;
     align-items: flex-start;
-    justify-content: space-between;
+    justify-content: flex-start;
+    gap: 8px;
+}
+
+/* Agrupa os badges (tipo + status) juntos à direita, com pequeno espaço. */
+.fam-card__head .fam-tipo {
+    margin-left: auto;
 }
 
 .fam-card__avatar {

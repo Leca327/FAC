@@ -25,4 +25,28 @@
             });
         });
     }
+
+    // -------------------------------------------------------------------
+    // Limpeza de modais ao fechar
+    // Sempre que QUALQUER popup (.modal) é fechado (o atributo `hidden`
+    // passa a estar presente), os formulários dentro dele são resetados.
+    // Assim o texto digitado não "fica lá" ao reabrir, qualquer que tenha
+    // sido a forma de fechar (clique no X/overlay, tecla Esc, etc.).
+    // Usa MutationObserver para captar todas as formas de fechamento,
+    // independentemente do JS específico de cada tela.
+    // -------------------------------------------------------------------
+    document.querySelectorAll(".modal").forEach(function (modal) {
+        const observer = new MutationObserver(function () {
+            if (modal.hidden) {
+                modal.querySelectorAll("form").forEach(function (form) {
+                    form.reset();
+                });
+                // Limpa também mensagens de erro de validação exibidas.
+                modal.querySelectorAll(".field__error").forEach(function (el) {
+                    el.remove();
+                });
+            }
+        });
+        observer.observe(modal, { attributes: true, attributeFilter: ["hidden"] });
+    });
 })();

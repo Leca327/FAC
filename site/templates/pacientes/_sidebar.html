@@ -35,7 +35,11 @@ Sidebar do contexto do paciente. Requer:
         <a href="{% url 'escala:semanal' paciente.id %}" {% if menu_ativo == 'escala' %}class="is-active"{% endif %}>Escala</a>
 
         <p class="vg__nav-group">&nbsp;</p>
-        <a href="#">Prontuário</a>
+        <a href="{% url 'prontuario:diario' paciente.id %}" {% if menu_ativo == 'prontuario' %}class="is-active"{% endif %}>Prontuário</a>
+        {% if request.user.is_cuidador %}
+        <a href="{% url 'ponto:meu' paciente.id %}" {% if menu_ativo == 'ponto' %}class="is-active"{% endif %}>Ponto</a>
+        {% else %}
         <a href="#">Ponto</a>
+        {% endif %}
     </nav>
 </aside>

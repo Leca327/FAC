@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Meu Ponto — {{ paciente.nome }} — CuidaCare{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/pacientes.css' %}">
+<link rel="stylesheet" href="{% static 'css/medicamentos.css' %}">
+<link rel="stylesheet" href="{% static 'css/ponto.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="vg pac--cuidador">
+    <div class="vg__layout">
+        {% include "pacientes/_sidebar.html" with menu_ativo="ponto" %}
+
+        <main class="vg__main">
+            <a href="{% url 'pacientes:visao_geral' paciente.id %}" class="vg__back">← Voltar ao paciente</a>
+
+            <div class="med__top">
+                <div>
+                    <h1 class="med__title">
+                        <span class="med__title-icon" aria-hidden="true">
+                            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M5 3 2 6M19 3l3 3"/></svg>
+                        </span>
+                        Meu Ponto
+                    </h1>
+                    <p class="vg__subtitle">Controle de check-in e check-out — {{ paciente.nome }}</p>
+                </div>
+            </div>
+
+            <!-- Cartão principal: ponto do dia -->
+            <section class="pt-hoje">
+                <p class="pt-hoje__titulo">Ponto do dia — {{ hoje|date:"j \d\e F (l)" }}</p>
+
+                {% if not pode_registrar %}
+                <p class="pt-hoje__aviso">O registro de ponto é exclusivo de cuidadores.</p>
+                {% elif estado.situacao == 'sem_ponto' %}
+                <form method="post" action="{% url 'ponto:check_in' paciente.id %}" data-geo-form>
+                    {% csrf_token %}
+                    <input type="hidden" name="lat">
+                    <input type="hidden" name="lng">
+                    <button type="submit" class="pt-btn pt-btn--in">
+                        <span class="pt-btn__icon">▶</span>
+                        <span class="pt-btn__label">CHECK-IN</span>
+                    </button>
+                </form>
+                <p class="pt-clock" data-clock></p>
+                <p class="pt-hoje__info">
+                    <span>Você ainda não iniciou o plantão de hoje.</span>
+                    <span class="pt-geo-status" data-geo-status></span>
+                </p>
+
+                {% elif estado.situacao == 'aberto' %}
+                <form method="post" action="{% url 'ponto:check_out' paciente.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="pt-btn pt-btn--out">
+                        <span class="pt-btn__icon">✋</span>
+                        <span class="pt-btn__label">CHECK-OUT</span>
+                    </button>
+                </form>
+                <p class="pt-clock" data-clock></p>
+                <p class="pt-hoje__info">
+                    <span class="pt-check">✅ Check-in registrado às {{ estado.entrada|time:"H:i" }}</span>
+                    <span class="pt-horas">Trabalhadas hoje: {{ estado.trabalhadas }}</span>
+                    {% if estado.observacoes %}<span class="pt-obs">⚠ {{ estado.observacoes }}</span>{% endif %}
+                </p>
+                {% if pode_registrar %}<button type="button" class="btn btn--soft btn--xs pt-editar" id="abrir-editar-ponto">✎ Editar ponto de hoje</button>{% endif %}
+
+                {% else %}{# fechado #}
+                <div class="pt-btn pt-btn--done" aria-hidden="true">
+                    <span class="pt-btn__icon">✔</span>
+                    <span class="pt-btn__label">CONCLUÍDO</span>
+                </div>
+                <p class="pt-hoje__info">
+                    <span class="pt-check">✅ Plantão de hoje concluído</span>
+                    <span class="pt-horas">Entrada {{ estado.entrada|time:"H:i" }} • Saída {{ estado.saida|time:"H:i" }} • Total {{ estado.trabalhadas }}</span>
+                    {% if estado.observacoes %}<span class="pt-obs">⚠ {{ estado.observacoes }}</span>{% endif %}
+                </p>
+                {% if pode_registrar %}<button type="button" class="btn btn--soft btn--xs pt-editar" id="abrir-editar-ponto">✎ Editar ponto de hoje</button>{% endif %}
+                {% endif %}
+            </section>
+
+            <!-- Histórico de ponto: últimos 7 finalizados + filtro de intervalo -->
+            <section class="pt-hist">
+                <header class="pt-hist__head">
+                    <h2>
+                        <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                        Histórico de Ponto
+                    </h2>
+                    <form class="pt-hist__filtro" method="get" action="{% url 'ponto:meu' paciente.id %}">
+                        <label for="f-de">De:</label>
+                        <input type="date" id="f-de" name="de" value="{{ de|date:'Y-m-d' }}">
+                        <label for="f-ate">Até:</label>
+                        <input type="date" id="f-ate" name="ate" value="{{ ate|date:'Y-m-d' }}">
+                        <button type="submit" class="btn btn--primary btn--xs">Filtrar</button>
+                        <a href="{% url 'ponto:meu' paciente.id %}" class="btn btn--soft btn--xs">Limpar</a>
+                    </form>
+                </header>
+
+                <p class="pt-hist__sub">Os últimos 7 plantões finalizados.</p>
+
+                <div class="pt-hist__row">
+                    {% for h in historico %}
+                    <article class="pt-card">
+                        <header class="pt-card__head">
+                            <strong>{{ h.dia_semana }}</strong>
+                            <span>{{ h.data_label }}</span>
+                        </header>
+                        <div class="pt-card__linha">
+                            <span class="pt-card__label">Entrada</span>
+                            <span class="pt-card__valor">{{ h.entrada|time:"H:i" }}</span>
+                        </div>
+                        <div class="pt-card__linha">
+                            <span class="pt-card__label">Saída</span>
+                            <span class="pt-card__valor">{{ h.saida|time:"H:i" }}</span>
+                        </div>
+                        <div class="pt-card__linha pt-card__linha--horas">
+                            <span class="pt-card__label">Horas do dia</span>
+                            <span class="pt-card__valor">{{ h.horas }}</span>
+                        </div>
+                        <span class="pt-badge">Trabalhado</span>
+                        {% if h.observacoes %}<p class="pt-card__obs">⚠ {{ h.observacoes }}</p>{% endif %}
+                    </article>
+                    {% empty %}
+                    <p class="pt-hist__empty">Nenhum plantão finalizado no período.</p>
+                    {% endfor %}
+                </div>
+            </section>
+        </main>
+    </div>
+</div>
+
+{% if pode_registrar and estado.situacao != 'sem_ponto' %}
+<!-- Popup: Editar ponto de hoje (somente o dia atual) -->
+<div class="modal" id="modal-editar-ponto" hidden>
+    <div class="modal__overlay" data-close></div>
+    <div class="modal__card modal__card--wide" role="dialog" aria-modal="true" aria-labelledby="modal-editar-ponto-title">
+        <button type="button" class="modal__close" data-close aria-label="Fechar">&times;</button>
+        <div class="modal__icon" aria-hidden="true">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        </div>
+        <h2 id="modal-editar-ponto-title">Editar ponto de hoje</h2>
+        <p class="modal__subtitle">Ajuste os horários do plantão de {{ hoje|date:"j \d\e F" }}.</p>
+
+        <form method="post" action="{% url 'ponto:editar' paciente.id %}">
+            {% csrf_token %}
+            <div class="field-grid">
+                <div class="field">
+                    <label for="ed_entrada">Entrada:</label>
+                    <input type="time" id="ed_entrada" name="entrada" value="{{ estado.entrada|time:'H:i' }}" required>
+                </div>
+                <div class="field">
+                    <label for="ed_saida">Saída:</label>
+                    <input type="time" id="ed_saida" name="saida" value="{{ estado.saida|time:'H:i' }}">
+                </div>
+            </div>
+            <p class="field__hint">Deixe a saída em branco para manter o plantão aberto.</p>
+            <button type="submit" class="btn btn--primary btn--block btn--lg">Salvar alterações</button>
+        </form>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}<script src="{% static 'js/ponto.js' %}"></script>{% endblock %}

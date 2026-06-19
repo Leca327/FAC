@@ -8,16 +8,38 @@ O sistema oferece funcionalidades como agenda médica, controle de jornada das c
 
 ## 🌐 Tecnologias Utilizadas
 
+**Backend**
+- Python 3.12
+- Django 5.x
+- MySQL (driver PyMySQL)
+
+**Frontend**
 - HTML5
 - CSS3
-- Bootstrap
 - JavaScript
-- PHP
-- MySQL
+
+**Ferramentas**
 - Git
 - GitHub
 - Figma
 - Trello
+
+## ▶️ Como rodar o projeto localmente
+
+O backend é feito em **Python + Django** e usa **MySQL** (driver PyMySQL).
+O passo a passo completo está documentado em dois manuais na raiz do repositório:
+
+- **[MANUAL_INSTALACAO.txt](MANUAL_INSTALACAO.txt)** — instalação inicial (Python 3.12, MySQL, ambiente virtual, dependências e preparação do banco). Faça isto **uma vez**.
+- **[MANUAL_EXECUCAO.txt](MANUAL_EXECUCAO.txt)** — como subir o servidor no dia a dia e visualizar o site no navegador.
+
+Resumo rápido (após a instalação):
+
+```powershell
+cd site
+.\venv\Scripts\python.exe manage.py runserver 127.0.0.1:8000
+```
+
+Depois abra **http://127.0.0.1:8000/** no navegador.
 
 ## Integrantes
 

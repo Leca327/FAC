@@ -19,7 +19,7 @@ from django.views import View
 from pacientes.services import PacienteService
 
 from .forms import MedicamentoForm, RotinaPosologiaForm
-from .services import MedicamentoService
+from .services import DoseFuturaError, MedicamentoService
 
 __all__ = [
     "MedicamentosPacienteView",
@@ -230,15 +230,20 @@ class MarcarDoseView(LoginRequiredMixin, View):
         horario = request.POST.get("horario", "").strip()
         medicamento_id = request.POST.get("medicamento_id")
 
-        resultado = MedicamentoService.alternar_dose(
-            paciente=paciente,
-            medicamento_id=medicamento_id,
-            data=data_dose,
-            horario=horario,
-            usuario=request.user,
-        )
-        if resultado is None:
-            messages.error(request, "Medicamento não encontrado.")
+        try:
+            resultado = MedicamentoService.alternar_dose(
+                paciente=paciente,
+                medicamento_id=medicamento_id,
+                data=data_dose,
+                horario=horario,
+                usuario=request.user,
+            )
+        except DoseFuturaError as erro:
+            messages.error(request, str(erro))
+            resultado = False
+        else:
+            if resultado is None:
+                messages.error(request, "Medicamento não encontrado.")
 
         # Volta para a página de origem (ex.: Visão Geral) quando informada.
         destino = request.POST.get("next")

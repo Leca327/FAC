@@ -1,0 +1,151 @@
+========================================================================
+ CUIDACARE - MANUAL DE INSTALACAO (primeira vez)
+========================================================================
+
+Este manual descreve TUDO o que precisa ser instalado e configurado UMA
+UNICA VEZ na maquina para conseguir rodar o projeto localmente.
+Depois de seguir estes passos, use o "MANUAL_EXECUCAO.txt" para subir o
+servidor no dia a dia.
+
+Sistema de referencia: Windows 10/11 + PowerShell.
+
+------------------------------------------------------------------------
+ PRE-REQUISITOS (o que o projeto precisa)
+------------------------------------------------------------------------
+1. Python 3.12 (backend Django)
+2. MySQL Server 8.0 rodando na porta 3306 (banco de dados)
+3. O banco "cuidacare_db" criado e populado (dump em site/bd/bdcuidacare.sql)
+
+------------------------------------------------------------------------
+ PASSO 1 - INSTALAR O PYTHON 3.12
+------------------------------------------------------------------------
+ATENCAO: o "python" que ja vem no Windows (atalho da Microsoft Store) NAO
+serve - ele e apenas um atalho vazio. Instale o Python de verdade.
+
+Opcao A (recomendada) - via winget no PowerShell:
+
+    winget install --id Python.Python.3.12 -e --source winget --accept-package-agreements --accept-source-agreements
+
+Opcao B - manualmente:
+    Baixe em https://www.python.org/downloads/ e, no instalador,
+    MARQUE a opcao "Add python.exe to PATH".
+
+Depois de instalar, FECHE e ABRA o PowerShell de novo e confirme:
+
+    python --version
+    (deve aparecer "Python 3.12.x")
+
+Se "python" continuar caindo no atalho da Store, use o caminho completo:
+    & "$env:LOCALAPPDATA\Programs\Python\Python312\python.exe" --version
+
+------------------------------------------------------------------------
+ PASSO 2 - GARANTIR O MYSQL RODANDO
+------------------------------------------------------------------------
+O projeto usa MySQL em desenvolvimento (porta 3306), com:
+    usuario:  root
+    senha:    root
+    banco:    cuidacare_db
+
+- Tenha o MySQL Server 8.0 instalado e o servico iniciado.
+- Para conferir se esta no ar (PowerShell):
+    (Test-NetConnection -ComputerName 127.0.0.1 -Port 3306).TcpTestSucceeded
+    (deve retornar "True")
+
+Se o seu usuario/senha do MySQL forem DIFERENTES de root/root, veja o
+PASSO 5 (arquivo .env) para ajustar.
+
+------------------------------------------------------------------------
+ PASSO 3 - IMPORTAR O BANCO DE DADOS
+------------------------------------------------------------------------
+Se o banco "cuidacare_db" ainda nao existe, crie e importe o dump:
+
+    mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS cuidacare_db CHARACTER SET utf8mb4;"
+    mysql -u root -p cuidacare_db < "site/bd/bdcuidacare.sql"
+
+(o caminho do mysql.exe costuma ser:
+ "C:\Program Files\MySQL\MySQL Server 8.0\bin\mysql.exe")
+
+------------------------------------------------------------------------
+ PASSO 4 - CRIAR O AMBIENTE VIRTUAL E INSTALAR DEPENDENCIAS
+------------------------------------------------------------------------
+Abra o PowerShell na pasta do projeto e entre na pasta "site":
+
+    cd "C:\Users\Let\Documents\Projetos Git\FAC\site"
+
+Crie o ambiente virtual (venv):
+
+    python -m venv venv
+
+Atualize o pip e instale as dependencias dentro do venv usando o
+arquivo site/requirements.txt:
+
+    .\venv\Scripts\python.exe -m pip install --upgrade pip
+    .\venv\Scripts\python.exe -m pip install -r requirements.txt
+
+IMPORTANTE sobre o driver do banco:
+    O projeto usa PyMySQL (arquivo site/config/__init__.py registra o
+    PyMySQL como driver MySQLdb). Por isso a dependencia e "PyMySQL" e
+    NAO "mysqlclient" - ela ja consta no requirements.txt.
+
+(O requirements.txt tambem inclui psycopg2-binary e gunicorn, usados
+ apenas em producao; instala-los nao atrapalha o ambiente local.)
+
+------------------------------------------------------------------------
+ PASSO 5 - (OPCIONAL) ARQUIVO .env
+------------------------------------------------------------------------
+Os valores padrao do settings.py ja funcionam para MySQL root/root em
+cuidacare_db. Voce SO precisa de um .env se quiser mudar usuario, senha,
+porta etc.
+
+    1. Copie site/.env.example para site/.env
+    2. Ajuste as variaveis DB_USER, DB_PASSWORD, DB_HOST, DB_PORT.
+
+Sem .env, o sistema assume:
+    ENVIRONMENT=development
+    DB_NAME=cuidacare_db, DB_USER=root, DB_PASSWORD=root,
+    DB_HOST=127.0.0.1, DB_PORT=3306
+
+------------------------------------------------------------------------
+ PASSO 6 - PREPARAR AS MIGRACOES DO DJANGO
+------------------------------------------------------------------------
+O banco vindo do dump (bdcuidacare.sql) ja tem as tabelas de DADOS
+(usuario, paciente, medicamento, etc.), mas NAO tem as tabelas internas
+do Django (sessoes, autenticacao, etc.). Por isso a sequencia abaixo:
+
+Ainda dentro de site/ (use sempre o python do venv):
+
+    $py = ".\venv\Scripts\python.exe"
+
+1) Cria as tabelas internas do Django (auth, contenttypes, etc.) e
+   "finge" as iniciais cujas tabelas ja existem:
+
+    & $py manage.py migrate --fake-initial
+
+   (Esse comando vai dar erro no app "usuarios" - e esperado. Continue.)
+
+2) Marca como aplicadas as migracoes dos apps cujas tabelas ja vieram
+   do dump:
+
+    foreach ($app in @('usuarios','pacientes','medicamentos','medicos','consultas','familia','escala','prontuario','ponto')) { & $py manage.py migrate $app --fake }
+
+3) Cria a tabela de sessoes (necessaria para login) e marca o admin
+   como fingido (o admin do Django nao e usado no site):
+
+    & $py manage.py migrate sessions
+    & $py manage.py migrate admin --fake
+
+4) Confirme que nao sobrou nada pendente:
+
+    & $py manage.py showmigrations | Select-String "\[ \]"
+    (nao deve retornar nenhuma linha)
+
+OBS: Esses passos de migracao so sao necessarios assim, com --fake,
+PORQUE o banco veio pronto do dump SQL. Em um banco vazio do zero,
+bastaria rodar "python manage.py migrate" normalmente.
+
+------------------------------------------------------------------------
+ PRONTO!
+------------------------------------------------------------------------
+A instalacao esta concluida. A partir de agora, para rodar o projeto no
+dia a dia, siga o arquivo "MANUAL_EXECUCAO.txt".
+========================================================================

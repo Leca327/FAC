@@ -82,14 +82,14 @@
                 <section class="vg-panel">
                     <header class="vg-panel__head">
                         <h2><svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2 6 4-14 3 8h5"/></svg> Atividades Recentes</h2>
-                        <a href="#">Ver todas</a>
+                        <a href="{% url 'prontuario:diario' paciente.id %}">Ver todas</a>
                     </header>
                     {% for atv in atividades %}
                     <div class="vg-panel__row">
-                        <div><small>{{ atv.data_hora }}</small><strong>{{ atv.descricao }}</strong></div>
+                        <div><small>{{ atv.data_hora|date:"d/m H:i" }}</small><strong>{{ atv.titulo }}</strong></div>
                     </div>
                     {% empty %}
-                    <p class="vg-panel__empty">Sem atividades recentes.</p>
+                    <p class="vg-panel__empty">Sem anotações recentes.</p>
                     {% endfor %}
                 </section>
 

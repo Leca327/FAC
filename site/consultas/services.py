@@ -10,6 +10,11 @@ from django.utils import timezone
 
 from .models import Consulta
 
+
+class ConsultaFuturaError(Exception):
+    """Regra de negócio: não se marca como realizada uma consulta futura."""
+
+
 MESES_PT = [
     "janeiro", "fevereiro", "março", "abril", "maio", "junho",
     "julho", "agosto", "setembro", "outubro", "novembro", "dezembro",
@@ -140,6 +145,11 @@ class ConsultaService:
         consulta = Consulta.objects.filter(paciente=paciente, pk=pk).first()
         if not consulta:
             return None
+        # RN: não é permitido marcar como realizada uma consulta de data futura.
+        if consulta.data_hora > timezone.now():
+            raise ConsultaFuturaError(
+                "Não é permitido marcar como realizada uma consulta de data futura."
+            )
         consulta.status = Consulta.Status.REALIZADA
         consulta.resultado = (resultado or "").strip()
         consulta.realizada_por = usuario

@@ -21,17 +21,44 @@ CREATE TABLE `usuario` (
   `last_name` VARCHAR(150),
   `tipo_usuario` ENUM('familiar', 'cuidador') NOT NULL,
   `cpf` VARCHAR(11) UNIQUE,
-  `telefone` VARCHAR(11),
-  `endereco` VARCHAR(255),
+  `telefone` VARCHAR(11) NOT NULL DEFAULT '',
+  `endereco` VARCHAR(255) NOT NULL DEFAULT '',
+  `cep` VARCHAR(8) NOT NULL DEFAULT '',
   `data_criacao` DATETIME DEFAULT CURRENT_TIMESTAMP,
-  `ativo` BOOLEAN DEFAULT TRUE,
-  `is_staff` BOOLEAN DEFAULT FALSE,
-  `is_superuser` BOOLEAN DEFAULT FALSE,
+  -- Campo extra do fluxo de recuperação de senha (model usuarios.Usuario)
+  `senha_temporaria` BOOLEAN NOT NULL DEFAULT FALSE,
+  -- Campos herdados do AbstractUser do Django
+  `is_active` BOOLEAN NOT NULL DEFAULT TRUE,
+  `is_staff` BOOLEAN NOT NULL DEFAULT FALSE,
+  `is_superuser` BOOLEAN NOT NULL DEFAULT FALSE,
+  `date_joined` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `last_login` DATETIME NULL,
-  
+
   INDEX idx_email (email),
   INDEX idx_tipo (tipo_usuario),
   INDEX idx_cpf (cpf)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =====================================================
+-- TABELAS DE LIGAÇÃO M2M do usuário (AbstractUser do Django)
+-- group_id/permission_id referenciam auth_group/auth_permission,
+-- tabelas criadas pelo `migrate` do Django (por isso sem FK aqui,
+-- para não depender da ordem de importação).
+-- =====================================================
+CREATE TABLE `usuario_groups` (
+  `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+  `usuario_id` INT NOT NULL,
+  `group_id` INT NOT NULL,
+  UNIQUE KEY `usuario_groups_usuario_id_group_id_uniq` (`usuario_id`, `group_id`),
+  FOREIGN KEY (usuario_id) REFERENCES usuario(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `usuario_user_permissions` (
+  `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+  `usuario_id` INT NOT NULL,
+  `permission_id` INT NOT NULL,
+  UNIQUE KEY `usuario_user_perms_usuario_id_permission_id_uniq` (`usuario_id`, `permission_id`),
+  FOREIGN KEY (usuario_id) REFERENCES usuario(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- (Observação: NÃO há mais as tabelas de especialização `familiar` e
@@ -346,10 +373,30 @@ CREATE TABLE `excecao_dia` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =====================================================
+-- TABELA: ANOTACAO (Prontuário - anotações manuais do dia)
+-- A linha do tempo do prontuário também agrega medicamentos tomados e
+-- consultas realizadas, mas esses vêm das tabelas medicamento_tomado e
+-- consulta; aqui ficam apenas as anotações registradas manualmente.
+-- =====================================================
+CREATE TABLE `anotacao` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `paciente_id` INT NOT NULL,
+  `data_hora` DATETIME(6) NOT NULL,
+  `titulo` VARCHAR(255) NOT NULL,
+  `descricao` TEXT,
+  `autor_id` INT DEFAULT NULL,                -- quem registrou (familiar/cuidador)
+  `data_criacao` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+
+  INDEX idx_anotacao_pac_data (paciente_id, data_hora),
+  FOREIGN KEY (paciente_id) REFERENCES paciente(id) ON DELETE CASCADE,
+  FOREIGN KEY (autor_id) REFERENCES usuario(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =====================================================
 -- ÍNDICES ADICIONAIS PARA PERFORMANCE
 -- =====================================================
 
-CREATE INDEX idx_usuario_ativo ON usuario(ativo);
+CREATE INDEX idx_usuario_ativo ON usuario(is_active);
 CREATE INDEX idx_paciente_ativo ON paciente(ativo);
 CREATE INDEX idx_participacao_usuario_paciente ON participacao(usuario_id, paciente_id);
 CREATE INDEX idx_plantao_cuidador_data ON plantao(cuidador_id, data_plantao);
@@ -398,12 +445,13 @@ SELECT
   p.nome as paciente,
   c.tipo,
   c.titulo,
-  c.profissional,
+  md.nome as profissional,
   c.data_hora,
-  c.local,
+  c.observacao,
   DATEDIFF(c.data_hora, NOW()) as dias_para_consulta
 FROM consulta c
 INNER JOIN paciente p ON c.paciente_id = p.id
+LEFT JOIN medico md ON c.medico_id = md.id
 WHERE c.status = 'agendada' AND c.data_hora >= NOW()
 ORDER BY c.data_hora ASC;
 

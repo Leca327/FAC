@@ -1,0 +1,94 @@
+========================================================================
+ ALTERACAO 02 - Tabela `usuario` (modelo de usuario) e views do dump
+ Documento alvo: "A4 Lab. Desenv. Web - FAC.docx"
+ Arquivo de banco alvo: site/bd/bdcuidacare.sql  (JA ATUALIZADO)
+ Data: 2026-06-19
+========================================================================
+
+MOTIVO
+------------------------------------------------------------------------
+Ao popular dados de teste, o sistema nao conseguia sequer criar um usuario:
+a tabela `usuario` do dump nao batia com o model Django `usuarios.Usuario`
+(que herda de AbstractUser). Faltavam colunas que o Django exige e as
+tabelas de ligacao (M2M) do usuario. Foi necessario alinhar o banco ao
+model para o sistema funcionar.
+
+O arquivo site/bd/bdcuidacare.sql JA FOI corrigido (tabela `usuario`,
+novas tabelas M2M e uma view). Falta apenas refletir isso na documentacao
+A4 (itens abaixo).
+
+
+------------------------------------------------------------------------
+ O QUE MUDOU NO BANCO (ja aplicado em bdcuidacare.sql)
+------------------------------------------------------------------------
+Tabela `usuario`:
+  + ADICIONADAS as colunas: `cep` (VARCHAR 8), `senha_temporaria`,
+    `is_active`, `date_joined`  (alem de is_staff/is_superuser/last_login
+    que ja existiam — todas herdadas do AbstractUser do Django).
+  - REMOVIDA a coluna `ativo` (substituida por `is_active`, que e o nome
+    usado pelo Django; o indice idx_usuario_ativo passou a usar is_active).
+
+Novas tabelas de ligacao (M2M padrao do AbstractUser):
+  + `usuario_groups`            (usuario <-> auth_group)
+  + `usuario_user_permissions`  (usuario <-> auth_permission)
+  (Sem FK para auth_group/auth_permission no dump, pois essas tabelas sao
+   criadas pelo `migrate` do Django apos a importacao.)
+
+View `vw_proximas_consultas`:
+  Corrigida — referenciava colunas que nao existem mais na tabela
+  `consulta` redesenhada (`c.profissional`, `c.local`). Passou a usar o
+  nome do profissional via JOIN na tabela `medico` e o campo `observacao`.
+
+
+------------------------------------------------------------------------
+ TRECHO 1 - Secao "2.5.1. Descricao Resumida", item "1. USER"
+------------------------------------------------------------------------
+TEXTO ATUAL:
+"Armazena os dados de todos os usuarios do sistema (familiares e
+cuidadores). Contem informacoes de autenticacao (email e senha), dados
+pessoais e um discriminador para indicar o tipo de usuario. Serve como
+superclasse para as entidades FAMILIAR e CUIDADOR atraves de heranca de
+tabela unica."
+
+SUBSTITUIR POR:
+"Armazena os dados de todos os usuarios do sistema (familiares e
+cuidadores) em uma UNICA tabela `usuario`. Contem informacoes de
+autenticacao (email e senha), dados pessoais (nome, CPF, telefone,
+endereco, CEP) e um discriminador `tipo_usuario` (familiar/cuidador).
+Herda de AbstractUser do Django, incluindo os campos is_active, is_staff,
+is_superuser, date_joined e last_login, alem das tabelas de ligacao
+usuario_groups e usuario_user_permissions. NAO ha mais especializacao em
+tabelas separadas: o papel de cada usuario em relacao a um paciente (e o
+vinculo, ex.: Filha) e definido na entidade PARTICIPACAO."
+
+
+------------------------------------------------------------------------
+ TRECHO 2 - Secao "2.5.1", itens "2. FAMILIAR" e "3. CUIDADOR"
+------------------------------------------------------------------------
+ACAO: REMOVER os dois itens (2. FAMILIAR e 3. CUIDADOR) e renumerar os
+seguintes.
+
+MOTIVO: as especializacoes FAMILIAR e CUIDADOR foram descontinuadas na
+implementacao (nao existem tabelas `familiar`/`cuidador`). O que elas
+guardavam virou:
+  - vinculo do familiar com o paciente (ex.: Filha)  -> PARTICIPACAO.vinculo;
+  - papel familiar/cuidador                          -> usuario.tipo_usuario
+                                                        e PARTICIPACAO.tipo_participacao.
+
+(Observacao: os campos profissionais que a antiga CUIDADOR previa —
+numero de registro, especialidade — nao sao usados nas telas atuais.)
+
+
+------------------------------------------------------------------------
+ RESUMO DA ALTERACAO
+------------------------------------------------------------------------
+- USER: passa a ser a unica tabela de usuario (AbstractUser), sem
+  especializacao; citar os campos herdados e as tabelas M2M.
+- Remover as entidades FAMILIAR e CUIDADOR do DER/descricao.
+- O dump (bdcuidacare.sql) ja foi alinhado e importa sem erros.
+
+NOTA: ha outras divergencias pre-existentes entre a documentacao e a
+implementacao atual (ex.: item "7. CONSULTA" cita "local"; itens de
+MEDICAMENTO/PRESCRICAO_MEDICAMENTO). Nao fazem parte desta alteracao;
+podem virar ALTERACAO-03 etc. se for desejado reconcilia-las.
+========================================================================

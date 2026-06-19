@@ -1,0 +1,63 @@
+========================================================================
+ ALTERACAO 01 - Banco de dados em DESENVOLVIMENTO (SQLite -> MySQL)
+ Documento alvo: "A4 Lab. Desenv. Web - FAC.docx"
+ Data: 2026-06-19
+========================================================================
+
+MOTIVO
+------------------------------------------------------------------------
+A documentacao afirma que o ambiente de DESENVOLVIMENTO usa SQLite, mas o
+sistema implementado usa MySQL em desenvolvimento. O banco oficial do
+projeto e o dump "site/bd/bdcuidacare.sql" (MySQL), e o acesso e feito
+pelo driver PyMySQL (registrado como MySQLdb em site/config/__init__.py).
+Producao continua PostgreSQL (sem alteracao).
+
+Esta alteracao e necessaria para manter a CONFORMIDADE entre a
+documentacao, o codigo (settings.py) e o banco (bdcuidacare.sql).
+
+
+------------------------------------------------------------------------
+ TRECHO 1 - Secao "2.6. Backend" (paragrafo de abertura)
+------------------------------------------------------------------------
+ONDE: primeiro paragrafo da secao 2.6, que descreve o backend.
+
+TEXTO ATUAL (como esta no documento):
+"O backend da aplicacao CuidaCare foi desenvolvido utilizando o framework
+Django, em linguagem Python, com banco de dados PostgreSQL em producao e
+SQLite para desenvolvimento."
+
+SUBSTITUIR POR:
+"O backend da aplicacao CuidaCare foi desenvolvido utilizando o framework
+Django, em linguagem Python, com banco de dados PostgreSQL em producao e
+MySQL em desenvolvimento."
+
+(o restante do paragrafo, a partir de "A arquitetura segue o padrao
+Model-View-Template...", permanece inalterado.)
+
+
+------------------------------------------------------------------------
+ TRECHO 2 - Secao "2.6.8. Banco de Dados"
+------------------------------------------------------------------------
+ONDE: primeiro paragrafo da secao 2.6.8.
+
+TEXTO ATUAL (como esta no documento):
+"O banco de dados utiliza PostgreSQL em producao, escolhido por sua
+robustez, suporte a transacoes ACID, indices avancados e escalabilidade.
+Em desenvolvimento, utiliza SQLite para simplificar setup local."
+
+SUBSTITUIR POR:
+"O banco de dados utiliza PostgreSQL em producao, escolhido por sua
+robustez, suporte a transacoes ACID, indices avancados e escalabilidade.
+Em desenvolvimento, utiliza MySQL (banco 'cuidacare_db'), cujo schema e
+dados iniciais sao carregados a partir do dump 'bdcuidacare.sql'. O acesso
+ao MySQL e feito pelo driver PyMySQL, registrado como MySQLdb em
+config/__init__.py, dispensando compilacao no Windows."
+
+
+------------------------------------------------------------------------
+ RESUMO DA ALTERACAO
+------------------------------------------------------------------------
+- Trocar "SQLite" por "MySQL" como banco de desenvolvimento (2 ocorrencias).
+- Mencionar o dump bdcuidacare.sql e o driver PyMySQL na secao 2.6.8.
+- Producao (PostgreSQL) NAO muda.
+========================================================================

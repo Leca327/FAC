@@ -1,0 +1,58 @@
+========================================================================
+ ALTERACAO 06 - App PONTO implementado (check-in / check-out)
+ Documento alvo: "A4 Lab. Desenv. Web - FAC.docx"
+ Banco: site/bd/bdcuidacare.sql  (SEM mudanca - tabela `plantao` ja existia)
+ Data: 2026-06-19
+========================================================================
+
+MOTIVO
+------------------------------------------------------------------------
+Foi implementada a tela "Meu Ponto" (visualizacao do cuidador), onde o
+cuidador inicia (check-in) e finaliza (check-out) seu plantao do dia, e ve
+o historico dos ultimos plantoes finalizados. Isto tira o app `ponto` e a
+entidade PLANTAO do status PENDENTE (ver ALTERACAO-03).
+
+A entidade PLANTAO e a "App Ponto" JA constam na documentacao (DER item 10
+e secao 2.6.1). Esta alteracao apenas atualiza o STATUS de "previsto/
+pendente" para "implementado", com as ressalvas abaixo.
+
+
+------------------------------------------------------------------------
+ O QUE FOI IMPLEMENTADO
+------------------------------------------------------------------------
+- Model `Plantao` (app `ponto`) mapeado a tabela EXISTENTE `plantao`
+  (db_table="plantao"); nenhuma mudanca de schema. Migracao aplicada como
+  --fake (a tabela vem do dump), como nos demais apps.
+- Service `PontoService`: check_in(), check_out() (calcula duracao_horas),
+  estado_hoje() e historico_finalizados() (ultimos 7 plantoes FECHADOS,
+  com filtro por intervalo de datas).
+- Views: PontoView (cartao do dia + historico), CheckInView, CheckOutView.
+- Tela `ponto/meu_ponto.html`: botao circular de check-in/out, relogio ao
+  vivo, e "Historico de Ponto" (7 cards na horizontal + filtro De/Ate).
+- Item de menu "Ponto" da barra lateral: visivel para contas de cuidador
+  e agora apontando para a tela (antes era placeholder).
+
+Regras de negocio aplicadas:
+- RN05 (um plantao aberto por cuidador por vez): em PontoService.check_in(),
+  que levanta PlantaoAbertoError. Tambem ha no maximo um plantao por
+  (paciente, cuidador, dia) (UNIQUE do dump).
+
+
+------------------------------------------------------------------------
+ AINDA PENDENTE (atualizar os textos da doc conforme)
+------------------------------------------------------------------------
+- RN01 (Check-in com GPS): NAO implementado ainda. O check-in atual NAO
+  valida a localizacao (o campo plantao.localizacao_gps_entrada fica
+  vazio). A view PontoService/CheckInView pode evoluir para validar o GPS
+  contra paciente.latitude_gps/longitude_gps/raio (geopy).
+- DIARIO_PLANTAO / app `diario` e relatorio mensal de horas continuam
+  PENDENTES.
+
+
+------------------------------------------------------------------------
+ RESUMO
+------------------------------------------------------------------------
+- App `ponto` e entidade PLANTAO: de PENDENTE para IMPLEMENTADO (check-in/
+  check-out + historico). Sem mudanca no banco.
+- Pendencias remanescentes: RN01 (GPS), diario de plantao, relatorio mensal.
+========================================================================
