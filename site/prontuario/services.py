@@ -139,6 +139,44 @@ class ProntuarioService:
                 "rodape": f"Registrado por {_nome(a.autor)}" if a.autor else "",
             })
 
+        # 4) Ponto: entrada (check-in) e saída (check-out) dos plantões do dia.
+        # Derivado da tabela plantao — se o ponto for editado/excluído, o
+        # prontuário reflete automaticamente.
+        from ponto.models import Plantao
+        from ponto.services import formatar_minutos, turno_label, _minutos
+
+        plantoes = (
+            Plantao.objects.filter(paciente=paciente, data_plantao=dia)
+            .select_related("cuidador")
+        )
+        for p in plantoes:
+            cuidador = _nome(p.cuidador)
+            turno = turno_label(p.hora_entrada)
+            if p.hora_entrada:
+                eventos.append({
+                    "tipo": "ponto",
+                    "tipo_label": "Entrada de Plantão",
+                    "hora": p.hora_entrada.strftime("%H:%M"),
+                    "titulo": cuidador,
+                    "detalhe": f"— {turno}" if turno else "",
+                    "subtitulo": "Check-in do plantão",
+                    "rodape": "",
+                })
+            if p.hora_saida:
+                mins = _minutos(p.hora_entrada, p.hora_saida) if p.hora_entrada else None
+                sub = "Check-out do plantão"
+                if mins is not None:
+                    sub += f" • {formatar_minutos(mins)} trabalhadas"
+                eventos.append({
+                    "tipo": "ponto",
+                    "tipo_label": "Saída de Plantão",
+                    "hora": p.hora_saida.strftime("%H:%M"),
+                    "titulo": cuidador,
+                    "detalhe": f"— {turno}" if turno else "",
+                    "subtitulo": sub,
+                    "rodape": "",
+                })
+
         # Filtro de busca por tipo de evento (ou titulo).
         if busca:
             b = busca.lower()

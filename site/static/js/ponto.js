@@ -56,6 +56,26 @@
         });
     }
 
+    // ---------- Filtro do histórico: janela fixa de 7 dias ----------
+    // Ao mudar um dos campos, o outro se ajusta para manter exatamente 7
+    // dias (não é permitido um intervalo menor).
+    var fDe = document.getElementById("f-de");
+    var fAte = document.getElementById("f-ate");
+    if (fDe && fAte) {
+        var addDias = function (valor, dias) {
+            var d = new Date(valor + "T00:00:00");
+            if (isNaN(d)) return "";
+            d.setDate(d.getDate() + dias);
+            return d.toISOString().slice(0, 10);
+        };
+        fDe.addEventListener("change", function () {
+            if (fDe.value) fAte.value = addDias(fDe.value, 6);
+        });
+        fAte.addEventListener("change", function () {
+            if (fAte.value) fDe.value = addDias(fAte.value, -6);
+        });
+    }
+
     // ---------- Popup de editar ponto ----------
     var modal = document.getElementById("modal-editar-ponto");
     var abrir = document.getElementById("abrir-editar-ponto");

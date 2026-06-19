@@ -39,8 +39,8 @@
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v5a4 4 0 0 0 8 0V3"/><path d="M5 3H7M13 3h2"/><path d="M10 18a6 6 0 0 0 6-6v-1"/><circle cx="18" cy="10" r="2"/></svg>
                     </span>
                     {% if cuidador_plantao %}
-                    <strong class="vg-stat__big">{{ cuidador_plantao.first_name }}</strong>
-                    <span class="vg-stat__label">Cuidadora de Plantão</span>
+                    <strong class="vg-stat__big">{{ cuidador_plantao.get_full_name|default:cuidador_plantao.first_name|default:cuidador_plantao.email }}</strong>
+                    <span class="vg-stat__label">Cuidador(a) de Plantão</span>
                     {% else %}
                     <strong class="vg-stat__big">—</strong>
                     <span class="vg-stat__label">Nenhum plantão aberto</span>

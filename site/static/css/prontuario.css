@@ -237,6 +237,10 @@
 .evt--anotacao .evt__icon { background: var(--pac-accent); }
 .evt--anotacao .evt__time { color: var(--pac-accent-dark); }
 
+.evt--ponto { border-left-color: #2e9e6b; }
+.evt--ponto .evt__icon { background: #2e9e6b; }
+.evt--ponto .evt__time { color: #2e7d4f; }
+
 .pr-empty {
     color: var(--text-muted);
     text-align: center;

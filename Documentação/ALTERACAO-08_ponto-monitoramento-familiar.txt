@@ -1,0 +1,58 @@
+========================================================================
+ ALTERACAO 08 - Ponto: tela de monitoramento do familiar
+ Documento alvo: "A4 Lab. Desenv. Web - FAC.docx"
+ Banco: site/bd/bdcuidacare.sql  (SEM mudança de schema)
+ Data: 2026-06-19
+========================================================================
+
+MOTIVO
+------------------------------------------------------------------------
+A "App Ponto" ganhou a VISÃO DO FAMILIAR: uma tela de monitoramento dos
+plantões dos cuidadores (antes só existia "Meu Ponto", do cuidador). Sem
+mudança de banco (usa a tabela `plantao`).
+
+
+------------------------------------------------------------------------
+ O QUE FOI IMPLEMENTADO
+------------------------------------------------------------------------
+Tela "Ponto" (familiar) — /ponto/paciente/<pk>/monitoramento/:
+  - Resumo do mês: total de horas, nº de cuidadores na equipe, nº de
+    plantões realizados.
+  - "Em Plantão Agora": cuidadores com plantão ABERTO, com tempo decorrido.
+  - "Plantão do Dia": plantões de hoje (cuidador, turno, horários, status,
+    duração).
+  - "Relatório de Horas - <mês>": por cuidador (plantões + horas) e TOTAL,
+    com FILTRO de mês (escolher o mês de referência; padrão = mês atual) e
+    botão "Baixar Relatório" (exporta CSV do mês selecionado). O resumo do
+    topo também segue o mês escolhido.
+  - "Pontos por Dia": filtro por DIA e por CUIDADOR, em formato de LISTA,
+    permitindo EDITAR e EXCLUIR cada plantão.
+
+Camada de Services (MonitorService): resumo_mes, em_plantao_agora,
+plantoes_do_dia, relatorio_mes, editar_plantao, excluir_plantao.
+Views: MonitoramentoView, EditarPlantaoView, ExcluirPlantaoView,
+RelatorioCSVView. O item de menu "Ponto" da barra lateral aponta para esta
+tela quando o usuário é familiar (e para "Meu Ponto" quando é cuidador).
+
+
+------------------------------------------------------------------------
+ REGRA DE NEGÓCIO (complemento da RN10)
+------------------------------------------------------------------------
+RN10 (edição de ponto): refinar para distinguir os papéis —
+  - CUIDADOR: edita apenas o próprio ponto do DIA ATUAL (tela "Meu Ponto").
+  - FAMILIAR: no monitoramento, pode EDITAR e EXCLUIR qualquer plantão dos
+    cuidadores daquele paciente (gestão/correção), em qualquer dia.
+
+
+------------------------------------------------------------------------
+ DOCUMENTAÇÃO A AJUSTAR
+------------------------------------------------------------------------
+- Secao 2.6.4 (Views): adicionar MonitoramentoView, EditarPlantaoView,
+  ExcluirPlantaoView, RelatorioCSVView.
+- Secao 2.6.5 (Services): adicionar MonitorService.
+- RN10 (2.2 e 2.6.6): incluir a distinção cuidador x familiar acima.
+- O "RelatorioMensalView" previsto na doc (2.6.4) está atendido, em parte,
+  por este relatório de horas do mês + exportação CSV.
+
+Sem mudança no bdcuidacare.sql.
+========================================================================

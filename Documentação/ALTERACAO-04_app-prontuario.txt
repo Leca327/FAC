@@ -16,7 +16,10 @@ Ela:
      * medicamentos TOMADOS, no horario indicado da dose
        (origem: tabela medicamento_tomado);
      * consultas REALIZADAS, no horario marcado da consulta
-       (origem: tabela consulta).
+       (origem: tabela consulta);
+     * PONTO: entrada (check-in) e saida (check-out) dos plantoes do dia
+       (origem: tabela plantao). Como sao derivados, editar/excluir um ponto
+       atualiza o prontuario automaticamente. [adicionado em 2026-06-19]
 
 Apenas a anotacao manual e persistida (nova tabela `anotacao`); os demais
 eventos sao montados em tempo de exibicao, sem duplicar dados.

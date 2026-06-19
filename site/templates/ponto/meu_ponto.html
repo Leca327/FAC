@@ -97,7 +97,7 @@
                     </form>
                 </header>
 
-                <p class="pt-hist__sub">Os últimos 7 plantões finalizados.</p>
+                <p class="pt-hist__sub">Janela de 7 dias — {{ de|date:"d/m/Y" }} a {{ ate|date:"d/m/Y" }} (intervalo fixo de 7 dias).</p>
 
                 <div class="pt-hist__row">
                     {% for h in historico %}

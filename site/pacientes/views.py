@@ -89,7 +89,14 @@ class VisaoGeralPacienteView(LoginRequiredMixin, View):
         from consultas.services import ConsultaService
         from medicamentos.services import MedicamentoService
         from prontuario.services import ProntuarioService
+        from ponto.models import Plantao
 
+        plantao_aberto = (
+            Plantao.objects.filter(paciente=paciente, status=Plantao.Status.ABERTO)
+            .select_related("cuidador")
+            .order_by("hora_entrada")
+            .first()
+        )
         equipe = PacienteService.equipe_do_paciente(paciente)
         context = {
             "paciente": paciente,
@@ -102,8 +109,8 @@ class VisaoGeralPacienteView(LoginRequiredMixin, View):
             "hoje": timezone.localdate(),
             # "Atividades Recentes": as 3 anotações mais recentes do prontuário.
             "atividades": ProntuarioService.ultimas_anotacoes(paciente, 3),
-            # Placeholder até o app de ponto/plantão existir:
-            "cuidador_plantao": None,
+            # Cuidador do plantão aberto agora (se houver).
+            "cuidador_plantao": plantao_aberto.cuidador if plantao_aberto else None,
         }
         return render(request, "pacientes/visao_geral.html", context)
 

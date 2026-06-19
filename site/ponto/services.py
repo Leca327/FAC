@@ -60,6 +60,27 @@ def rotulo_data(dia):
     return DIAS_SEMANA[dia.weekday()], f"{dia.day} de {MESES_PT[dia.month - 1]}"
 
 
+def turno_label(hora):
+    """Turno a partir da hora de entrada: Manhã / Tarde / Noite."""
+    if hora is None:
+        return ""
+    if hora.hour < 12:
+        return "Manhã"
+    if hora.hour < 18:
+        return "Tarde"
+    return "Noite"
+
+
+def _plantao_minutos(p):
+    if p.hora_entrada and p.hora_saida:
+        return _minutos(p.hora_entrada, p.hora_saida)
+    return 0
+
+
+def _nome(usuario):
+    return (usuario.get_full_name() or usuario.email) if usuario else "—"
+
+
 class PontoService:
     """Regras de negócio do ponto (plantões) de um cuidador."""
 
@@ -239,3 +260,112 @@ class PontoService:
                 "observacoes": p.observacoes,
             })
         return itens
+
+
+class MonitorService:
+    """
+    Monitoramento dos plantões (visão do familiar): painéis de resumo,
+    plantões em aberto/do dia, relatório de horas do mês e gestão (editar/
+    excluir) dos pontos registrados.
+    """
+
+    @staticmethod
+    def cuidadores_equipe(paciente):
+        from pacientes.services import PacienteService
+        return list(PacienteService.equipe_do_paciente(paciente)["cuidadores"])
+
+    @staticmethod
+    def _item(p, agora=None):
+        """Formata um plantão para exibição (cards/lista)."""
+        mins = _plantao_minutos(p)
+        decorrido = None
+        if p.is_aberto and p.hora_entrada and agora is not None:
+            decorrido = _minutos(p.hora_entrada, agora)
+        return {
+            "plantao": p,
+            "cuidador_nome": _nome(p.cuidador),
+            "turno": turno_label(p.hora_entrada),
+            "entrada": p.hora_entrada,
+            "saida": p.hora_saida,
+            "status": p.status,
+            "status_label": p.get_status_display(),
+            "duracao": formatar_minutos(mins) if p.is_fechado else "—",
+            "decorrido": formatar_minutos(decorrido) if decorrido is not None else "",
+        }
+
+    @staticmethod
+    def em_plantao_agora(paciente):
+        agora = timezone.localtime().time().replace(microsecond=0)
+        qs = Plantao.objects.filter(
+            paciente=paciente, status=Plantao.Status.ABERTO
+        ).select_related("cuidador").order_by("hora_entrada")
+        return [MonitorService._item(p, agora) for p in qs]
+
+    @staticmethod
+    def plantoes_do_dia(paciente, dia, cuidador_id=None):
+        agora = timezone.localtime().time().replace(microsecond=0)
+        qs = Plantao.objects.filter(
+            paciente=paciente, data_plantao=dia
+        ).select_related("cuidador")
+        if cuidador_id:
+            qs = qs.filter(cuidador_id=cuidador_id)
+        # Mais recente primeiro (entrada mais tarde / inserido por último).
+        return [MonitorService._item(p, agora) for p in qs.order_by("-hora_entrada", "-id")]
+
+    @staticmethod
+    def relatorio_mes(paciente, ano, mes):
+        qs = Plantao.objects.filter(
+            paciente=paciente, status=Plantao.Status.FECHADO,
+            data_plantao__year=ano, data_plantao__month=mes,
+        ).select_related("cuidador")
+        agg = {}
+        for p in qs:
+            linha = agg.setdefault(p.cuidador_id, {"cuidador": _nome(p.cuidador),
+                                                   "plantoes": 0, "minutos": 0})
+            linha["plantoes"] += 1
+            linha["minutos"] += _plantao_minutos(p)
+        linhas = sorted(agg.values(), key=lambda x: x["cuidador"])
+        for l in linhas:
+            l["horas"] = formatar_minutos(l["minutos"])
+        total_plantoes = sum(l["plantoes"] for l in linhas)
+        total_min = sum(l["minutos"] for l in linhas)
+        return {
+            "linhas": linhas,
+            "total_plantoes": total_plantoes,
+            "total_horas": formatar_minutos(total_min),
+            "total_minutos": total_min,
+        }
+
+    @staticmethod
+    def resumo_mes(paciente, ano, mes):
+        rel = MonitorService.relatorio_mes(paciente, ano, mes)
+        return {
+            "total_horas": rel["total_horas"],
+            "num_cuidadores": len(MonitorService.cuidadores_equipe(paciente)),
+            "num_plantoes": rel["total_plantoes"],
+        }
+
+    @staticmethod
+    def editar_plantao(*, paciente, plantao_id, entrada, saida=None):
+        """Edita um plantão do paciente (visão do familiar)."""
+        plantao = Plantao.objects.filter(paciente=paciente, pk=plantao_id).first()
+        if plantao is None:
+            return None
+        plantao.hora_entrada = entrada
+        if saida:
+            plantao.hora_saida = saida
+            plantao.status = Plantao.Status.FECHADO
+            plantao.duracao_horas = Decimal(_minutos(entrada, saida)) / Decimal(60)
+        else:
+            plantao.hora_saida = None
+            plantao.status = Plantao.Status.ABERTO
+            plantao.duracao_horas = None
+        plantao.save()
+        return plantao
+
+    @staticmethod
+    def excluir_plantao(*, paciente, plantao_id):
+        apagados, _ = Plantao.objects.filter(
+            paciente=paciente, pk=plantao_id
+        ).delete()
+        return apagados > 0

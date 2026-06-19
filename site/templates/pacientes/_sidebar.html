@@ -39,7 +39,7 @@ Sidebar do contexto do paciente. Requer:
         {% if request.user.is_cuidador %}
         <a href="{% url 'ponto:meu' paciente.id %}" {% if menu_ativo == 'ponto' %}class="is-active"{% endif %}>Ponto</a>
         {% else %}
-        <a href="#">Ponto</a>
+        <a href="{% url 'ponto:monitoramento' paciente.id %}" {% if menu_ativo == 'ponto' %}class="is-active"{% endif %}>Ponto</a>
         {% endif %}
     </nav>
 </aside>

@@ -23,14 +23,22 @@ latitude_gps, longitude_gps, raio_validacao_gps; e `plantao`).
 Na "Tabela 1 - Regras de Negócio" (2.2) e na seção 2.6.6, o texto de RN01
 deve passar a refletir a implementação real:
 
-"RN01 - Check-in com GPS: o check-in só é permitido quando o cuidador está
-dentro do raio configurado da residência do paciente. A tela captura a
-localização do navegador (Geolocation API) e envia ao servidor; em
-PontoService.check_in(), a distância até paciente.latitude_gps/longitude_gps
-é calculada com geopy (geodesic) e comparada a paciente.raio_validacao_gps.
-Fora do raio (ou sem localização disponível), o check-in é recusado com
-ForaDoLocalError. Quando o paciente não tem coordenadas configuradas, a
-validação não se aplica (check-in liberado)."
+"RN01 - Check-in com GPS: o check-in é validado pela localização. A tela
+captura a localização do navegador (Geolocation API) e envia ao servidor;
+em PontoService.check_in(), a distância até paciente.latitude_gps/
+longitude_gps é calculada com geopy (geodesic) e comparada a
+paciente.raio_validacao_gps. Casos:
+  - dentro do raio  -> check-in normal (guarda a localização);
+  - FORA do raio    -> check-in RECUSADO (ForaDoLocalError);
+  - localização indisponível (GPS negado/sem suporte) -> o ponto É marcado
+    mesmo assim, com a observação 'Marcado sem Localização' registrada no
+    plantão (aparece no histórico);
+  - paciente sem coordenadas configuradas -> validação não se aplica."
+
+OBS de UI: o filtro do histórico usa uma janela FIXA de 7 dias (padrão:
+últimos 7 dias, hoje - 6 → hoje, para já mostrar os plantões finalizados
+recentes); ao mudar uma data, a outra se ajusta para manter os 7 dias —
+não é permitido um intervalo menor.
 
 
 ------------------------------------------------------------------------
