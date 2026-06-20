@@ -1,0 +1,87 @@
+========================================================================
+ ALTERACAO 09 - Ponto: plantao aberto NAO fecha sozinho ao virar turno/dia
+ Documento alvo: "A4 Lab. Desenv. Web - FAC.docx"
+ Banco: site/bd/bdcuidacare.sql  (SEM mudança de schema)
+ Data: 2026-06-20
+========================================================================
+
+MOTIVO
+------------------------------------------------------------------------
+Comportamento esperado: quando um cuidador deixa o ponto ABERTO e passa
+o turno (manhã/tarde/noite) ou vira o dia, o plantão NÃO deve ser fechado.
+O sistema deve esperar o cuidador fazer o check-out — nunca fecha sozinho.
+
+BUG corrigido: a tela "Meu Ponto" amarrava todas as operações do cuidador
+à data de HOJE (data_plantao = hoje). Se o plantão cruzava a meia-noite,
+ele ficava "invisível": estado_hoje() mostrava "sem ponto", o check_out()
+não achava o aberto (não dava para fechar) e, mesmo assim, a RN05 (um
+aberto por vez) continuava bloqueando um novo check-in. O cuidador ficava
+travado.
+
+Sem mudança de banco (usa os campos que já existem em `plantao`).
+
+
+------------------------------------------------------------------------
+ TRECHO 1 - Regra de negócio (Tabela 1 em 2.2 e seção 2.6.6)
+------------------------------------------------------------------------
+[ADICIONAR]:
+
+"RN11 - Plantão aberto não fecha automaticamente: um plantão deixado em
+aberto NÃO é encerrado pelo sistema quando muda o turno (manhã/tarde/noite)
+nem quando vira o dia. Ele permanece aberto até o cuidador fazer o
+check-out. O plantão aberto é localizado pelo STATUS (não pela data), então
+o cuidador sempre consegue encerrá-lo. A duração é calculada da entrada
+(data + hora) até o momento do check-out, contando corretamente a virada
+de um ou mais dias. Implementado em PontoService.plantao_aberto(),
+plantao_corrente() e check_out()."
+
+[AJUSTE em RN10] A edição de ponto passa a valer para o plantão CORRENTE
+do cuidador (o aberto, mesmo que iniciado em dia anterior; se não houver
+aberto, o registro de hoje). Plantões já finalizados do histórico
+continuam não editáveis pelo cuidador.
+
+
+------------------------------------------------------------------------
+ TRECHO 2 - Views/Services (2.6.4 / 2.6.5)
+------------------------------------------------------------------------
+Em PontoService:
+- plantao_aberto(paciente, cuidador): retorna o plantão com status=ABERTO
+  do cuidador, INDEPENDENTE da data (NULL se não houver).
+- plantao_corrente(paciente, cuidador): o aberto tem prioridade; senão, o
+  plantão de hoje. É o que o cartão "Ponto do dia" exibe.
+- check_out(): passa a fechar o plantao_aberto() (qualquer dia) e calcula a
+  duração com _minutos_corridos() (entrada data+hora -> agora).
+- estado_hoje(): usa plantao_corrente(); no estado "aberto" expõe
+  data_inicio e de_dia_anterior para a tela sinalizar o plantão herdado do
+  dia anterior.
+- editar_hoje(): edita o plantao_corrente().
+- historico_finalizados() e MonitorService: a duração/decorrido de
+  plantões agora preferem a duracao_horas gravada (que considera a virada
+  de dias), recalculando pelos horários só quando ela não existir.
+
+
+------------------------------------------------------------------------
+ TRECHO 3 - Interface (tela "Meu Ponto")
+------------------------------------------------------------------------
+No cartão "Ponto do dia", quando o plantão aberto começou em dia anterior,
+a tela mostra "Check-in às HH:MM de <data>" e o aviso "Plantão ainda em
+aberto desde o dia anterior — ele não fecha sozinho; faça o check-out para
+encerrá-lo." O total passou a ser rotulado "Trabalhadas" (não mais
+"Trabalhadas hoje", pois pode abranger mais de um dia).
+
+No HISTÓRICO de ponto, quando o plantão cruzou a meia-noite (a saída caiu
+em outro dia), o card mostra a DATA da saída abaixo da hora. A data real da
+saída é calculada como entrada (data + hora) + duração — pois `hora_saida`
+guarda apenas a hora (ver PontoService._saida_datetime e os campos
+saida_data/saida_data_label/vira_dia em historico_finalizados).
+
+
+------------------------------------------------------------------------
+ RESUMO
+------------------------------------------------------------------------
+- Nova RN11: plantão aberto nunca é fechado pelo sistema (só o check-out).
+- O aberto é buscado por status, não por data -> sempre encerrável.
+- Duração ciente da virada de dia(s).
+- Ajuste na RN10 (edição passa a mirar o plantão corrente).
+- Sem mudança no bdcuidacare.sql.
+========================================================================

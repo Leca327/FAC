@@ -1,0 +1,70 @@
+========================================================================
+ ALTERACAO 14 - "Meu Perfil": ver e editar os próprios dados
+ Documento alvo: "A4 Lab. Desenv. Web - FAC.docx"
+ Banco: site/bd/bdcuidacare.sql  (SEM mudança de schema)
+ Data: 2026-06-20
+========================================================================
+
+MOTIVO
+------------------------------------------------------------------------
+O menu do usuário (navbar, dropdown que abre ao passar o mouse) tinha um item
+"Perfil" sem destino. Passa a ser "Meu Perfil", acima de "Sair", levando a
+uma página onde o usuário vê e edita seus dados.
+
+Sem mudança de banco (usa os campos já existentes em `usuario`).
+
+
+------------------------------------------------------------------------
+ TRECHO 1 - Views/Services/Forms (2.6.4 / 2.6.6)
+------------------------------------------------------------------------
+- usuarios/forms.py: PerfilForm (ModelForm de Usuario) com first_name,
+  last_name, email, cpf, telefone, endereco, cep. Valida e-mail/CPF únicos
+  (excluindo o próprio usuário) e o formato de telefone (10/11 dígitos);
+  CPF vazio é salvo como NULL.
+- usuarios/views.py: PerfilView (login obrigatório; GET mostra, POST salva e
+  redireciona com mensagem de sucesso).
+- usuarios/urls.py: rota name="perfil" em /conta/perfil/.
+
+
+------------------------------------------------------------------------
+ TRECHO 2 - Interface (2.7.x)
+------------------------------------------------------------------------
+- templates/base.html: item do dropdown do usuário vira "Meu Perfil"
+  (href usuarios:perfil), acima de "Sair". O dropdown já abre no hover
+  (.user-menu:hover .user-menu__dropdown).
+- templates/usuarios/perfil.html: cartão com avatar (inicial), nome, tipo de
+  usuário e "membro desde", formulário de edição (nome, sobrenome, e-mail,
+  CPF, CEP, telefone, endereço), botão "Salvar alterações" e atalho "Alterar
+  senha" (usuarios:redefinir_senha). Mostra mensagens (sucesso/erro).
+- static/css/perfil.css: estilos da página (cartão, avatar, campos, alerta de
+  sucesso). Acrescenta .alert--success (complementa .alert/.alert--error).
+
+
+------------------------------------------------------------------------
+ TRECHO 3 - Ajustes de revisão (2026-06-20)
+------------------------------------------------------------------------
+- MENSAGENS GLOBAIS: as mensagens (messages) não eram exibidas em nenhuma
+  tela e se acumulavam na sessão (logins/check-ins apareciam empilhados ao
+  abrir o perfil). Agora base.html renderiza as mensagens no topo do <main>
+  (área .flash-area / .flash--success|info|warning|error em components.css),
+  consumindo-as a cada página. O perfil deixou de ter seu próprio loop de
+  mensagens (o sucesso de salvar aparece via flash global após o redirect).
+- TAGS DE PAPEL: o(s) badge(s) do perfil vêm das PARTICIPAÇÕES aceitas
+  (PerfilView._papeis): "Familiar" e/ou "Cuidador" conforme o usuário tenha
+  paciente como familiar e/ou cuidador (cai no tipo da conta se não houver
+  participação). Pode exibir os dois.
+- TEMA: a tela de perfil é neutra, em tons de roxo/lavanda (perfil.css usa
+  --bg-lavender-soft no fundo, borda superior --primary, sombra roxa; badge
+  lavanda). O alerta de erro do form passou a ser estilizado no próprio
+  perfil.css (.perfil .alert/--error), pois auth.css não é carregado aqui.
+
+
+------------------------------------------------------------------------
+ RESUMO
+------------------------------------------------------------------------
+- Nova tela "Meu Perfil" (usuarios:perfil) com edição dos próprios dados.
+- Item do menu renomeado e ligado à página (acima de "Sair").
+- Mensagens passam a ser exibidas globalmente (base.html), sem acumular.
+- Badge de papel vem da participação (familiar/cuidador), tela em roxo.
+- Sem mudança no bdcuidacare.sql.
+========================================================================

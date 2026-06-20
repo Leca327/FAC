@@ -195,6 +195,16 @@ class AlterarDiaView(LoginRequiredMixin, View):
             messages.error(request, "Informe um dia e turno válidos.")
             return redirect(_url_semanal(paciente, inicio))
 
+        # RN12: dia já passado e com plantão registrado não pode ser alterado —
+        # a escala reflete o que realmente aconteceu.
+        if data < date.today() and EscalaService.tem_plantao(paciente, data, turno):
+            messages.error(
+                request,
+                "Este dia já passou e teve plantão registrado; a escala mostra "
+                "o que realmente aconteceu e não pode ser alterada.",
+            )
+            return redirect(_url_semanal(paciente, segunda_da_semana(data)))
+
         if request.POST.get("acao") == "restaurar":
             EscalaService.limpar_excecao(paciente=paciente, data=data, turno=turno)
             messages.info(request, "Dia restaurado ao padrão base.")

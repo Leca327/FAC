@@ -523,6 +523,9 @@
     color: var(--pac-accent-dark);
     white-space: nowrap;
 }
+/* Linha/etiqueta de plantão apenas PLANEJADO (ainda não aconteceu). */
+.vg-badge--plan { background: #eef0f6; color: #6a73a6; }
+.ag-row--plan td { color: var(--text-muted); font-style: italic; }
 
 .vg-panel__empty {
     color: var(--text-muted);

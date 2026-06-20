@@ -124,13 +124,19 @@ class CheckInView(LoginRequiredMixin, View):
             return redirect(_url_ponto(paciente))
 
         try:
-            PontoService.check_in(
+            _, fechados = PontoService.check_in(
                 paciente=paciente,
                 cuidador=request.user,
                 latitude=_parse_coord(request.POST.get("lat")),
                 longitude=_parse_coord(request.POST.get("lng")),
             )
             messages.success(request, "Check-in registrado. Bom trabalho!")
+            if fechados:
+                messages.info(
+                    request,
+                    "Havia plantão em aberto: foi fechado automaticamente com o "
+                    "início deste novo plantão.",
+                )
         except (PlantaoAbertoError, ForaDoLocalError) as erro:
             messages.error(request, str(erro))
         return redirect(_url_ponto(paciente))

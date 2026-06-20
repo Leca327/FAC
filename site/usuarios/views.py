@@ -10,7 +10,7 @@ from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.views import View
 
-from .forms import CadastroForm, LoginForm, RedefinirSenhaForm
+from .forms import CadastroForm, LoginForm, PerfilForm, RedefinirSenhaForm
 from .services import UsuarioService
 
 
@@ -125,6 +125,69 @@ class RecuperarSenhaView(View):
                 "temporária para a sua caixa de entrada."
             ),
         })
+
+
+class PerfilView(View):
+    """Tela 'Meu Perfil': vê e edita os próprios dados."""
+
+    template_name = "usuarios/perfil.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect("usuarios:login")
+        return super().dispatch(request, *args, **kwargs)
+
+    @staticmethod
+    def _papeis(user):
+        """
+        Papéis exibidos no perfil — vêm das participações ACEITAS: se o usuário
+        tem algum paciente como familiar e/ou como cuidador. Sem participações,
+        cai no tipo da conta.
+        """
+        from pacientes.models import Participacao
+
+        tipos = set(
+            user.participacoes
+            .filter(status_convite=Participacao.Status.ACEITO)
+            .values_list("tipo_participacao", flat=True)
+        )
+        if not tipos:
+            tipos = {user.tipo_usuario}
+        rotulos = dict(Participacao.Tipo.choices)
+        ordem = [Participacao.Tipo.FAMILIAR, Participacao.Tipo.CUIDADOR]
+        return [rotulos[t] for t in ordem if t in tipos]
+
+    def get(self, request):
+        return render(request, self.template_name, {
+            "form": PerfilForm(instance=request.user),
+            "papeis": self._papeis(request.user),
+        })
+
+    def post(self, request):
+        form = PerfilForm(request.POST, request.FILES, instance=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Perfil atualizado com sucesso!")
+            return redirect("usuarios:perfil")
+        messages.error(request, "Não foi possível salvar. Verifique os campos destacados.")
+        return render(request, self.template_name, {
+            "form": form,
+            "papeis": self._papeis(request.user),
+            "abrir_edicao": True,
+        })
+
+
+class DeletarContaView(View):
+    """Exclui a própria conta (ação irreversível)."""
+
+    def post(self, request):
+        if not request.user.is_authenticated:
+            return redirect("usuarios:login")
+        usuario = request.user
+        logout(request)
+        usuario.delete()
+        messages.info(request, "Sua conta foi excluída.")
+        return redirect("core:home")
 
 
 class LogoutView(View):

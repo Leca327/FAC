@@ -81,9 +81,11 @@
                                     <span class="esc-turno__h">({{ linha.horario }})</span>
                                 </th>
                                 {% for c in linha.celulas %}
-                                <td class="esc-cell {% if c.alterado %}esc-cell--alt{% endif %}{% if pode_editar %} esc-cell--click{% endif %}"
-                                    {% if pode_editar %}data-data="{{ c.data|date:'Y-m-d' }}" data-turno="{{ linha.turno }}" data-cuidador="{% if c.cuidador %}{{ c.cuidador.id }}{% endif %}"{% endif %}>
+                                <td class="esc-cell {% if c.alterado %}esc-cell--alt{% endif %}{% if c.bloqueado %} esc-cell--bloq{% elif pode_editar %} esc-cell--click{% endif %}"
+                                    {% if pode_editar and not c.bloqueado %}data-data="{{ c.data|date:'Y-m-d' }}" data-turno="{{ linha.turno }}" data-cuidador="{% if c.cuidador %}{{ c.cuidador.id }}{% endif %}"{% endif %}
+                                    {% if c.bloqueado %}title="Dia já passado com plantão registrado — não pode ser alterado."{% endif %}>
                                     {% if c.alterado %}<span class="esc-alt">ALT</span>{% endif %}
+                                    {% if c.bloqueado %}<span class="esc-lock" aria-hidden="true"><i class="bi bi-lock-fill"></i></span>{% endif %}
                                     <span class="esc-cell__nome">{{ c.nome|default:"—" }}</span>
                                 </td>
                                 {% endfor %}
@@ -96,6 +98,7 @@
                 <div class="esc-legend">
                     <span class="esc-legend__item"><span class="esc-swatch"></span> Padrão Base</span>
                     <span class="esc-legend__item"><span class="esc-swatch esc-swatch--alt"></span> Alterado no Dia (ALT)</span>
+                    <span class="esc-legend__item"><i class="bi bi-lock-fill"></i> Realizado (dia passado, não editável)</span>
                 </div>
             </section>
 

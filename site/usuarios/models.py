@@ -21,6 +21,19 @@ class Usuario(AbstractUser):
         FAMILIAR = "familiar", "Familiar"
         CUIDADOR = "cuidador", "Cuidador"
 
+    class Genero(models.TextChoices):
+        FEMININO = "feminino", "Feminino"
+        MASCULINO = "masculino", "Masculino"
+        OUTRO = "outro", "Outro"
+        NAO_INFORMAR = "nao_informar", "Prefiro não informar"
+
+    class EstadoCivil(models.TextChoices):
+        SOLTEIRO = "solteiro", "Solteiro(a)"
+        CASADO = "casado", "Casado(a)"
+        DIVORCIADO = "divorciado", "Divorciado(a)"
+        VIUVO = "viuvo", "Viúvo(a)"
+        UNIAO_ESTAVEL = "uniao_estavel", "União estável"
+
     # Login por e-mail — removemos o username padrão do AbstractUser
     username = None
     email = models.EmailField("e-mail", unique=True)
@@ -36,9 +49,26 @@ class Usuario(AbstractUser):
         blank=True,
         validators=[RegexValidator(r"^\d{11}$", "O CPF deve conter 11 dígitos.")],
     )
+    rg = models.CharField("RG", max_length=20, blank=True)
+    data_nascimento = models.DateField("data de nascimento", null=True, blank=True)
+    genero = models.CharField(
+        "gênero", max_length=15, choices=Genero.choices, blank=True
+    )
+    estado_civil = models.CharField(
+        "estado civil", max_length=15, choices=EstadoCivil.choices, blank=True
+    )
     telefone = models.CharField("telefone", max_length=11, blank=True)
-    endereco = models.CharField("endereço", max_length=255, blank=True)
+    whatsapp = models.CharField("WhatsApp", max_length=11, blank=True)
+    # Endereço detalhado
+    endereco = models.CharField("rua", max_length=255, blank=True)
+    complemento = models.CharField("complemento", max_length=100, blank=True)
+    cidade = models.CharField("cidade", max_length=100, blank=True)
+    estado = models.CharField("estado (UF)", max_length=2, blank=True)
     cep = models.CharField("CEP", max_length=8, blank=True)
+    pais = models.CharField("país", max_length=60, blank=True, default="Brasil")
+    foto = models.FileField(
+        "foto de perfil", upload_to="avatares/", null=True, blank=True
+    )
     data_criacao = models.DateTimeField("data de criação", auto_now_add=True)
     # True quando a senha atual é uma temporária gerada pela recuperação,
     # forçando o usuário a redefini-la no próximo acesso.

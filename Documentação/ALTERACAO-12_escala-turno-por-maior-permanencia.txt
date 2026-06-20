@@ -1,0 +1,77 @@
+========================================================================
+ ALTERACAO 12 - Escala: turno atribuído a quem ficou mais tempo nele
+                 (deriva dos plantões por sobreposição) + limpeza de
+                 plantões sobrepostos
+ Documento alvo: "A4 Lab. Desenv. Web - FAC.docx"
+ Banco: site/bd/bdcuidacare.sql  (SEM mudança de schema)
+ Data: 2026-06-20
+ OBS: substitui a parte da ALTERACAO-10 que atribuía o turno pela HORA DE
+      ENTRADA do plantão (registrar_plantao/turno_de_horario), agora removida.
+========================================================================
+
+MOTIVO
+------------------------------------------------------------------------
+1) A escala "realizada" deve atribuir cada turno ao cuidador que ficou MAIS
+   TEMPO dentro daquele turno (e não a quem entrou nele). Ex.: Joana fecha às
+   07:00, Ana entra e fica até as 19:00, e Joana entra e fica até o dia
+   seguinte → Manhã e Tarde = Ana; Noite = Joana.
+
+2) Limpeza de dados: havia plantões SOBREPOSTOS no tempo (de execuções
+   repetidas do seed), violando "um plantão por vez". Foram removidos os
+   sobrepostos, mantendo um por grupo — preferindo os da Joana.
+
+
+------------------------------------------------------------------------
+ TRECHO 1 - Regra de negócio (Tabela 1 em 2.2 e seção 2.6.6)
+------------------------------------------------------------------------
+[ATUALIZAR RN12]:
+
+"RN12 - Escala reflete o plantão real (por maior permanência): a escala
+'realizada' de cada (dia, turno) é derivada dos plantões batidos no ponto. O
+turno é atribuído ao cuidador que somou MAIS tempo dentro da janela do turno
+(Manhã 06–12, Tarde 12–18, Noite 18–06), pela sobreposição do intervalo de
+cada plantão (entrada → saída; aberto → até agora) com a janela. Essa
+realidade tem prioridade sobre a exceção manual e sobre o padrão. Um turno
+já passado que teve plantão fica TRAVADO (não editável). O cálculo é feito na
+montagem da escala (não grava exceção a cada ponto)."
+
+
+------------------------------------------------------------------------
+ TRECHO 2 - Views/Services (2.6.4 / 2.6.5)
+------------------------------------------------------------------------
+Em escala/services.py:
+- janela_turno(data, turno): janela (datetime) do turno (noite cruza o dia).
+- _intervalo_plantao(p, agora): intervalo de presença do plantão (usa a
+  duração gravada, que considera a virada de dias; aberto vai até agora).
+- EscalaService.realizados_semana(paciente, dias): {(dia,turno): cuidador}
+  com quem teve MAIOR sobreposição na janela.
+- EscalaService.tem_plantao() reescrito sobre realizados_semana.
+- EscalaService.semana(): a célula usa o realizado (prioridade), senão a
+  exceção manual, senão o padrão; marca ALT quando o realizado difere do
+  previsto.
+- REMOVIDOS: turno_de_horario(), turnos_com_plantao(), registrar_plantao().
+
+Em ponto/services.py:
+- REMOVIDO PontoService._refletir_na_escala() e as chamadas em check_in()/
+  editar_hoje() — a escala agora deriva dos plantões sob demanda.
+
+
+------------------------------------------------------------------------
+ TRECHO 3 - Limpeza de dados (somente banco de desenvolvimento)
+------------------------------------------------------------------------
+Removidos os plantões sobrepostos do paciente 1 (14 registros), mantendo um
+por grupo de sobreposição, preferindo os da cuidadora Joana. Resultado: linha
+do tempo sem sobreposições. Não afeta o schema nem o dump bdcuidacare.sql
+(dados de teste são regeráveis por site/seed_dados_teste.py).
+
+
+------------------------------------------------------------------------
+ RESUMO
+------------------------------------------------------------------------
+- RN12 reescrita: turno realizado = quem ficou mais tempo (sobreposição).
+- Escala derivada dos plantões na montagem (sem gravar exceção por ponto).
+- Removidos turno_de_horario/turnos_com_plantao/registrar_plantao e o
+  _refletir_na_escala do ponto.
+- Limpeza de plantões sobrepostos no banco de teste.
+- Sem mudança no bdcuidacare.sql.
+========================================================================

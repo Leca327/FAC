@@ -1,0 +1,81 @@
+========================================================================
+ ALTERACAO 10 - Escala reflete o plantão realmente realizado e trava o
+                 dia passado que teve plantão
+ Documento alvo: "A4 Lab. Desenv. Web - FAC.docx"
+ Banco: site/bd/bdcuidacare.sql  (SEM mudança de schema)
+ Data: 2026-06-20
+========================================================================
+
+MOTIVO
+------------------------------------------------------------------------
+Integração entre o app `ponto` (plantões) e o app `escala`:
+
+1) Quando acontece um plantão que NÃO estava previsto (o cuidador que bateu
+   o ponto é diferente do previsto para aquele dia/turno), a escala daquele
+   dia deve ser atualizada para mostrar quem realmente trabalhou (vira um
+   "Alterado no Dia / ALT").
+
+2) Na tela de escala, um dia que JÁ PASSOU e que teve plantão registrado não
+   pode mais ser alterado — a escala passa a refletir o que de fato ocorreu.
+
+Sem mudança de banco (usa as tabelas `plantao` e `excecao_dia` existentes).
+
+
+------------------------------------------------------------------------
+ TRECHO 1 - Regra de negócio (Tabela 1 em 2.2 e seção 2.6.6)
+------------------------------------------------------------------------
+[ADICIONAR]:
+
+"RN12 - Escala reflete o plantão real: ao registrar um ponto (check-in), o
+cuidador que assumiu o turno é gravado na escala daquele dia. Se for
+diferente do previsto pelo padrão (ou da exceção atual), cria-se/atualiza-se
+a exceção do dia (ALT) com o cuidador real; se já coincide, nada muda. O
+turno é deduzido da hora de entrada (Manhã 06–12, Tarde 12–18, Noite 18–06;
+entrada de madrugada 00–06 conta como a Noite do dia anterior).
+Complemento: um dia JÁ PASSADO que teve plantão registrado fica TRAVADO na
+tela de escala (não é editável por 'Alterar Dia'), pois a escala reflete o
+que aconteceu."
+
+
+------------------------------------------------------------------------
+ TRECHO 2 - Views/Services (2.6.4 / 2.6.5)
+------------------------------------------------------------------------
+Em escala/services.py:
+- turno_de_horario(data, hora): mapeia (data + hora de entrada do plantão)
+  para o (dia, turno) da escala, tratando a virada de meia-noite.
+- EscalaService.registrar_plantao(paciente, cuidador, data_plantao,
+  hora_entrada): grava na escala o cuidador real (cria ALT só quando difere
+  do previsto/atual).
+- EscalaService.turnos_com_plantao(paciente, inicio, fim) e
+  EscalaService.tem_plantao(paciente, data, turno): quais (dia, turno)
+  tiveram plantão (aberto/fechado), usados para travar o passado.
+- EscalaService.semana(): cada célula agora traz "realizado" e "bloqueado".
+
+Em ponto/services.py:
+- PontoService.check_in() e editar_hoje() chamam _refletir_na_escala(), que
+  invoca EscalaService.registrar_plantao() (import tardio p/ evitar ciclo).
+
+Em escala/views.py:
+- AlterarDiaView.post() recusa alterar/restaurar um dia anterior a hoje que
+  tenha plantão registrado (mensagem de erro).
+
+
+------------------------------------------------------------------------
+ TRECHO 3 - Interface (tela "Escala de Cuidadores", aba Semanal)
+------------------------------------------------------------------------
+- Células de dias passados com plantão aparecem TRAVADAS: cadeado (🔒), sem
+  clique (não abrem o "Alterar Dia"), com tooltip explicativo.
+- Nova legenda: "🔒 Realizado (dia passado, não editável)".
+- Plantões não previstos do dia atual aparecem com o selo ALT (como qualquer
+  alteração de dia), e seguem editáveis enquanto o dia não passa.
+
+
+------------------------------------------------------------------------
+ RESUMO
+------------------------------------------------------------------------
+- Nova RN12: escala reflete o plantão real (ALT automático) e trava o dia
+  passado que teve plantão.
+- ponto -> escala via PontoService._refletir_na_escala /
+  EscalaService.registrar_plantao.
+- Sem mudança no bdcuidacare.sql.
+========================================================================

@@ -1,0 +1,76 @@
+========================================================================
+ ALTERACAO 11 - Ponto: um plantão por vez — novo check-in fecha o aberto
+ Documento alvo: "A4 Lab. Desenv. Web - FAC.docx"
+ Banco: site/bd/bdcuidacare.sql  (SEM mudança de schema)
+ Data: 2026-06-20
+========================================================================
+
+MOTIVO
+------------------------------------------------------------------------
+Regra: só é permitido um plantão por vez. Quando alguém bate o ponto
+(check-in) e ainda há um plantão ABERTO, o que estava aberto é FECHADO
+automaticamente e recebe a indicação "Fechado Automaticamente com Início
+de Novo Plantão".
+
+Isso refina/atualiza a RN05 (antes o novo check-in era BLOQUEADO se houvesse
+aberto) e convive com a RN11 (o plantão não fecha apenas pelo tempo passar —
+virar turno/dia; ele só é fechado por um check-out manual OU pelo início de
+um novo plantão).
+
+Sem mudança de banco (usa `plantao` e o campo `observacoes`).
+
+
+------------------------------------------------------------------------
+ TRECHO 1 - Regra de negócio (Tabela 1 em 2.2 e seção 2.6.6)
+------------------------------------------------------------------------
+[ATUALIZAR RN05] de "bloqueia novo plantão se houver aberto" para:
+
+"RN05 - Um plantão por vez: um cuidador só tem um plantão aberto por vez e um
+paciente só tem um plantão aberto por vez."
+
+[ADICIONAR]:
+
+"RN13 - Fechamento automático ao iniciar novo plantão: ao registrar um
+check-in, qualquer plantão ainda ABERTO do mesmo cuidador (em qualquer
+paciente) e/ou do mesmo paciente (de qualquer cuidador — troca de turno) é
+fechado automaticamente. A hora de saída é o instante do novo check-in, a
+duração é recalculada (considerando a virada de dias) e a observação
+'Fechado Automaticamente com Início de Novo Plantão' é registrada no plantão
+fechado. Não é possível ter dois plantões do mesmo cuidador no mesmo paciente
+no mesmo dia (restrição única paciente+cuidador+dia)."
+
+
+------------------------------------------------------------------------
+ TRECHO 2 - Views/Services (2.6.4 / 2.6.5)
+------------------------------------------------------------------------
+Em ponto/services.py:
+- PontoService._fechar_abertos_por_novo_plantao(paciente, cuidador): fecha os
+  abertos (cuidador OU paciente) com a observação OBS_FECHADO_AUTO; devolve a
+  quantidade.
+- PontoService.check_in(): deixa de bloquear por haver aberto; chama o
+  fechamento automático antes de criar o novo. Passa a retornar
+  (plantao, qtd_fechados_auto).
+- MonitorService._item(): passa a incluir "observacoes".
+
+Em ponto/views.py:
+- CheckInView desempacota (plantao, fechados) e, se fechados>0, mostra um
+  aviso de que o plantão anterior foi fechado automaticamente.
+
+
+------------------------------------------------------------------------
+ TRECHO 3 - Interface
+------------------------------------------------------------------------
+- A observação "Fechado Automaticamente com Início de Novo Plantão" aparece
+  na indicação do plantão (cartão "Ponto do dia" e histórico em "Meu Ponto";
+  e no painel "Plantão do Dia" do monitoramento do familiar).
+- No check-in, surge uma mensagem informando o fechamento automático.
+
+
+------------------------------------------------------------------------
+ RESUMO
+------------------------------------------------------------------------
+- RN05 reformulada (um plantão por vez, por cuidador e por paciente).
+- Nova RN13: novo check-in fecha automaticamente o aberto (com observação).
+- check_in() agora retorna (plantao, qtd_fechados_auto).
+- Sem mudança no bdcuidacare.sql.
+========================================================================

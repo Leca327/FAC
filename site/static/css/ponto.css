@@ -160,6 +160,14 @@
     color: var(--text-muted);
 }
 .pt-card__valor { font-weight: 700; color: var(--pac-accent-dark); }
+.pt-card__data {
+    display: block;
+    font-size: 0.66rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: none;
+    letter-spacing: 0;
+}
 .pt-card__linha--horas .pt-card__valor { color: var(--ink); }
 .pt-badge {
     margin-top: 2px;
@@ -305,6 +313,7 @@
     border-radius: 999px;
     margin-top: 2px;
 }
+.mon-obs { color: #b06a00 !important; font-size: 0.78rem !important; }
 .mon-badge--fechado { background: #eef1f6; color: #5a6478; }
 .mon-badge--aberto { background: #e3f5e9; color: #2e7d4f; }
 .mon-badge--cancelado { background: #fdeef0; color: #b3344b; }

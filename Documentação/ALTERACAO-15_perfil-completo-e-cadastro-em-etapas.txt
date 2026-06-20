@@ -1,0 +1,73 @@
+========================================================================
+ ALTERACAO 15 - Perfil completo (mais dados) + cadastro em etapas
+ Documento alvo: "A4 Lab. Desenv. Web - FAC.docx"
+ Banco: site/bd/bdcuidacare.sql  (COM mudança de schema na tabela usuario)
+ Data: 2026-06-20
+========================================================================
+
+MOTIVO
+------------------------------------------------------------------------
+A tela "Meu Perfil" passou a seguir o layout de referência (cartões por
+seção) e a guardar mais dados do usuário. O cadastro foi dividido em etapas
+(preenche uma etapa e avança para a próxima).
+
+
+------------------------------------------------------------------------
+ TRECHO 1 - Banco (tabela `usuario`) — NOVOS CAMPOS
+------------------------------------------------------------------------
+Adicionados ao model usuarios.Usuario e à tabela `usuario`:
+  rg              VARCHAR(20)  DEFAULT ''
+  data_nascimento DATE NULL
+  genero          VARCHAR(15)  DEFAULT ''   (feminino/masculino/outro/nao_informar)
+  estado_civil    VARCHAR(15)  DEFAULT ''   (solteiro/casado/divorciado/viuvo/uniao_estavel)
+  whatsapp        VARCHAR(11)  DEFAULT ''
+  complemento     VARCHAR(100) DEFAULT ''
+  cidade          VARCHAR(100) DEFAULT ''
+  estado          VARCHAR(2)   DEFAULT ''   (UF)
+  pais            VARCHAR(60)  DEFAULT 'Brasil'
+  foto            VARCHAR(100) NULL         (FileField upload_to=avatares/)
+O campo `endereco` passou a representar a "Rua".
+
+Aplicação: migração REAL usuarios/0004 (ALTER TABLE — NÃO usar --fake nela).
+Refletido em site/bd/bdcuidacare.sql (CREATE TABLE usuario).
+
+
+------------------------------------------------------------------------
+ TRECHO 2 - Views/Forms/URLs (2.6.4 / 2.6.6)
+------------------------------------------------------------------------
+- usuarios/forms.py: PerfilForm passou a incluir os novos campos, com
+  validação de telefone/whatsapp (10/11 dígitos), CPF/e-mail únicos, UF em
+  maiúsculas e foto (tipo de imagem + até 5 MB). data_nascimento usa input
+  type=date.
+- usuarios/views.py: PerfilView trata upload (request.FILES); nova
+  DeletarContaView (POST) exclui a própria conta (logout + delete).
+- usuarios/urls.py: nova rota usuarios:excluir_conta (/conta/perfil/excluir/).
+- config/urls.py: em DEBUG, serve MEDIA_URL/MEDIA_ROOT (fotos de perfil).
+
+
+------------------------------------------------------------------------
+ TRECHO 3 - Interface (2.7.x)
+------------------------------------------------------------------------
+- templates/usuarios/perfil.html: cartões por seção — cabeçalho (foto/avatar,
+  nome, contato, etiquetas, "Alterar Foto"/"Editar Perfil"), Informações
+  Pessoais, Informações de Contato, Endereço e Conta & Segurança (Alterar
+  Senha / Deletar Conta). Em tons de roxo/lavanda (paleta neutra do site).
+- static/css/perfil.css: layout das seções; alterna leitura/edição pela
+  classe .is-editing; .btn--danger.
+- static/js/perfil.js: botões "Editar" entram em modo edição; "Cancelar"
+  recarrega; ao escolher a foto, envia o formulário.
+- templates/usuarios/cadastro.html: formulário em 3 etapas (fieldsets
+  .wizard-step) com indicador de progresso e navegação (Voltar/Próximo/
+  Cadastre-se). static/js/cadastro.js só avança quando a etapa atual é válida
+  (e revela tudo se o servidor devolver erros). Estilos do wizard em auth.css.
+
+
+------------------------------------------------------------------------
+ RESUMO
+------------------------------------------------------------------------
+- usuario ganhou rg, data_nascimento, genero, estado_civil, whatsapp,
+  complemento, cidade, estado, pais, foto (migração 0004, refletida no dump).
+- Perfil em cartões por seção (paleta roxa), com edição inline e foto.
+- Exclusão de conta e link de troca de senha.
+- Cadastro em etapas (wizard) com validação por etapa.
+========================================================================

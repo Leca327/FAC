@@ -7,9 +7,10 @@ finalizados. Regras de negócio:
 - só existe um plantão por (paciente, cuidador, dia).
 """
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
 
+from django.db.models import Q
 from django.utils import timezone
 from geopy.distance import geodesic
 
@@ -48,6 +49,22 @@ def _minutos(entrada, saida):
     return s - e
 
 
+def _minutos_corridos(data_inicio, hora_inicio, agora=None):
+    """
+    Minutos decorridos entre o início (data + hora de entrada) e `agora`,
+    considerando a virada de um ou mais dias.
+
+    Diferente de `_minutos` (que só sabe os horários), aqui usamos a data do
+    plantão, então um ponto deixado aberto por mais de 24h é contado correto.
+    """
+    if not (data_inicio and hora_inicio):
+        return None
+    agora = agora or timezone.localtime()
+    inicio = datetime.combine(data_inicio, hora_inicio)
+    fim = agora.replace(tzinfo=None, second=0, microsecond=0)
+    return max(0, int((fim - inicio).total_seconds() // 60))
+
+
 def formatar_minutos(minutos):
     """Ex.: 705 -> '11h 45m'."""
     if minutos is None or minutos < 0:
@@ -72,13 +89,43 @@ def turno_label(hora):
 
 
 def _plantao_minutos(p):
+    """Minutos trabalhados de um plantão fechado.
+
+    Prefere a `duracao_horas` gravada no check-out (que considera a virada de
+    dias); só recalcula pelos horários se a duração não estiver gravada.
+    """
+    if p.duracao_horas is not None:
+        return int(round(float(p.duracao_horas) * 60))
     if p.hora_entrada and p.hora_saida:
         return _minutos(p.hora_entrada, p.hora_saida)
     return 0
 
 
+def _saida_datetime(p):
+    """
+    Momento da saída de um plantão fechado = entrada (data + hora) + duração.
+
+    Como `hora_saida` guarda só a hora, é daqui que sai a DATA real da saída,
+    usada para mostrar o dia quando o plantão cruzou a meia-noite.
+    """
+    if not (p.hora_entrada and p.data_plantao):
+        return None
+    inicio = datetime.combine(p.data_plantao, p.hora_entrada)
+    return inicio + timedelta(minutes=_plantao_minutos(p))
+
+
 def _nome(usuario):
     return (usuario.get_full_name() or usuario.email) if usuario else "—"
+
+
+def _juntar_obs(atual, nota):
+    """Acrescenta `nota` às observações sem duplicar nem perder o que havia."""
+    atual = (atual or "").strip()
+    if not atual:
+        return nota
+    if nota in atual:
+        return atual
+    return f"{atual} • {nota}"
 
 
 class PontoService:
@@ -90,8 +137,62 @@ class PontoService:
             paciente=paciente, cuidador=cuidador, data_plantao=timezone.localdate()
         ).first()
 
+    @staticmethod
+    def plantao_aberto(paciente, cuidador):
+        """
+        O plantão ABERTO do cuidador neste paciente, se houver — INDEPENDENTE
+        da data.
+
+        Um plantão deixado aberto NÃO é fechado automaticamente quando vira o
+        turno (manhã/tarde/noite) nem quando vira o dia: ele continua aqui até
+        o cuidador fazer o check-out. Por isso o aberto é buscado pelo status,
+        e não por `data_plantao = hoje`.
+        """
+        return Plantao.objects.filter(
+            paciente=paciente, cuidador=cuidador, status=Plantao.Status.ABERTO
+        ).first()
+
+    @staticmethod
+    def plantao_corrente(paciente, cuidador):
+        """
+        Plantão que o cartão "Ponto do dia" exibe: o ABERTO (de qualquer dia)
+        tem prioridade; se não houver aberto, mostra o registro de hoje.
+        """
+        return (
+            PontoService.plantao_aberto(paciente, cuidador)
+            or PontoService.plantao_de_hoje(paciente, cuidador)
+        )
+
     # Observação registrada quando o check-in é feito sem localização.
     OBS_SEM_LOCAL = "Marcado sem Localização"
+    # Observação de quem foi fechado automaticamente por um novo plantão.
+    OBS_FECHADO_AUTO = "Fechado Automaticamente com Início de Novo Plantão"
+
+    @staticmethod
+    def _fechar_abertos_por_novo_plantao(paciente, cuidador):
+        """
+        RN05/RN13: só pode haver um plantão por vez. Ao iniciar um novo, fecha
+        automaticamente os plantões que ainda estavam ABERTOS — tanto os do
+        próprio cuidador (em qualquer paciente) quanto os deste paciente (de
+        qualquer cuidador, ex.: troca de turno). Cada um recebe a observação
+        OBS_FECHADO_AUTO. Retorna quantos foram fechados.
+        """
+        agora = timezone.localtime()
+        abertos = Plantao.objects.filter(
+            Q(cuidador=cuidador) | Q(paciente=paciente),
+            status=Plantao.Status.ABERTO,
+        )
+        fechados = 0
+        for p in abertos:
+            p.hora_saida = agora.time().replace(second=0, microsecond=0)
+            p.status = Plantao.Status.FECHADO
+            mins = _minutos_corridos(p.data_plantao, p.hora_entrada, agora)
+            if mins is not None:
+                p.duracao_horas = Decimal(mins) / Decimal(60)
+            p.observacoes = _juntar_obs(p.observacoes, PontoService.OBS_FECHADO_AUTO)
+            p.save()
+            fechados += 1
+        return fechados
 
     @staticmethod
     def _validar_local(paciente, latitude, longitude):
@@ -122,15 +223,17 @@ class PontoService:
 
     @staticmethod
     def check_in(*, paciente, cuidador, latitude=None, longitude=None):
-        """Inicia o plantão de hoje (check-in), validando o GPS (RN01)."""
+        """
+        Inicia o plantão de hoje (check-in), validando o GPS (RN01).
+
+        RN13: como só pode haver um plantão por vez, qualquer plantão ainda
+        ABERTO (do cuidador ou deste paciente) é fechado automaticamente ao
+        iniciar este — com a observação "Fechado Automaticamente com Início de
+        Novo Plantão". Retorna (plantao, qtd_fechados_auto).
+        """
         hoje = timezone.localdate()
-        # RN05: um plantão aberto por cuidador por vez.
-        if Plantao.objects.filter(
-            cuidador=cuidador, status=Plantao.Status.ABERTO
-        ).exists():
-            raise PlantaoAbertoError(
-                "Você já tem um plantão aberto. Finalize-o antes de iniciar outro."
-            )
+        # Não dá para ter dois plantões do mesmo cuidador no mesmo paciente no
+        # mesmo dia (restrição única paciente+cuidador+dia).
         if Plantao.objects.filter(
             paciente=paciente, cuidador=cuidador, data_plantao=hoje
         ).exists():
@@ -140,32 +243,40 @@ class PontoService:
         # RN01: check-in só é permitido na residência do paciente — mas se a
         # localização não puder ser obtida, marca mesmo assim com observação.
         gps, observacao = PontoService._validar_local(paciente, latitude, longitude)
-        return Plantao.objects.create(
+        # RN13: fecha automaticamente o que estava aberto antes de abrir o novo.
+        fechados = PontoService._fechar_abertos_por_novo_plantao(paciente, cuidador)
+        entrada = timezone.localtime().time().replace(second=0, microsecond=0)
+        plantao = Plantao.objects.create(
             paciente=paciente,
             cuidador=cuidador,
             data_plantao=hoje,
-            hora_entrada=timezone.localtime().time().replace(second=0, microsecond=0),
+            hora_entrada=entrada,
             localizacao_gps_entrada=gps,
             observacoes=observacao,
             status=Plantao.Status.ABERTO,
         )
+        # RN12: a escala reflete quem REALMENTE trabalhou — isso é derivado dos
+        # plantões na hora de montar a escala (EscalaService.realizados_semana),
+        # então o check-in não precisa gravar nada na escala.
+        return plantao, fechados
 
     @staticmethod
     def check_out(*, paciente, cuidador):
-        """Finaliza o plantão aberto de hoje (check-out)."""
-        plantao = Plantao.objects.filter(
-            paciente=paciente,
-            cuidador=cuidador,
-            data_plantao=timezone.localdate(),
-            status=Plantao.Status.ABERTO,
-        ).first()
+        """
+        Finaliza o plantão ABERTO do cuidador (check-out), de qualquer dia.
+
+        O sistema nunca fecha o plantão sozinho ao virar o turno ou o dia — só
+        este check-out o encerra. A duração é calculada da entrada (data + hora)
+        até agora, então um plantão que cruzou a meia-noite conta certo.
+        """
+        plantao = PontoService.plantao_aberto(paciente, cuidador)
         if not plantao:
             raise SemPlantaoAbertoError("Não há plantão aberto para finalizar.")
-        saida = timezone.localtime().time().replace(second=0, microsecond=0)
-        plantao.hora_saida = saida
+        agora = timezone.localtime()
+        plantao.hora_saida = agora.time().replace(second=0, microsecond=0)
         plantao.status = Plantao.Status.FECHADO
-        if plantao.hora_entrada:
-            mins = _minutos(plantao.hora_entrada, saida)
+        mins = _minutos_corridos(plantao.data_plantao, plantao.hora_entrada, agora)
+        if mins is not None:
             plantao.duracao_horas = Decimal(mins) / Decimal(60)
         plantao.save()
         return plantao
@@ -177,9 +288,9 @@ class PontoService:
         `entrada` é obrigatória. Se `saida` for informada, fecha o plantão e
         recalcula a duração; senão, mantém aberto (sem saída).
         """
-        plantao = PontoService.plantao_de_hoje(paciente, cuidador)
+        plantao = PontoService.plantao_corrente(paciente, cuidador)
         if plantao is None:
-            raise SemPlantaoAbertoError("Não há ponto de hoje para editar.")
+            raise SemPlantaoAbertoError("Não há ponto para editar.")
         plantao.hora_entrada = entrada
         if saida:
             plantao.hora_saida = saida
@@ -198,31 +309,29 @@ class PontoService:
         Estado do ponto de hoje para o cartão principal:
         situacao = 'sem_ponto' | 'aberto' | 'fechado', com horários e minutos.
         """
-        plantao = PontoService.plantao_de_hoje(paciente, cuidador)
+        plantao = PontoService.plantao_corrente(paciente, cuidador)
         if plantao is None:
             return {"situacao": "sem_ponto", "plantao": None}
+        hoje = timezone.localdate()
         if plantao.is_aberto:
-            agora = timezone.localtime().time().replace(microsecond=0)
-            mins = _minutos(plantao.hora_entrada, agora) if plantao.hora_entrada else None
+            mins = _minutos_corridos(plantao.data_plantao, plantao.hora_entrada)
             return {
                 "situacao": "aberto",
                 "plantao": plantao,
                 "entrada": plantao.hora_entrada,
+                "data_inicio": plantao.data_plantao,
+                "de_dia_anterior": plantao.data_plantao < hoje,
                 "trabalhadas": formatar_minutos(mins),
                 "observacoes": plantao.observacoes,
             }
         # fechado
-        mins = (
-            _minutos(plantao.hora_entrada, plantao.hora_saida)
-            if plantao.hora_entrada and plantao.hora_saida
-            else None
-        )
         return {
             "situacao": "fechado",
             "plantao": plantao,
             "entrada": plantao.hora_entrada,
             "saida": plantao.hora_saida,
-            "trabalhadas": formatar_minutos(mins),
+            "data_inicio": plantao.data_plantao,
+            "trabalhadas": formatar_minutos(_plantao_minutos(plantao)),
             "observacoes": plantao.observacoes,
         }
 
@@ -245,18 +354,20 @@ class PontoService:
         itens = []
         for p in qs.order_by("-data_plantao")[:limite]:
             dia_semana, data_label = rotulo_data(p.data_plantao)
-            mins = (
-                _minutos(p.hora_entrada, p.hora_saida)
-                if p.hora_entrada and p.hora_saida
-                else None
-            )
+            saida_dt = _saida_datetime(p)
+            vira_dia = bool(saida_dt and saida_dt.date() != p.data_plantao)
             itens.append({
                 "plantao": p,
                 "dia_semana": dia_semana,
                 "data_label": data_label,
                 "entrada": p.hora_entrada,
                 "saida": p.hora_saida,
-                "horas": formatar_minutos(mins),
+                # Data real da saída (entrada + duração). Só interessa quando o
+                # plantão cruzou o dia — aí a tela mostra a data sob a hora.
+                "saida_data": saida_dt.date() if saida_dt else None,
+                "saida_data_label": rotulo_data(saida_dt.date())[1] if vira_dia else "",
+                "vira_dia": vira_dia,
+                "horas": formatar_minutos(_plantao_minutos(p)),
                 "observacoes": p.observacoes,
             })
         return itens
@@ -279,8 +390,8 @@ class MonitorService:
         """Formata um plantão para exibição (cards/lista)."""
         mins = _plantao_minutos(p)
         decorrido = None
-        if p.is_aberto and p.hora_entrada and agora is not None:
-            decorrido = _minutos(p.hora_entrada, agora)
+        if p.is_aberto and p.hora_entrada:
+            decorrido = _minutos_corridos(p.data_plantao, p.hora_entrada)
         return {
             "plantao": p,
             "cuidador_nome": _nome(p.cuidador),
@@ -291,6 +402,7 @@ class MonitorService:
             "status_label": p.get_status_display(),
             "duracao": formatar_minutos(mins) if p.is_fechado else "—",
             "decorrido": formatar_minutos(decorrido) if decorrido is not None else "",
+            "observacoes": p.observacoes,
         }
 
     @staticmethod
@@ -311,6 +423,19 @@ class MonitorService:
             qs = qs.filter(cuidador_id=cuidador_id)
         # Mais recente primeiro (entrada mais tarde / inserido por último).
         return [MonitorService._item(p, agora) for p in qs.order_by("-hora_entrada", "-id")]
+
+    @staticmethod
+    def plantoes_periodo(paciente, inicio, fim):
+        """Plantões do paciente entre `inicio` e `fim` (mais recente primeiro)."""
+        agora = timezone.localtime().time().replace(microsecond=0)
+        qs = (
+            Plantao.objects.filter(
+                paciente=paciente, data_plantao__gte=inicio, data_plantao__lte=fim
+            )
+            .select_related("cuidador")
+            .order_by("-data_plantao", "-hora_entrada")
+        )
+        return [MonitorService._item(p, agora) for p in qs]
 
     @staticmethod
     def relatorio_mes(paciente, ano, mes):

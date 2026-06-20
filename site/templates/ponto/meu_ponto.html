@@ -40,7 +40,7 @@
                     <input type="hidden" name="lat">
                     <input type="hidden" name="lng">
                     <button type="submit" class="pt-btn pt-btn--in">
-                        <span class="pt-btn__icon">▶</span>
+                        <span class="pt-btn__icon"><i class="bi bi-play-fill"></i></span>
                         <span class="pt-btn__label">CHECK-IN</span>
                     </button>
                 </form>
@@ -54,29 +54,34 @@
                 <form method="post" action="{% url 'ponto:check_out' paciente.id %}">
                     {% csrf_token %}
                     <button type="submit" class="pt-btn pt-btn--out">
-                        <span class="pt-btn__icon">✋</span>
+                        <span class="pt-btn__icon"><i class="bi bi-box-arrow-right"></i></span>
                         <span class="pt-btn__label">CHECK-OUT</span>
                     </button>
                 </form>
                 <p class="pt-clock" data-clock></p>
                 <p class="pt-hoje__info">
-                    <span class="pt-check">✅ Check-in registrado às {{ estado.entrada|time:"H:i" }}</span>
-                    <span class="pt-horas">Trabalhadas hoje: {{ estado.trabalhadas }}</span>
-                    {% if estado.observacoes %}<span class="pt-obs">⚠ {{ estado.observacoes }}</span>{% endif %}
+                    {% if estado.de_dia_anterior %}
+                    <span class="pt-check"><i class="bi bi-check-circle"></i> Check-in às {{ estado.entrada|time:"H:i" }} de {{ estado.data_inicio|date:"j \d\e F" }}</span>
+                    <span class="pt-obs"><i class="bi bi-hourglass-split"></i> Plantão ainda em aberto desde o dia anterior — ele não fecha sozinho; faça o check-out para encerrá-lo.</span>
+                    {% else %}
+                    <span class="pt-check"><i class="bi bi-check-circle"></i> Check-in registrado às {{ estado.entrada|time:"H:i" }}</span>
+                    {% endif %}
+                    <span class="pt-horas">Trabalhadas: {{ estado.trabalhadas }}</span>
+                    {% if estado.observacoes %}<span class="pt-obs"><i class="bi bi-exclamation-triangle"></i> {{ estado.observacoes }}</span>{% endif %}
                 </p>
-                {% if pode_registrar %}<button type="button" class="btn btn--soft btn--xs pt-editar" id="abrir-editar-ponto">✎ Editar ponto de hoje</button>{% endif %}
+                {% if pode_registrar %}<button type="button" class="btn btn--soft btn--xs pt-editar" id="abrir-editar-ponto"><i class="bi bi-pencil"></i> Editar ponto</button>{% endif %}
 
                 {% else %}{# fechado #}
                 <div class="pt-btn pt-btn--done" aria-hidden="true">
-                    <span class="pt-btn__icon">✔</span>
+                    <span class="pt-btn__icon"><i class="bi bi-check-circle-fill"></i></span>
                     <span class="pt-btn__label">CONCLUÍDO</span>
                 </div>
                 <p class="pt-hoje__info">
-                    <span class="pt-check">✅ Plantão de hoje concluído</span>
+                    <span class="pt-check"><i class="bi bi-check-circle"></i> Plantão de hoje concluído</span>
                     <span class="pt-horas">Entrada {{ estado.entrada|time:"H:i" }} • Saída {{ estado.saida|time:"H:i" }} • Total {{ estado.trabalhadas }}</span>
-                    {% if estado.observacoes %}<span class="pt-obs">⚠ {{ estado.observacoes }}</span>{% endif %}
+                    {% if estado.observacoes %}<span class="pt-obs"><i class="bi bi-exclamation-triangle"></i> {{ estado.observacoes }}</span>{% endif %}
                 </p>
-                {% if pode_registrar %}<button type="button" class="btn btn--soft btn--xs pt-editar" id="abrir-editar-ponto">✎ Editar ponto de hoje</button>{% endif %}
+                {% if pode_registrar %}<button type="button" class="btn btn--soft btn--xs pt-editar" id="abrir-editar-ponto"><i class="bi bi-pencil"></i> Editar ponto de hoje</button>{% endif %}
                 {% endif %}
             </section>
 
@@ -112,14 +117,17 @@
                         </div>
                         <div class="pt-card__linha">
                             <span class="pt-card__label">Saída</span>
-                            <span class="pt-card__valor">{{ h.saida|time:"H:i" }}</span>
+                            <span class="pt-card__valor">
+                                {{ h.saida|time:"H:i" }}
+                                {% if h.vira_dia %}<small class="pt-card__data">{{ h.saida_data_label }}</small>{% endif %}
+                            </span>
                         </div>
                         <div class="pt-card__linha pt-card__linha--horas">
                             <span class="pt-card__label">Horas do dia</span>
                             <span class="pt-card__valor">{{ h.horas }}</span>
                         </div>
                         <span class="pt-badge">Trabalhado</span>
-                        {% if h.observacoes %}<p class="pt-card__obs">⚠ {{ h.observacoes }}</p>{% endif %}
+                        {% if h.observacoes %}<p class="pt-card__obs"><i class="bi bi-exclamation-triangle"></i> {{ h.observacoes }}</p>{% endif %}
                     </article>
                     {% empty %}
                     <p class="pt-hist__empty">Nenhum plantão finalizado no período.</p>
@@ -139,8 +147,8 @@
         <div class="modal__icon" aria-hidden="true">
             <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
         </div>
-        <h2 id="modal-editar-ponto-title">Editar ponto de hoje</h2>
-        <p class="modal__subtitle">Ajuste os horários do plantão de {{ hoje|date:"j \d\e F" }}.</p>
+        <h2 id="modal-editar-ponto-title">Editar ponto</h2>
+        <p class="modal__subtitle">Ajuste os horários do plantão de {{ estado.data_inicio|date:"j \d\e F" }}.</p>
 
         <form method="post" action="{% url 'ponto:editar' paciente.id %}">
             {% csrf_token %}

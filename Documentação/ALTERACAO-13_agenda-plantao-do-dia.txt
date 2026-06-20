@@ -1,0 +1,54 @@
+========================================================================
+ ALTERACAO 13 - Agenda: painel "Plantão do dia" (reais + planejados)
+ Documento alvo: "A4 Lab. Desenv. Web - FAC.docx"
+ Banco: site/bd/bdcuidacare.sql  (SEM mudança de schema)
+ Data: 2026-06-20
+========================================================================
+
+MOTIVO
+------------------------------------------------------------------------
+Na agenda do paciente, o painel "Plantões da semana" listava todos os
+plantões reais da semana. Passa a se chamar "Plantão do dia" e a mostrar
+SOMENTE o dia selecionado no calendário, com:
+
+- plantões REAIS que cobrem o dia (incl. um plantão do dia anterior que
+  avançou pela madrugada): cuidadores que trabalharam, com horários batidos e
+  status (Fechado/Aberto);
+- se o dia for hoje: além dos já feitos, os turnos que ainda virão;
+- se for um dia futuro: o PLANEJADO (a escala prevista), com status
+  "Planejado";
+- dia passado: só o que foi realizado.
+
+Sem mudança de banco.
+
+
+------------------------------------------------------------------------
+ TRECHO 1 - Views/Services (2.6.4 / 2.6.5)
+------------------------------------------------------------------------
+- Novo EscalaService.agenda_dia(paciente, dia): devolve a lista (formatada e
+  ordenada no tempo) com os plantões reais que se sobrepõem ao dia + os turnos
+  planejados (só se o dia for hoje/futuro; pula folga e turno de hoje já
+  encerrado). Cada item: cuidador_nome, entrada_label, saida_label,
+  status_label, planejado(bool).
+- AgendaPacienteView usa EscalaService.agenda_dia(paciente, data_sel) no lugar
+  de MonitorService.plantoes_periodo(); contexto: "plantoes_dia" + "data_sel".
+
+
+------------------------------------------------------------------------
+ TRECHO 2 - Interface (pacientes/agenda.html)
+------------------------------------------------------------------------
+- Título "Plantões da semana" -> "Plantão do dia — dd/mm/aaaa" (dia
+  selecionado).
+- A tabela usa os rótulos prontos (entrada_label/saida_label) e marca as
+  linhas planejadas (classe ag-row--plan e etiqueta vg-badge--plan, status
+  "Planejado").
+
+
+------------------------------------------------------------------------
+ RESUMO
+------------------------------------------------------------------------
+- Painel renomeado e filtrado para o DIA selecionado: reais (passado/hoje) +
+  planejados (hoje/futuro).
+- EscalaService.agenda_dia() combina ponto (real) e escala (planejado).
+- Sem mudança no bdcuidacare.sql.
+========================================================================

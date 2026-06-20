@@ -61,14 +61,14 @@
                                 <select name="rodizio_{{ t.valor }}">
                                     {% for c in cuidadores %}<option value="{{ c.id }}" {% if c.id|stringformat:'s' == cid %}selected{% endif %}>{{ c.get_full_name|default:c.email }}</option>{% endfor %}
                                 </select>
-                                <button type="button" class="btn btn--soft btn--xs js-seq-rm">✕</button>
+                                <button type="button" class="btn btn--soft btn--xs js-seq-rm"><i class="bi bi-x-lg"></i></button>
                             </div>
                             {% empty %}
                             <div class="esc-seq__row">
                                 <select name="rodizio_{{ t.valor }}">
                                     {% for c in cuidadores %}<option value="{{ c.id }}">{{ c.get_full_name|default:c.email }}</option>{% endfor %}
                                 </select>
-                                <button type="button" class="btn btn--soft btn--xs js-seq-rm">✕</button>
+                                <button type="button" class="btn btn--soft btn--xs js-seq-rm"><i class="bi bi-x-lg"></i></button>
                             </div>
                             {% endfor %}
                         </div>
@@ -98,7 +98,7 @@
                         <select>
                             {% for c in cuidadores %}<option value="{{ c.id }}">{{ c.get_full_name|default:c.email }}</option>{% endfor %}
                         </select>
-                        <button type="button" class="btn btn--soft btn--xs js-seq-rm">✕</button>
+                        <button type="button" class="btn btn--soft btn--xs js-seq-rm"><i class="bi bi-x-lg"></i></button>
                     </div>
                 </template>
 

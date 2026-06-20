@@ -7,7 +7,7 @@ o tipo do usuário — sem necessidade de alternância manual.
 """
 
 import calendar
-from datetime import date
+from datetime import date, timedelta
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -151,8 +151,13 @@ class AgendaPacienteView(LoginRequiredMixin, View):
 
         # Consultas do mês (para mostrar os títulos no calendário).
         from consultas.services import ConsultaService
+        from escala.services import EscalaService
 
         consultas_mes = ConsultaService.consultas_do_mes(paciente, ano, mes)
+
+        # "Plantão do dia": só o dia selecionado — reais (o que aconteceu/está
+        # acontecendo) + planejados (se hoje ou um dia futuro).
+        plantoes_dia = EscalaService.agenda_dia(paciente, data_sel)
 
         # Monta as semanas do mês (segunda a domingo)
         cal = calendar.Calendar(firstweekday=0)
@@ -201,8 +206,8 @@ class AgendaPacienteView(LoginRequiredMixin, View):
                 }
                 for c in ConsultaService.consultas_do_dia(paciente, data_sel)
             ],
-            # Placeholder até o app ponto existir:
-            "plantoes_semana": [],
+            "plantoes_dia": plantoes_dia,
+            "data_sel": data_sel,
         }
         return render(request, self.template_name, context)
 

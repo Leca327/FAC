@@ -142,6 +142,20 @@
     border-radius: 6px;
 }
 
+/* Dia já passado com plantão: travado, sem clique. */
+.esc-cell--bloq {
+    cursor: not-allowed;
+    background: #f4f5f7;
+}
+.esc-cell--bloq .esc-cell__nome { color: var(--text-muted); }
+.esc-lock {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    font-size: 0.7rem;
+    opacity: 0.6;
+}
+
 /* última coluna/linha sem borda dupla */
 .esc-table tr td:last-child,
 .esc-table tr th:last-child { border-right: none; }

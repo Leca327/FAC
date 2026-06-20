@@ -1,0 +1,194 @@
+/* =====================================================
+   CuidaCare — perfil.css
+   Tela "Meu Perfil": cartões por seção, em tons de roxo/lavanda (neutro).
+   Alterna entre modo leitura e edição via classe .is-editing no formulário.
+   ===================================================== */
+
+.pf {
+    background: var(--bg-lavender-soft);
+    min-height: calc(100vh - 72px);
+    padding: 32px 20px;
+}
+
+.pf__wrap {
+    max-width: 920px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+}
+
+.pf-form {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+}
+
+/* ---------- Cartões ---------- */
+.pf-card {
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 24px 26px;
+    box-shadow: 0 8px 26px rgba(79, 70, 201, 0.08);
+}
+
+/* ---------- Cabeçalho ---------- */
+.pf-head {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    border-top: 4px solid var(--primary);
+    flex-wrap: wrap;
+}
+
+.pf-avatar {
+    width: 72px;
+    height: 72px;
+    flex: 0 0 72px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    font-weight: 700;
+    overflow: hidden;
+}
+.pf-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+.pf-head__info { flex: 1 1 220px; }
+.pf-head__nome { font-size: 1.5rem; margin: 0; color: var(--ink); }
+.pf-head__contato { margin: 2px 0 0; color: var(--text-muted); font-size: 0.9rem; }
+.pf-head__meta { margin: 8px 0 0; color: var(--text-muted); font-size: 0.82rem; }
+
+.pf-head__acoes { display: flex; gap: 10px; flex-wrap: wrap; }
+
+.pf-badge {
+    display: inline-block;
+    background: var(--bg-lavender);
+    color: var(--primary-dark);
+    font-weight: 600;
+    font-size: 0.74rem;
+    padding: 2px 10px;
+    border-radius: 999px;
+    margin-right: 8px;
+}
+
+.pf-foto-input { display: none; }
+
+/* ---------- Seções ---------- */
+.pf-section__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+}
+.pf-section__head h2 {
+    font-size: 1.05rem;
+    margin: 0;
+    color: var(--ink);
+}
+.pf-edit-link {
+    background: none;
+    border: none;
+    color: var(--primary);
+    font-weight: 600;
+    font-size: 0.86rem;
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 8px;
+}
+.pf-edit-link:hover { background: var(--bg-lavender); }
+
+/* ---------- Grade de campos ---------- */
+.pf-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px 22px;
+}
+.pf-field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.pf-field--wide { grid-column: 1 / -1; }
+
+.pf-field__label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+.pf-field__value {
+    color: var(--ink);
+    font-size: 0.96rem;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--line);
+    min-height: 22px;
+    word-break: break-word;
+}
+
+/* Inputs (escondidos no modo leitura) */
+.pf-field__input { display: none; }
+.pf-field__input input,
+.pf-field__input select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    font-family: var(--font-sans);
+    font-size: 0.95rem;
+    background: var(--white);
+}
+.pf-field__input input:focus,
+.pf-field__input select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 22%, transparent);
+}
+/* Os dois campos (nome/sobrenome) só aparecem ao editar — ver modo edição. */
+.pf-twocol { gap: 12px; }
+
+.pf-err { color: var(--error); font-size: 0.8rem; display: block; margin-top: 4px; }
+
+/* ---------- Modo edição (por seção) ---------- */
+.pf-section.is-editing .pf-field__value { display: none; }
+.pf-section.is-editing .pf-field__input { display: block; }
+.pf-section.is-editing .pf-twocol { display: grid; grid-template-columns: 1fr 1fr; }
+.pf-section.is-editing .pf-edit-link { display: none; }
+
+/* Salvar/Cancelar centralizados dentro do próprio container. */
+.pf-section__actions {
+    display: none;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 20px;
+}
+.pf-section.is-editing .pf-section__actions { display: flex; }
+
+/* ---------- Conta & Segurança ---------- */
+.pf-secrow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--bg-lavender-soft);
+    margin-top: 12px;
+}
+.pf-secrow:first-of-type { margin-top: 0; }
+.pf-secrow__txt { display: flex; flex-direction: column; gap: 2px; }
+.pf-secrow__txt strong { color: var(--ink); }
+.pf-secrow__txt span { color: var(--text-muted); font-size: 0.84rem; }
+
+/* Botão de ação destrutiva */
+.btn--danger { background: #e0414f; color: #fff; }
+.btn--danger:hover { background: #c8323f; }
+
+@media (max-width: 720px) {
+    .pf-grid { grid-template-columns: 1fr; gap: 14px; }
+    .pf-section.is-editing .pf-twocol { grid-template-columns: 1fr; }
+    .pf-head__acoes { width: 100%; }
+}

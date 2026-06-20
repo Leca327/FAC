@@ -64,25 +64,25 @@
                         </table>
                     </section>
 
-                    <!-- Plantões da semana -->
+                    <!-- Plantão do dia: reais (o que aconteceu) + planejados (a vir) -->
                     <section class="vg-panel">
                         <header class="vg-panel__head">
-                            <h2>Plantões da semana</h2>
+                            <h2>Plantão do dia — {{ data_sel|date:"d/m/Y" }}</h2>
                         </header>
                         <table class="ag-table">
                             <thead>
                                 <tr><th>Cuidadora</th><th>Entrada</th><th>Saída</th><th>Status</th></tr>
                             </thead>
                             <tbody>
-                                {% for p in plantoes_semana %}
-                                <tr>
-                                    <td>{{ p.cuidadora }}</td>
-                                    <td>{{ p.entrada }}</td>
-                                    <td>{{ p.saida }}</td>
-                                    <td><span class="vg-badge">{{ p.status }}</span></td>
+                                {% for p in plantoes_dia %}
+                                <tr {% if p.planejado %}class="ag-row--plan"{% endif %}>
+                                    <td>{{ p.cuidador_nome }}</td>
+                                    <td>{{ p.entrada_label }}</td>
+                                    <td>{{ p.saida_label }}</td>
+                                    <td><span class="vg-badge {% if p.planejado %}vg-badge--plan{% endif %}">{{ p.status_label }}</span></td>
                                 </tr>
                                 {% empty %}
-                                <tr><td colspan="4" class="ag-table__empty">Nenhum plantão registrado nesta semana.</td></tr>
+                                <tr><td colspan="4" class="ag-table__empty">Nenhum plantão para mostrar.</td></tr>
                                 {% endfor %}
                             </tbody>
                         </table>

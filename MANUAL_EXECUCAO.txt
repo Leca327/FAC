@@ -70,6 +70,14 @@ Rotas internas (exigem login):
     Consultas/Exames .......... http://127.0.0.1:8000/consultas/
     Equipe (familia) .......... http://127.0.0.1:8000/equipe/
     Escala .................... http://127.0.0.1:8000/escala/
+    Meu Perfil ................ http://127.0.0.1:8000/conta/perfil/
+
+A tela "Meu Perfil" tambem pode ser aberta pelo menu do usuario: passe o
+mouse sobre "Ola, <seu nome>" no canto superior direito e clique em
+"Meu Perfil" (logo acima de "Sair"). Nela voce ve e edita seus dados (nome,
+e-mail, CPF, telefone, endereco, CEP), com atalho para "Alterar senha". As
+etiquetas Familiar/Cuidador aparecem conforme os pacientes em que voce
+participa.
 
 ------------------------------------------------------------------------
  PARA PARAR O SERVIDOR

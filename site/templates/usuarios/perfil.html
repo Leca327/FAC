@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Meu Perfil — CuidaCare{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/perfil.css' %}">{% endblock %}
+
+{% block content %}
+<div class="pf">
+    <div class="pf__wrap">
+
+        <form method="post" enctype="multipart/form-data" id="perfil-form" class="pf-form" novalidate>
+            {% csrf_token %}
+
+            <!-- Cabeçalho -->
+            <div class="pf-card pf-head">
+                <span class="pf-avatar">
+                    {% if user.foto %}<img src="{{ user.foto.url }}" alt="Foto de {{ user.get_full_name }}">
+                    {% else %}{{ user.first_name|default:user.email|slice:":1"|upper }}{% endif %}
+                </span>
+                <div class="pf-head__info">
+                    <h1 class="pf-head__nome">{{ user.get_full_name|default:user.email }}</h1>
+                    <p class="pf-head__contato">{{ user.email }}{% if user.telefone %} · {{ user.telefone }}{% endif %}</p>
+                    <p class="pf-head__meta">
+                        {% for papel in papeis %}<span class="pf-badge">{{ papel }}</span>{% endfor %}
+                        Membro desde {{ user.data_criacao|date:"d/m/Y" }}
+                    </p>
+                </div>
+                <div class="pf-head__acoes">
+                    <label class="btn btn--primary btn--xs" for="id_foto"><i class="bi bi-camera"></i> Alterar Foto</label>
+                </div>
+                <span class="pf-foto-input">{{ form.foto }}</span>
+                {% for e in form.foto.errors %}<span class="pf-err">{{ e }}</span>{% endfor %}
+            </div>
+
+            <!-- Informações Pessoais -->
+            <div class="pf-card pf-section {% if abrir_edicao %}is-editing{% endif %}">
+                <div class="pf-section__head">
+                    <h2><i class="bi bi-person-vcard"></i> Informações Pessoais</h2>
+                    <button type="button" class="pf-edit-link" data-editar><i class="bi bi-pencil"></i> Editar</button>
+                </div>
+                <div class="pf-grid">
+                    <div class="pf-field pf-field--wide">
+                        <span class="pf-field__label">Nome completo</span>
+                        <span class="pf-field__value">{{ user.get_full_name|default:"—" }}</span>
+                        <div class="pf-field__input pf-twocol">
+                            <span>{{ form.first_name }}{% for e in form.first_name.errors %}<span class="pf-err">{{ e }}</span>{% endfor %}</span>
+                            <span>{{ form.last_name }}{% for e in form.last_name.errors %}<span class="pf-err">{{ e }}</span>{% endfor %}</span>
+                        </div>
+                    </div>
+                    <div class="pf-field">
+                        <span class="pf-field__label">CPF</span>
+                        <span class="pf-field__value">{{ user.cpf|default:"—" }}</span>
+                        <div class="pf-field__input">{{ form.cpf }}{% for e in form.cpf.errors %}<span class="pf-err">{{ e }}</span>{% endfor %}</div>
+                    </div>
+                    <div class="pf-field">
+                        <span class="pf-field__label">RG</span>
+                        <span class="pf-field__value">{{ user.rg|default:"—" }}</span>
+                        <div class="pf-field__input">{{ form.rg }}{% for e in form.rg.errors %}<span class="pf-err">{{ e }}</span>{% endfor %}</div>
+                    </div>
+                    <div class="pf-field">
+                        <span class="pf-field__label">Data de nascimento</span>
+                        <span class="pf-field__value">{{ user.data_nascimento|date:"d \d\e F \d\e Y"|default:"—" }}</span>
+                        <div class="pf-field__input">{{ form.data_nascimento }}{% for e in form.data_nascimento.errors %}<span class="pf-err">{{ e }}</span>{% endfor %}</div>
+                    </div>
+                    <div class="pf-field">
+                        <span class="pf-field__label">Gênero</span>
+                        <span class="pf-field__value">{{ user.get_genero_display|default:"—" }}</span>
+                        <div class="pf-field__input">{{ form.genero }}{% for e in form.genero.errors %}<span class="pf-err">{{ e }}</span>{% endfor %}</div>
+                    </div>
+                    <div class="pf-field">
+                        <span class="pf-field__label">Estado civil</span>
+                        <span class="pf-field__value">{{ user.get_estado_civil_display|default:"—" }}</span>
+                        <div class="pf-field__input">{{ form.estado_civil }}{% for e in form.estado_civil.errors %}<span class="pf-err">{{ e }}</span>{% endfor %}</div>
+                    </div>
+                </div>
+                <div class="pf-section__actions">
+                    <button type="submit" class="btn btn--primary"><i class="bi bi-check-lg"></i> Salvar</button>
+                    <button type="button" class="btn btn--soft" data-cancelar><i class="bi bi-x-lg"></i> Cancelar</button>
+                </div>
+            </div>
+
+            <!-- Informações de Contato -->
+            <div class="pf-card pf-section {% if abrir_edicao %}is-editing{% endif %}">
+                <div class="pf-section__head">
+                    <h2><i class="bi bi-telephone"></i> Informações de Contato</h2>
+                    <button type="button" class="pf-edit-link" data-editar><i class="bi bi-pencil"></i> Editar</button>
+                </div>
+                <div class="pf-grid">
+                    <div class="pf-field">
+                        <span class="pf-field__label">E-mail</span>
+                        <span class="pf-field__value">{{ user.email }}</span>
+                        <div class="pf-field__input">{{ form.email }}{% for e in form.email.errors %}<span class="pf-err">{{ e }}</span>{% endfor %}</div>
+                    </div>
+                    <div class="pf-field">
+                        <span class="pf-field__label">Telefone</span>
+                        <span class="pf-field__value">{{ user.telefone|default:"—" }}</span>
+                        <div class="pf-field__input">{{ form.telefone }}{% for e in form.telefone.errors %}<span class="pf-err">{{ e }}</span>{% endfor %}</div>
+                    </div>
+                    <div class="pf-field">
+                        <span class="pf-field__label">WhatsApp</span>
+                        <span class="pf-field__value">{{ user.whatsapp|default:"—" }}</span>
+                        <div class="pf-field__input">{{ form.whatsapp }}{% for e in form.whatsapp.errors %}<span class="pf-err">{{ e }}</span>{% endfor %}</div>
+                    </div>
+                </div>
+                <div class="pf-section__actions">
+                    <button type="submit" class="btn btn--primary"><i class="bi bi-check-lg"></i> Salvar</button>
+                    <button type="button" class="btn btn--soft" data-cancelar><i class="bi bi-x-lg"></i> Cancelar</button>
+                </div>
+            </div>
+
+            <!-- Endereço -->
+            <div class="pf-card pf-section {% if abrir_edicao %}is-editing{% endif %}">
+                <div class="pf-section__head">
+                    <h2><i class="bi bi-house"></i> Endereço</h2>
+                    <button type="button" class="pf-edit-link" data-editar><i class="bi bi-pencil"></i> Editar</button>
+                </div>
+                <div class="pf-grid">
+                    <div class="pf-field">
+                        <span class="pf-field__label">Rua</span>
+                        <span class="pf-field__value">{{ user.endereco|default:"—" }}</span>
+                        <div class="pf-field__input">{{ form.endereco }}{% for e in form.endereco.errors %}<span class="pf-err">{{ e }}</span>{% endfor %}</div>
+                    </div>
+                    <div class="pf-field">
+                        <span class="pf-field__label">Complemento</span>
+                        <span class="pf-field__value">{{ user.complemento|default:"—" }}</span>
+                        <div class="pf-field__input">{{ form.complemento }}{% for e in form.complemento.errors %}<span class="pf-err">{{ e }}</span>{% endfor %}</div>
+                    </div>
+                    <div class="pf-field">
+                        <span class="pf-field__label">Cidade</span>
+                        <span class="pf-field__value">{{ user.cidade|default:"—" }}</span>
+                        <div class="pf-field__input">{{ form.cidade }}{% for e in form.cidade.errors %}<span class="pf-err">{{ e }}</span>{% endfor %}</div>
+                    </div>
+                    <div class="pf-field">
+                        <span class="pf-field__label">Estado</span>
+                        <span class="pf-field__value">{{ user.estado|default:"—" }}</span>
+                        <div class="pf-field__input">{{ form.estado }}{% for e in form.estado.errors %}<span class="pf-err">{{ e }}</span>{% endfor %}</div>
+                    </div>
+                    <div class="pf-field">
+                        <span class="pf-field__label">CEP</span>
+                        <span class="pf-field__value">{{ user.cep|default:"—" }}</span>
+                        <div class="pf-field__input">{{ form.cep }}{% for e in form.cep.errors %}<span class="pf-err">{{ e }}</span>{% endfor %}</div>
+                    </div>
+                    <div class="pf-field">
+                        <span class="pf-field__label">País</span>
+                        <span class="pf-field__value">{{ user.pais|default:"—" }}</span>
+                        <div class="pf-field__input">{{ form.pais }}{% for e in form.pais.errors %}<span class="pf-err">{{ e }}</span>{% endfor %}</div>
+                    </div>
+                </div>
+                <div class="pf-section__actions">
+                    <button type="submit" class="btn btn--primary"><i class="bi bi-check-lg"></i> Salvar</button>
+                    <button type="button" class="btn btn--soft" data-cancelar><i class="bi bi-x-lg"></i> Cancelar</button>
+                </div>
+            </div>
+        </form>
+
+        <!-- Conta & Segurança -->
+        <div class="pf-card pf-section">
+            <div class="pf-section__head"><h2><i class="bi bi-shield-lock"></i> Conta &amp; Segurança</h2></div>
+            <div class="pf-secrow">
+                <div class="pf-secrow__txt">
+                    <strong>Senha</strong>
+                    <span>Mantenha sua senha protegida e atualizada.</span>
+                </div>
+                <a href="{% url 'usuarios:redefinir_senha' %}" class="btn btn--soft btn--xs"><i class="bi bi-key"></i> Alterar Senha</a>
+            </div>
+            <div class="pf-secrow">
+                <div class="pf-secrow__txt">
+                    <strong>Deletar Conta</strong>
+                    <span>Esta ação é irreversível.</span>
+                </div>
+                <form method="post" action="{% url 'usuarios:excluir_conta' %}"
+                      onsubmit="return confirm('Tem certeza? Esta ação é irreversível e apagará sua conta permanentemente.');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn--danger btn--xs"><i class="bi bi-trash"></i> Deletar Conta</button>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/auth.js' %}"></script>
+<script src="{% static 'js/perfil.js' %}"></script>
+{% endblock %}

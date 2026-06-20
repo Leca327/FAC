@@ -171,6 +171,30 @@
     }
 }
 
+/* ---------- Mensagens (flash) ---------- */
+.flash-area {
+    max-width: 760px;
+    margin: 16px auto 0;
+    padding: 0 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.flash {
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: opacity 0.4s ease, transform 0.4s ease;
+}
+.flash--hide { opacity: 0; transform: translateY(-6px); }
+.flash--success { background: #e8f7ee; color: #1f7a45; border-color: #bfe6cd; }
+.flash--info,
+.flash--debug { background: var(--bg-lavender); color: var(--primary-dark); border-color: var(--line); }
+.flash--warning { background: #fff6e6; color: #9a6a00; border-color: #f0d9a8; }
+.flash--error { background: #fdeaea; color: #c0392b; border-color: #f5c6c6; }
+
 /* ---------- Botões ---------- */
 .btn {
     display: inline-flex;

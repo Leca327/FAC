@@ -348,6 +348,51 @@
     border: 1px solid #f5c6c6;
 }
 
+/* ---------- Cadastro em etapas (wizard) ---------- */
+.wizard-progress {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 0 0 22px;
+}
+.wizard-progress__dot {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+    background: var(--bg-lavender, #ececfb);
+    color: var(--text-muted, #6f6c87);
+    transition: background var(--transition), color var(--transition);
+}
+.wizard-progress__dot.is-active {
+    background: var(--primary, #4f46c9);
+    color: #fff;
+}
+.wizard-progress__bar {
+    width: 36px;
+    height: 2px;
+    background: var(--line, #e4e2f2);
+}
+.wizard-step__titulo {
+    font-weight: 700;
+    color: var(--ink, #1f1b3a);
+    margin: 0 0 14px;
+    font-size: 1.02rem;
+}
+.wizard-nav {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-top: 8px;
+}
+/* O "Voltar" fica compacto ao lado do botão principal. */
+.wizard-nav [data-voltar] { flex: 0 0 auto; }
+
 /* ---------- Responsivo ---------- */
 @media (max-width: 860px) {
     .auth {

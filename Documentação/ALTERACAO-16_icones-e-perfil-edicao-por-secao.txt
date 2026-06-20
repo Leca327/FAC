@@ -1,0 +1,50 @@
+========================================================================
+ ALTERACAO 16 - Ícones (Bootstrap Icons) no lugar de emojis + perfil
+                 com edição por seção
+ Documento alvo: "A4 Lab. Desenv. Web - FAC.docx"
+ Banco: site/bd/bdcuidacare.sql  (SEM mudança de schema)
+ Data: 2026-06-20
+========================================================================
+
+MOTIVO
+------------------------------------------------------------------------
+1) Padronizar a interface com uma biblioteca de ícones em vez de emojis.
+2) Na tela "Meu Perfil", permitir editar apenas o cartão (seção) cujo
+   "Editar" foi clicado, com os botões Salvar/Cancelar centralizados dentro
+   do próprio cartão.
+
+Sem mudança de banco.
+
+
+------------------------------------------------------------------------
+ TRECHO 1 - Ícones
+------------------------------------------------------------------------
+- base.html importa o Bootstrap Icons (CDN, como as fontes do Google).
+- Todos os emojis das telas foram trocados por <i class="bi bi-..."></i>:
+  * usuarios/perfil.html (seções), ponto/meu_ponto.html (check-in/out/
+    concluído, avisos, editar), ponto/monitoramento.html (cards/painéis/
+    ações), escala/semanal.html (cadeado), escala/editar_padrao.html
+    (remover), core/home.html (status "Online").
+
+
+------------------------------------------------------------------------
+ TRECHO 2 - Perfil: edição por seção
+------------------------------------------------------------------------
+- A classe .is-editing passou do <form> para cada .pf-section: o botão
+  "Editar" de uma seção abre só aquela (perfil.js usa closest('.pf-section')).
+- Cada seção editável tem seus próprios botões "Salvar" (submit) e "Cancelar",
+  centralizados (.pf-section__actions, justify-content:center), exibidos só
+  quando a seção está em edição. Removido o botão global "Editar Perfil" e a
+  barra única de ações.
+- Como o formulário é único e todos os campos continuam no DOM, salvar por
+  qualquer seção grava todos os dados (os demais ficam inalterados).
+
+
+------------------------------------------------------------------------
+ RESUMO
+------------------------------------------------------------------------
+- Bootstrap Icons importado no base.html; emojis substituídos por ícones em
+  todas as telas.
+- Perfil edita só o cartão clicado, com Salvar/Cancelar centralizados nele.
+- Sem mudança no bdcuidacare.sql.
+========================================================================

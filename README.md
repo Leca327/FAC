@@ -6,6 +6,8 @@ O Sistema de Gestão de Cuidados Domiciliares é uma aplicação web desenvolvid
 
 O sistema oferece funcionalidades como agenda médica, controle de jornada das cuidadoras, prontuário digital e relatórios de acompanhamento, promovendo maior organização, transparência e segurança no cuidado dos pacientes.
 
+Cada usuário conta ainda com a tela **Meu Perfil**, acessível pelo menu do usuário (canto superior direito), onde pode ver e editar seus dados (nome, e-mail, CPF, telefone, endereço e CEP) e alterar a senha. As etiquetas **Familiar/Cuidador** são exibidas conforme os pacientes em que a pessoa participa.
+
 ## 🌐 Tecnologias Utilizadas
 
 **Backend**
@@ -39,7 +41,7 @@ cd site
 .\venv\Scripts\python.exe manage.py runserver 127.0.0.1:8000
 ```
 
-Depois abra **http://127.0.0.1:8000/** no navegador.
+Depois abra **http://127.0.0.1:8000/** no navegador. Após o login, a tela **Meu Perfil** fica em **http://127.0.0.1:8000/conta/perfil/** (ou pelo menu do usuário, acima de "Sair").
 
 ## Integrantes
 

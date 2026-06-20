@@ -66,6 +66,114 @@ class RedefinirSenhaForm(forms.Form):
         return cleaned
 
 
+class PerfilForm(forms.ModelForm):
+    """Edição dos dados do próprio usuário (tela 'Meu Perfil')."""
+
+    class Meta:
+        model = Usuario
+        fields = [
+            "foto",
+            # Informações pessoais
+            "first_name", "last_name", "cpf", "rg",
+            "data_nascimento", "genero", "estado_civil",
+            # Contato
+            "email", "telefone", "whatsapp",
+            # Endereço
+            "endereco", "complemento", "cidade", "estado", "cep", "pais",
+        ]
+        labels = {
+            "first_name": "Nome", "last_name": "Sobrenome", "email": "E-mail",
+            "cpf": "CPF", "rg": "RG", "data_nascimento": "Data de nascimento",
+            "genero": "Gênero", "estado_civil": "Estado civil",
+            "telefone": "Telefone", "whatsapp": "WhatsApp",
+            "endereco": "Rua", "complemento": "Complemento", "cidade": "Cidade",
+            "estado": "Estado", "cep": "CEP", "pais": "País",
+        }
+        widgets = {
+            "email": forms.EmailInput(),
+            "cpf": forms.TextInput(attrs={
+                "inputmode": "numeric", "maxlength": "11", "pattern": r"\d*",
+                "class": "js-digits", "placeholder": "Somente números",
+            }),
+            "rg": forms.TextInput(attrs={"placeholder": "Ex.: 12.345.678-9"}),
+            "data_nascimento": forms.DateInput(
+                attrs={"type": "date"}, format="%Y-%m-%d"
+            ),
+            "telefone": forms.TextInput(attrs={
+                "inputmode": "numeric", "maxlength": "11", "pattern": r"\d*",
+                "class": "js-digits", "placeholder": "DDD + número",
+            }),
+            "whatsapp": forms.TextInput(attrs={
+                "inputmode": "numeric", "maxlength": "11", "pattern": r"\d*",
+                "class": "js-digits", "placeholder": "DDD + número",
+            }),
+            "endereco": forms.TextInput(attrs={"placeholder": "Rua e número"}),
+            "complemento": forms.TextInput(attrs={"placeholder": "Apto, bloco..."}),
+            "cidade": forms.TextInput(),
+            "estado": forms.TextInput(attrs={"maxlength": "2", "placeholder": "UF"}),
+            "cep": forms.TextInput(attrs={
+                "inputmode": "numeric", "maxlength": "8", "pattern": r"\d*",
+                "class": "js-digits",
+            }),
+            "pais": forms.TextInput(),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Garante o formato aceito pelo input type=date ao exibir o valor atual.
+        self.fields["data_nascimento"].input_formats = ["%Y-%m-%d"]
+        # Rótulo amigável para a opção vazia dos selects.
+        for nome in ("genero", "estado_civil"):
+            opcoes = list(self.fields[nome].choices)
+            if opcoes and opcoes[0][0] == "":
+                opcoes[0] = ("", "Não informado")
+                self.fields[nome].choices = opcoes
+
+    def clean_email(self):
+        email = self.cleaned_data["email"].lower()
+        if Usuario.objects.filter(email__iexact=email).exclude(pk=self.instance.pk).exists():
+            raise forms.ValidationError("Já existe uma conta com este e-mail.")
+        return email
+
+    def clean_cpf(self):
+        cpf = (self.cleaned_data.get("cpf") or "").strip()
+        if not cpf:
+            return None  # o model permite CPF vazio (null)
+        if not cpf.isdigit() or len(cpf) != 11:
+            raise forms.ValidationError("O CPF deve conter 11 dígitos numéricos.")
+        if Usuario.objects.filter(cpf=cpf).exclude(pk=self.instance.pk).exists():
+            raise forms.ValidationError("Este CPF já está cadastrado.")
+        return cpf
+
+    def _validar_fone(self, valor):
+        valor = (valor or "").strip()
+        if valor and (not valor.isdigit() or len(valor) not in (10, 11)):
+            raise forms.ValidationError(
+                "Use 10 ou 11 dígitos numéricos (com DDD)."
+            )
+        return valor
+
+    def clean_telefone(self):
+        return self._validar_fone(self.cleaned_data.get("telefone"))
+
+    def clean_whatsapp(self):
+        return self._validar_fone(self.cleaned_data.get("whatsapp"))
+
+    def clean_estado(self):
+        return (self.cleaned_data.get("estado") or "").strip().upper()
+
+    def clean_foto(self):
+        foto = self.cleaned_data.get("foto")
+        # Só valida quando um novo arquivo foi enviado.
+        if foto and hasattr(foto, "content_type"):
+            permitidos = {"image/jpeg", "image/png", "image/webp", "image/gif"}
+            if foto.content_type not in permitidos:
+                raise forms.ValidationError("Envie uma imagem JPG, PNG, WEBP ou GIF.")
+            if foto.size > 5 * 1024 * 1024:
+                raise forms.ValidationError("A imagem deve ter no máximo 5 MB.")
+        return foto
+
+
 class CadastroForm(forms.Form):
     """Formulário de criação de conta (Familiar ou Cuidador)."""
 
