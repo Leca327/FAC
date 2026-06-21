@@ -16,6 +16,10 @@ Sistema de referencia: Windows 10/11 + PowerShell.
 2. MySQL Server 8.0 rodando na porta 3306 (banco de dados)
 3. O banco "cuidacare_db" criado e populado (dump em site/bd/bdcuidacare.sql)
 
+OBS: o passo a passo focado SO em criar o banco (import do .sql + migracoes
+do Django, que o .sql nao cria) esta no "MANUAL_CRIANDO_O_BANCO.txt".
+Os PASSOS 3 e 6 abaixo resumem isso dentro da instalacao completa.
+
 ------------------------------------------------------------------------
  PASSO 1 - INSTALAR O PYTHON 3.12
 ------------------------------------------------------------------------

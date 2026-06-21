@@ -1,0 +1,92 @@
+========================================================================
+ ALTERACAO 18 - Criador do paciente: proteção na Equipe e exclusão
+ Documento alvo: "A4 Lab. Desenv. Web - FAC.docx"
+ Banco: site/bd/bdcuidacare.sql  (SEM mudança de schema)
+ Data: 2026-06-20
+========================================================================
+
+MOTIVO
+------------------------------------------------------------------------
+O usuário que criou o paciente (paciente.familiar_responsavel) é o "Criador"
+e tem proteções:
+1) Não pode ser removido da Equipe (o botão "Remover" não aparece para ele).
+2) A Equipe indica quem é o Criador.
+3) Na lista de pacientes, só o Criador pode excluir o paciente.
+
+
+------------------------------------------------------------------------
+ TRECHO 1 - Regra de negócio (Tabela 1 em 2.2 e seção 2.6.6)
+------------------------------------------------------------------------
+[ADICIONAR]:
+
+"RN14 - Criador do paciente: o familiar responsável (quem cadastrou o
+paciente) é o Criador. Ele NÃO pode ser removido da Equipe e é o ÚNICO que
+pode EXCLUIR o paciente (botão 'Excluir' só aparece para ele; exclusão lógica
+ativo=False). Só o Criador gerencia a Equipe (convidar/editar/remover);
+familiares não-criadores apenas visualizam."
+
+
+------------------------------------------------------------------------
+ TRECHO 2 - Views/Services (2.6.4 / 2.6.5)
+------------------------------------------------------------------------
+- familia/views.py (RemoverMembroView): recusa remover a participação cujo
+  usuario é o familiar_responsavel do paciente (mensagem de erro).
+- pacientes/views.py: ExcluirPacienteView (POST) — só o familiar_responsavel
+  exclui; exclusão lógica (ativo=False). Não-criador é bloqueado.
+- pacientes/urls.py: rota pacientes:excluir (/pacientes/<pk>/excluir/).
+
+
+------------------------------------------------------------------------
+ TRECHO 3 - Interface (2.7.x)
+------------------------------------------------------------------------
+- templates/familia/lista.html: o Criador recebe a etiqueta "Criador"
+  (cards e tabela) e, no lugar do botão "Remover", mostra "Responsável pelo
+  paciente". Demais membros seguem com Remover/Cancelar normalmente.
+- static/css/familia.css: .fam-badge--criador e .fam-card__criador.
+- templates/pacientes/dashboard_familiar.html: o botão "Excluir" é um form
+  POST e só aparece para o CRIADOR
+  (paciente.familiar_responsavel_id == request.user.id).
+
+
+------------------------------------------------------------------------
+ TRECHO 4 - Gerência da Equipe restrita ao Criador
+------------------------------------------------------------------------
+Só o Criador (familiar responsável) pode CONVIDAR, EDITAR vínculo e REMOVER
+membros (ou reenviar/cancelar convites). Familiares não-criadores apenas
+VISUALIZAM a equipe.
+- familia/views.py: helper _pode_gerenciar(request, paciente) = é o
+  familiar_responsavel. Convidar/Editar/Remover/Reenviar passam a exigir
+  _pode_gerenciar (antes bastava o modo Familiar). O contexto leva
+  pode_gerenciar para o template.
+- familia/lista.html: "Convidar" e os botões Editar/Remover/Reenviar/Cancelar
+  (cards e tabela) só aparecem se pode_gerenciar; o card do Criador mostra
+  "Responsável pelo paciente" e TAMBÉM o botão "Editar" (o Criador pode editar
+  o PRÓPRIO grau de parentesco/vínculo, além do dos demais familiares).
+- familia.css / pacientes.css: botões de ação alinhados (o form vira flex,
+  align-items:stretch) — Editar/Remover na equipe e Alterar/Excluir no card
+  do dashboard ficam com a mesma altura.
+
+
+------------------------------------------------------------------------
+ TRECHO 5 - Autoatendimento do membro na Equipe
+------------------------------------------------------------------------
+Qualquer membro (não-criador), no SEU PRÓPRIO card da Equipe, tem:
+- "Editar grau": edita o próprio vínculo/grau de parentesco (se for familiar).
+  EditarMembroView passou a permitir editar quando é o criador OU quando é a
+  própria participação (membro.usuario_id == request.user.id).
+- "Sair": sai da equipe do paciente (apaga a própria participação). Nova
+  SairEquipeView / rota equipe:sair (/equipe/paciente/<pk>/sair/); o Criador
+  não pode sair. Após sair, volta ao dashboard.
+Nos cards/tabela, o branch do "próprio card" mostra Editar grau + Sair; o card
+do Criador mostra Editar (próprio grau) + "Responsável pelo paciente".
+
+
+------------------------------------------------------------------------
+ RESUMO
+------------------------------------------------------------------------
+- Nova RN14: o Criador não é removível da Equipe e é o ÚNICO que exclui o
+  paciente (botão Excluir só p/ ele; exclusão lógica ativo=False).
+- Só o Criador gerencia a Equipe (convidar/editar/remover de terceiros);
+  cada membro edita o PRÓPRIO grau e pode SAIR (equipe:sair). Demais só veem.
+- Equipe mostra a etiqueta "Criador". Sem mudança no bdcuidacare.sql.
+========================================================================

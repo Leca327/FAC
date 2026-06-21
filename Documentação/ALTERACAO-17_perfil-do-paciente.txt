@@ -1,0 +1,84 @@
+========================================================================
+ ALTERACAO 17 - Tela "Perfil do Paciente"
+ Documento alvo: "A4 Lab. Desenv. Web - FAC.docx"
+ Banco: site/bd/bdcuidacare.sql  (SEM mudança de schema)
+ Data: 2026-06-20
+========================================================================
+
+MOTIVO
+------------------------------------------------------------------------
+Criar uma tela de perfil do paciente (nos moldes do "Meu Perfil" do usuário),
+em cartões por seção, acessível por um link "Perfil do Paciente" dentro do
+card do paciente (sidebar). Usa os dados que já existem na tabela `paciente`.
+
+
+------------------------------------------------------------------------
+ TRECHO 1 - Views/Forms/URLs (2.6.4 / 2.6.6)
+------------------------------------------------------------------------
+- pacientes/forms.py: PacientePerfilForm (ModelForm de Paciente) com nome,
+  cpf, data_nascimento, telefone, endereco, condicoes_saude, alergias e os
+  campos de GPS (latitude/longitude/raio). CPF opcional e único (excluindo o
+  próprio); telefone 10/11 dígitos; nascimento não pode ser futuro.
+- pacientes/views.py: PerfilPacienteView (login obrigatório). GET mostra;
+  POST só no modo Familiar (cuidador é somente leitura), salva e volta com
+  mensagem.
+- pacientes/urls.py: nova rota pacientes:perfil (/pacientes/<pk>/perfil/).
+
+
+------------------------------------------------------------------------
+ TRECHO 2 - Interface (2.7.x)
+------------------------------------------------------------------------
+- templates/pacientes/perfil_paciente.html: layout do paciente (sidebar +
+  main) com os cartões por seção (reaproveita perfil.css/perfil.js):
+  cabeçalho (avatar, nome, idade, etiqueta "Paciente", cadastrado em),
+  Informações Pessoais (nome, CPF, nascimento, idade), Saúde (condições e
+  alergias), Contato e Endereço, Localização (check-in por GPS). Edição por
+  seção (só no modo Familiar), com Salvar/Cancelar centralizados.
+- templates/pacientes/_sidebar.html: link "Perfil do Paciente" (ícone
+  bi-person-vcard) dentro do card do paciente (.vg__patient).
+- static/css/perfil.css: textarea estilizado; .pf-field__value--always (valor
+  que continua visível em edição, ex.: idade).
+- static/css/pacientes.css: estilo do link .vg__patient-perfil.
+
+
+------------------------------------------------------------------------
+ TRECHO 3 - Localização do check-in por ENDEREÇO (geocoding)
+------------------------------------------------------------------------
+A localização do check-in (RN01) passou a ser definida pelo ENDEREÇO, não
+mais por latitude/longitude digitadas:
+- PacientePerfilForm NÃO edita mais latitude_gps/longitude_gps (só o raio).
+- PacienteService.geocodificar(endereco): usa o Nominatim (OpenStreetMap via
+  geopy) para converter "endereço, Brasil" em (lat, long). Best-effort
+  (None se vazio/não encontrado/erro de rede).
+- PerfilPacienteView, ao salvar: se o endereço mudou (ou não havia
+  coordenadas), geocodifica e grava latitude_gps/longitude_gps; se não achar,
+  salva mesmo assim e mostra um aviso para revisar o endereço.
+- Na tela, a seção "Localização (check-in por GPS)" mostra lat/long apenas
+  como leitura (derivadas do endereço) + raio editável + uma nota explicativa.
+
+
+------------------------------------------------------------------------
+ RESUMO
+------------------------------------------------------------------------
+- Nova tela pacientes:perfil com os dados do paciente em cartões por seção.
+- Link "Perfil do Paciente" no card do paciente (sidebar).
+- Familiar edita (por seção); cuidador vê. Sem mudança no bdcuidacare.sql.
+- Check-in por GPS: coordenadas vêm do ENDEREÇO (geocoding Nominatim/geopy),
+  não mais digitadas.
+- A tela segue o tema do paciente (Familiar=rosa / Cuidador=azul): overrides
+  .vg .pf-* usam --pac-accent em pacientes.css. Botão de voltar padronizado
+  como "← Voltar aos pacientes" (vai para a lista, como a Visão Geral).
+- Endereço do paciente passou a ser em PARTES (como no usuário): novos campos
+  na tabela `paciente` — complemento, cidade, estado(UF), cep, pais (endereco
+  = rua). Migração pacientes/0003 (real) refletida no bdcuidacare.sql. O
+  geocoding usa o endereço completo (PacienteService.endereco_completo). A
+  seção "Contato e Endereço" virou duas: "Informações de Contato" (telefone)
+  e "Endereço" (rua, complemento, cidade, estado, CEP, país).
+- MENSAGENS (flash) agora SOBREPÕEM o conteúdo (.flash-area position:fixed no
+  topo, z-index alto, pointer-events) em vez de empurrar os itens; e o login
+  não mostra mais "Login realizado com sucesso" (ALTERACAO-14 atualizada).
+- O botão "Alterar" na lista de pacientes (dashboard_familiar.html) passou a
+  funcionar: aponta para pacientes:perfil com ?editar=1; PerfilPacienteView
+  abre as seções já em modo edição (abrir_edicao) quando ?editar=1 e o modo
+  é Familiar.
+========================================================================

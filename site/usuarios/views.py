@@ -33,7 +33,7 @@ class LoginView(View):
             if usuario.senha_temporaria:
                 messages.info(request, "Por segurança, defina uma nova senha.")
                 return redirect("usuarios:redefinir_senha")
-            messages.success(request, "Login realizado com sucesso!")
+            # Sem mensagem de "login com sucesso": a própria home já confirma.
             return redirect(request.GET.get("next") or "core:home")
         return render(request, self.template_name, {"form": form})
 

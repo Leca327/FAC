@@ -197,9 +197,14 @@
 
 .pac-card__actions {
     display: flex;
+    align-items: stretch;
     gap: 10px;
     margin-top: auto;
 }
+
+/* O "Excluir" fica num form: ele vira flex p/ o botão preencher a altura
+   e ficar do mesmo tamanho do "Alterar". */
+.pac-card__actions form { flex: 1; display: flex; }
 
 .pac-card__actions .btn {
     flex: 1;
@@ -349,6 +354,39 @@
     font-size: 0.8rem;
     color: var(--text-muted);
 }
+
+/* Link "Perfil do Paciente" dentro do card do paciente */
+.vg__patient-perfil {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 12px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--pac-accent-dark);
+    text-decoration: none;
+}
+.vg__patient-perfil:hover { text-decoration: underline; }
+.vg__patient-perfil.is-active { color: var(--pac-accent); }
+
+/* ===== Perfil do Paciente: cards pf-* seguem o tema (familiar=rosa / cuidador=azul) ===== */
+.vg .pf-head { border-top-color: var(--pac-accent); }
+.vg .pf-avatar { background: var(--pac-accent); }
+.vg .pf-badge { background: var(--pac-card); color: var(--pac-accent-dark); }
+.vg .pf-edit-link { color: var(--pac-accent); }
+.vg .pf-edit-link:hover { background: var(--pac-soft); }
+.vg .pf-card { box-shadow: 0 8px 26px color-mix(in srgb, var(--pac-accent) 14%, transparent); }
+.vg .pf-field__input input:focus,
+.vg .pf-field__input select:focus,
+.vg .pf-field__input textarea:focus {
+    border-color: var(--pac-accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--pac-accent) 22%, transparent);
+}
+.vg .pf-hint { background: var(--pac-soft); }
+.vg .pf-hint .bi { color: var(--pac-accent); }
+.vg .pf-card .btn--primary { background: var(--pac-accent); border-color: var(--pac-accent); }
+.vg .pf-card .btn--primary:hover { background: var(--pac-accent-dark); }
+.vg .pf-card .btn--soft { color: var(--pac-accent); border-color: color-mix(in srgb, var(--pac-accent) 35%, transparent); }
 
 .vg__nav {
     display: flex;

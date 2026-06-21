@@ -29,14 +29,19 @@
                 <div class="pac-card__body">
                     <h3 class="pac-card__name">{{ paciente.nome }}</h3>
                     <div class="pac-card__actions">
-                        <a href="#" class="btn btn--primary">
+                        <a href="{% url 'pacientes:perfil' paciente.id %}?editar=1" class="btn btn--primary">
                             <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
                             Alterar
                         </a>
-                        <a href="#" class="btn btn--soft">
-                            <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M6 6l1 14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-14"/></svg>
-                            Excluir
-                        </a>
+                        {% if paciente.familiar_responsavel_id == request.user.id %}
+                        <form method="post" action="{% url 'pacientes:excluir' paciente.id %}" onsubmit="return confirm('Excluir {{ paciente.nome|escapejs }}? Ele deixará de aparecer na sua lista.');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn--soft">
+                                <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M6 6l1 14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-14"/></svg>
+                                Excluir
+                            </button>
+                        </form>
+                        {% endif %}
                     </div>
                     <a href="{% url 'pacientes:visao_geral' paciente.id %}" class="btn btn--primary pac-card__view">
                         <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -102,9 +107,41 @@
             </div>
 
             <div class="field">
-                <label for="id_endereco">Endereço:</label>
+                <label for="id_endereco">Rua:</label>
                 {{ paciente_form.endereco }}
                 {% for e in paciente_form.endereco.errors %}<span class="field__error">{{ e }}</span>{% endfor %}
+            </div>
+
+            <div class="field-grid">
+                <div class="field">
+                    <label for="id_complemento">Complemento:</label>
+                    {{ paciente_form.complemento }}
+                    {% for e in paciente_form.complemento.errors %}<span class="field__error">{{ e }}</span>{% endfor %}
+                </div>
+                <div class="field">
+                    <label for="id_cidade">Cidade:</label>
+                    {{ paciente_form.cidade }}
+                    {% for e in paciente_form.cidade.errors %}<span class="field__error">{{ e }}</span>{% endfor %}
+                </div>
+            </div>
+
+            <div class="field-grid">
+                <div class="field">
+                    <label for="id_estado">Estado:</label>
+                    {{ paciente_form.estado }}
+                    {% for e in paciente_form.estado.errors %}<span class="field__error">{{ e }}</span>{% endfor %}
+                </div>
+                <div class="field">
+                    <label for="id_cep">CEP:</label>
+                    {{ paciente_form.cep }}
+                    {% for e in paciente_form.cep.errors %}<span class="field__error">{{ e }}</span>{% endfor %}
+                </div>
+            </div>
+
+            <div class="field">
+                <label for="id_pais">País:</label>
+                {{ paciente_form.pais }}
+                {% for e in paciente_form.pais.errors %}<span class="field__error">{{ e }}</span>{% endfor %}
             </div>
 
             <div class="field">

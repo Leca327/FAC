@@ -12,6 +12,39 @@ class PacienteService:
     """Regras de negócio relacionadas a pacientes."""
 
     @staticmethod
+    def endereco_completo(paciente):
+        """Endereço do paciente montado em uma linha (para geocodificar)."""
+        partes = [
+            paciente.endereco, paciente.cidade, paciente.estado,
+            paciente.cep, paciente.pais or "Brasil",
+        ]
+        return ", ".join(p.strip() for p in partes if p and p.strip())
+
+    @staticmethod
+    def geocodificar(endereco):
+        """
+        Converte um endereço em (latitude, longitude) usando o geocoder
+        Nominatim (OpenStreetMap, via geopy). Best-effort: devolve None se o
+        endereço estiver vazio, não for encontrado ou der erro de rede.
+
+        Usado para definir a localização do check-in por GPS (RN01) a partir
+        do endereço do paciente, em vez de digitar coordenadas.
+        """
+        endereco = (endereco or "").strip()
+        if not endereco:
+            return None
+        try:
+            from geopy.geocoders import Nominatim
+
+            geocoder = Nominatim(user_agent="cuidacare", timeout=10)
+            local = geocoder.geocode(endereco)
+            if local:
+                return round(local.latitude, 8), round(local.longitude, 8)
+        except Exception:
+            return None
+        return None
+
+    @staticmethod
     @transaction.atomic
     def criar_paciente(*, familiar, form):
         """
@@ -21,6 +54,12 @@ class PacienteService:
         """
         paciente = form.save(commit=False)
         paciente.familiar_responsavel = familiar
+        # Localização do check-in (RN01) a partir do endereço informado.
+        coords = PacienteService.geocodificar(
+            PacienteService.endereco_completo(paciente)
+        )
+        if coords:
+            paciente.latitude_gps, paciente.longitude_gps = coords
         paciente.save()
 
         Participacao.objects.create(

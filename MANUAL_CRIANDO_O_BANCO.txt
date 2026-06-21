@@ -1,0 +1,136 @@
+========================================================================
+ CUIDACARE - CRIANDO O BANCO (do zero, primeira vez)
+========================================================================
+
+Este manual explica como deixar o BANCO DE DADOS "nos conformes" para o
+site funcionar numa maquina nova.
+
+RESUMO IMPORTANTE
+------------------------------------------------------------------------
+O arquivo site/bd/bdcuidacare.sql NAO e, sozinho, suficiente para o site
+rodar. Ele cria TODO o schema da aplicacao (tabelas, views, procedures,
+triggers e dados de exemplo), mas NAO cria as tabelas internas do Django,
+que sao geradas pelo proprio Django com "migrate":
+
+    - django_migrations   (historico de migracoes)
+    - django_session      (SESSAO / LOGIN - sem ela nao da pra logar)
+    - django_content_type
+    - auth_group, auth_permission, auth_group_permissions
+    - django_admin_log
+
+Essas tabelas dependem da versao do Django e por isso NAO ficam no .sql;
+elas sao criadas pelo comando "migrate" (passos abaixo). As tabelas de
+ligacao usuario_groups / usuario_user_permissions referenciam
+auth_group / auth_permission, que so existem depois do migrate.
+
+Ou seja: criar o banco = IMPORTAR O .sql  +  RODAR AS MIGRACOES do Django.
+
+Sistema de referencia: Windows 10/11 + PowerShell + MySQL 8.0.
+Pre-requisitos (Python, MySQL, venv): ver MANUAL_INSTALACAO.txt.
+
+
+========================================================================
+ CAMINHO RECOMENDADO - com o dump (bdcuidacare.sql)
+========================================================================
+Use este caminho: alem das tabelas, ele traz as VIEWS, PROCEDURES,
+TRIGGERS e dados de exemplo definidos no projeto.
+
+PASSO 1 - Importar o dump (cria o banco cuidacare_db + schema + dados)
+------------------------------------------------------------------------
+O proprio .sql ja faz "CREATE DATABASE IF NOT EXISTS cuidacare_db" e "USE".
+No PowerShell:
+
+    & "C:\Program Files\MySQL\MySQL Server 8.0\bin\mysql.exe" -u root -p < "site\bd\bdcuidacare.sql"
+
+(informe a senha do MySQL quando pedir; no projeto o padrao e "root")
+
+Conferir que o banco e as tabelas vieram:
+
+    & "C:\Program Files\MySQL\MySQL Server 8.0\bin\mysql.exe" -u root -p -e "USE cuidacare_db; SHOW TABLES;"
+
+
+PASSO 2 - Criar as tabelas do Django e reconciliar as migracoes
+------------------------------------------------------------------------
+Como as tabelas de dados JA existem (vieram do dump), nao da para rodar
+"migrate" normal (ele tentaria criar o que ja existe). A sequencia abaixo
+cria SO o que falta (tabelas internas do Django) e marca o resto como
+"ja aplicado" (--fake). Rode dentro de site/, com o python do venv:
+
+    cd "C:\Users\Let\Documents\Projetos Git\FAC\site"
+    $py = ".\venv\Scripts\python.exe"
+
+  1) Cria as tabelas internas do Django e "finge" as iniciais cujas
+     tabelas ja existem (o erro no app "usuarios" aqui e esperado):
+
+        & $py manage.py migrate --fake-initial
+
+  2) Marca como aplicadas as migracoes dos apps que vieram do dump:
+
+        foreach ($app in @('usuarios','pacientes','medicamentos','medicos','consultas','familia','escala','prontuario','ponto')) { & $py manage.py migrate $app --fake }
+
+  3) Cria a tabela de SESSAO (necessaria para login) e finge o admin
+     (o admin do Django nao e usado no site):
+
+        & $py manage.py migrate sessions
+        & $py manage.py migrate admin --fake
+
+  4) Conferir que nao sobrou migracao pendente (nao deve listar nada):
+
+        & $py manage.py showmigrations | Select-String "\[ \]"
+
+
+PASSO 3 - (Opcional) Dados de teste prontos para usar
+------------------------------------------------------------------------
+Cria familiar + cuidadoras + paciente + medicamentos + consultas + escala
+(idempotente: pode rodar mais de uma vez):
+
+    & $py manage.py shell < seed_dados_teste.py
+
+Logins de teste (senha Teste@123):
+    maria.souza@teste.com   (familiar)
+    ana.lima@teste.com / joana.ribeiro@teste.com / carla.mendes@teste.com (cuidadoras)
+
+
+========================================================================
+ CAMINHO ALTERNATIVO - banco do zero, SEM o dump
+========================================================================
+Se preferir um banco totalmente vazio e deixar o Django criar tudo
+(sem os dados de exemplo):
+
+  1) Criar o banco vazio:
+
+        & "C:\Program Files\MySQL\MySQL Server 8.0\bin\mysql.exe" -u root -p -e "CREATE DATABASE IF NOT EXISTS cuidacare_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+
+  2) Rodar as migracoes normalmente (cria TODAS as tabelas):
+
+        & $py manage.py migrate
+
+  3) (Opcional) dados de teste:
+
+        & $py manage.py shell < seed_dados_teste.py
+
+ATENCAO: este caminho NAO cria as VIEWS, PROCEDURES e TRIGGERS que existem
+no bdcuidacare.sql (elas nao fazem parte das migracoes do Django). O site
+funciona assim (usa o ORM), mas se voce quer o banco identico ao projeto
+de referencia, use o CAMINHO RECOMENDADO (com o dump).
+
+
+========================================================================
+ PROBLEMAS COMUNS
+========================================================================
+* "Table 'xxx' already exists" ao rodar migrate
+    -> Voce importou o dump e rodou "migrate" normal. Use os passos do
+       CAMINHO RECOMENDADO (--fake-initial / --fake).
+
+* Login nao funciona / erro em django_session
+    -> Faltou o "migrate sessions" (PASSO 2.3).
+
+* "Can't connect to MySQL" / porta 3306
+    -> O MySQL nao esta no ar. Veja o MANUAL_INSTALACAO.txt (PASSO 2).
+
+* "No module named 'pymysql'"
+    -> Dependencias nao instaladas no venv. Veja o MANUAL_INSTALACAO.txt
+       (PASSO 4).
+
+Depois do banco pronto, suba o site com o MANUAL_EXECUCAO.txt.
+========================================================================

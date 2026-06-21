@@ -32,6 +32,7 @@ O backend é feito em **Python + Django** e usa **MySQL** (driver PyMySQL).
 O passo a passo completo está documentado em dois manuais na raiz do repositório:
 
 - **[MANUAL_INSTALACAO.txt](MANUAL_INSTALACAO.txt)** — instalação inicial (Python 3.12, MySQL, ambiente virtual, dependências e preparação do banco). Faça isto **uma vez**.
+- **[MANUAL_CRIANDO_O_BANCO.txt](MANUAL_CRIANDO_O_BANCO.txt)** — passo a passo só do banco: importar o dump `bdcuidacare.sql` **e** rodar as migrações do Django (o `.sql` cria o schema da aplicação, mas as tabelas internas do Django — sessão/login, auth, etc. — são criadas pelo `migrate`).
 - **[MANUAL_EXECUCAO.txt](MANUAL_EXECUCAO.txt)** — como subir o servidor no dia a dia e visualizar o site no navegador.
 
 Resumo rápido (após a instalação):

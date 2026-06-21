@@ -149,6 +149,24 @@
     </footer>
 
     <script src="{% static 'js/main.js' %}"></script>
+    <script>
+        // Mensagens (flash) somem sozinhas em alguns segundos; clicar fecha já.
+        // Quando a última some, remove a área para não sobrar espaço em branco.
+        (function () {
+            var area = document.querySelector(".flash-area");
+            document.querySelectorAll(".flash").forEach(function (f) {
+                function fechar() {
+                    f.classList.add("flash--hide");
+                    setTimeout(function () {
+                        f.remove();
+                        if (area && !area.querySelector(".flash")) area.remove();
+                    }, 400);
+                }
+                var t = setTimeout(fechar, 4500);
+                f.addEventListener("click", function () { clearTimeout(t); fechar(); });
+            });
+        })();
+    </script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

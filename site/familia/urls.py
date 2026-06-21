@@ -10,6 +10,7 @@ from .views import (
     ReenviarConviteView,
     RemoverMembroView,
     ResponderConviteView,
+    SairEquipeView,
 )
 
 app_name = "equipe"
@@ -32,6 +33,7 @@ urlpatterns = [
         ReenviarConviteView.as_view(),
         name="reenviar",
     ),
+    path("paciente/<int:pk>/sair/", SairEquipeView.as_view(), name="sair"),
     # Responder convite pelo sininho (aceitar/recusar)
     path("convite/<int:pk>/responder/", ResponderConviteView.as_view(), name="responder"),
     # Aceite público (link do e-mail)

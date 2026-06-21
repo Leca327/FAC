@@ -17,6 +17,9 @@ Sidebar do contexto do paciente. Requer:
                 {% if paciente.idade %}<span>{{ paciente.idade }} anos</span>{% endif %}
             </div>
         </div>
+        <a href="{% url 'pacientes:perfil' paciente.id %}" class="vg__patient-perfil {% if menu_ativo == 'perfil' %}is-active{% endif %}">
+            <i class="bi bi-person-vcard"></i> Perfil do Paciente
+        </a>
     </div>
 
     <nav class="vg__nav" aria-label="Menu do paciente">

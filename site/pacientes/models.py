@@ -23,7 +23,13 @@ class Paciente(models.Model):
     nome = models.CharField("nome", max_length=255)
     cpf = models.CharField("CPF", max_length=11, unique=True, null=True, blank=True)
     data_nascimento = models.DateField("data de nascimento")
-    endereco = models.CharField("endereço", max_length=255, blank=True)
+    # Endereço em partes (a "rua" fica em `endereco`).
+    endereco = models.CharField("rua", max_length=255, blank=True)
+    complemento = models.CharField("complemento", max_length=100, blank=True)
+    cidade = models.CharField("cidade", max_length=100, blank=True)
+    estado = models.CharField("estado (UF)", max_length=2, blank=True)
+    cep = models.CharField("CEP", max_length=8, blank=True)
+    pais = models.CharField("país", max_length=60, blank=True, default="Brasil")
     telefone = models.CharField("telefone", max_length=11, blank=True)
 
     familiar_responsavel = models.ForeignKey(

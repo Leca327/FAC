@@ -2,6 +2,12 @@
 -- BANCO DE DADOS: CUIDACARE
 -- MYSQL 8.0+
 -- =====================================================
+-- ATENCAO: este script cria TODO o schema da aplicacao (tabelas, views,
+-- procedures, triggers) + dados de exemplo, mas NAO cria as tabelas
+-- internas do Django (django_migrations, django_session, django_content_type,
+-- auth_*). Essas sao criadas pelo "migrate". Importar este .sql NAO basta
+-- para o site rodar -> siga o "MANUAL_CRIANDO_O_BANCO.txt" (na raiz).
+-- =====================================================
 
 CREATE DATABASE IF NOT EXISTS cuidacare_db 
 CHARACTER SET utf8mb4 
@@ -84,7 +90,12 @@ CREATE TABLE `paciente` (
   `nome` VARCHAR(255) NOT NULL,
   `cpf` VARCHAR(11) UNIQUE,
   `data_nascimento` DATE NOT NULL,
-  `endereco` VARCHAR(255),
+  `endereco` VARCHAR(255),            -- rua
+  `complemento` VARCHAR(100) NOT NULL DEFAULT '',
+  `cidade` VARCHAR(100) NOT NULL DEFAULT '',
+  `estado` VARCHAR(2) NOT NULL DEFAULT '',
+  `cep` VARCHAR(8) NOT NULL DEFAULT '',
+  `pais` VARCHAR(60) NOT NULL DEFAULT 'Brasil',
   `telefone` VARCHAR(11),
   `familiar_responsavel_id` INT NOT NULL,
   `condicoes_saude` TEXT,

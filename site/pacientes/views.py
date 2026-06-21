@@ -16,7 +16,7 @@ from django.utils import timezone
 from django.views import View
 from django.views.generic import TemplateView
 
-from .forms import PacienteForm
+from .forms import PacienteForm, PacientePerfilForm
 from .services import PacienteService
 
 __all__ = [
@@ -24,6 +24,8 @@ __all__ = [
     "NovoPacienteView",
     "VisaoGeralPacienteView",
     "AgendaPacienteView",
+    "PerfilPacienteView",
+    "ExcluirPacienteView",
 ]
 
 MESES_PT = [
@@ -210,6 +212,86 @@ class AgendaPacienteView(LoginRequiredMixin, View):
             "data_sel": data_sel,
         }
         return render(request, self.template_name, context)
+
+
+class PerfilPacienteView(LoginRequiredMixin, View):
+    """Perfil do paciente: vê os dados; familiar pode editar (por seção)."""
+
+    template_name = "pacientes/perfil_paciente.html"
+
+    def get(self, request, pk):
+        paciente = PacienteService.paciente_acessivel(request.user, pk)
+        if not paciente:
+            messages.error(request, "Paciente não encontrado ou sem acesso.")
+            return redirect("pacientes:dashboard")
+        pode_editar = modo_atual(request) != "cuidador"
+        return render(request, self.template_name, {
+            "paciente": paciente,
+            "form": PacientePerfilForm(instance=paciente),
+            "pode_editar": pode_editar,
+            # "Alterar" (na lista de pacientes) abre já em modo edição.
+            "abrir_edicao": pode_editar and request.GET.get("editar") == "1",
+        })
+
+    def post(self, request, pk):
+        paciente = PacienteService.paciente_acessivel(request.user, pk)
+        if not paciente:
+            messages.error(request, "Paciente não encontrado ou sem acesso.")
+            return redirect("pacientes:dashboard")
+        if modo_atual(request) == "cuidador":
+            messages.error(request, "Apenas no modo Familiar é possível editar o paciente.")
+            return redirect("pacientes:perfil", pk=paciente.pk)
+
+        endereco_antigo = PacienteService.endereco_completo(paciente)
+        form = PacientePerfilForm(request.POST, instance=paciente)
+        if form.is_valid():
+            obj = form.save(commit=False)
+            # Localização do check-in (RN01) vem do ENDEREÇO: geocodifica quando
+            # o endereço mudou ou ainda não há coordenadas.
+            geo_falhou = False
+            endereco_novo = PacienteService.endereco_completo(obj)
+            if endereco_novo and (endereco_novo != endereco_antigo or obj.latitude_gps is None):
+                coords = PacienteService.geocodificar(endereco_novo)
+                if coords:
+                    obj.latitude_gps, obj.longitude_gps = coords
+                else:
+                    geo_falhou = True
+            obj.save()
+            if geo_falhou:
+                messages.warning(
+                    request,
+                    "Perfil salvo, mas não foi possível localizar o endereço no mapa. "
+                    "Revise o endereço (rua, número, cidade) para o check-in por GPS.",
+                )
+            else:
+                messages.success(request, "Perfil do paciente atualizado com sucesso!")
+            return redirect("pacientes:perfil", pk=paciente.pk)
+        messages.error(request, "Não foi possível salvar. Verifique os campos destacados.")
+        return render(request, self.template_name, {
+            "paciente": paciente,
+            "form": form,
+            "pode_editar": True,
+            "abrir_edicao": True,
+        })
+
+
+class ExcluirPacienteView(LoginRequiredMixin, View):
+    """Exclui um paciente — APENAS o criador (familiar responsável)."""
+
+    def post(self, request, pk):
+        from .models import Paciente
+
+        paciente = Paciente.objects.filter(pk=pk, ativo=True).first()
+        if not paciente:
+            messages.error(request, "Paciente não encontrado.")
+            return redirect("pacientes:dashboard")
+        if paciente.familiar_responsavel_id != request.user.id:
+            messages.error(request, "Apenas o criador do paciente pode excluí-lo.")
+            return redirect("pacientes:dashboard")
+        paciente.ativo = False
+        paciente.save(update_fields=["ativo"])
+        messages.info(request, f"Paciente {paciente.nome} excluído.")
+        return redirect("pacientes:dashboard")
 
 
 class NovoPacienteView(LoginRequiredMixin, View):

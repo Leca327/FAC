@@ -26,10 +26,12 @@
                     </h1>
                     <p class="vg__subtitle">Quem faz parte do cuidado de {{ paciente.nome }}</p>
                 </div>
+                {% if pode_gerenciar %}
                 <button type="button" class="btn btn--primary med__new" id="abrir-convidar">
                     <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
                     Convidar
                 </button>
+                {% endif %}
             </div>
 
             <!-- Barra de ferramentas: filtro por tipo (menu suspenso) + abas Cards/Tabela -->
@@ -64,7 +66,11 @@
                         <header class="fam-card__head">
                             <span class="fam-card__avatar fam-avatar--{% cycle 'a' 'b' 'c' 'd' %}">{{ m.iniciais }}</span>
                             <span class="fam-tipo fam-tipo--{{ m.tipo_participacao }}">{{ m.get_tipo_participacao_display }}</span>
+                            {% if m.usuario_id == paciente.familiar_responsavel_id %}
+                            <span class="fam-badge fam-badge--criador"><i class="bi bi-star-fill"></i> Criador</span>
+                            {% else %}
                             <span class="fam-badge fam-badge--{{ m.status_convite }}">{{ m.get_status_convite_display }}</span>
+                            {% endif %}
                         </header>
 
                         <h3 class="fam-card__name">{{ m.nome }}</h3>
@@ -83,6 +89,33 @@
 
                         <footer class="fam-card__actions">
                             {% if m.is_aceito %}
+                            {% if m.usuario_id == paciente.familiar_responsavel_id %}
+                            {% if pode_gerenciar and m.tipo_participacao == 'familiar' %}
+                            <button type="button" class="btn btn--soft fam-edit"
+                                    data-action="{% url 'equipe:editar' paciente.id m.id %}"
+                                    data-vinculo="{{ m.vinculo }}">
+                                <svg class="icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                                Editar
+                            </button>
+                            {% endif %}
+                            <span class="fam-card__criador"><i class="bi bi-shield-check"></i> Responsável pelo paciente</span>
+                            {% elif m.usuario_id == request.user.id %}
+                            {% if m.tipo_participacao == 'familiar' %}
+                            <button type="button" class="btn btn--soft fam-edit"
+                                    data-action="{% url 'equipe:editar' paciente.id m.id %}"
+                                    data-vinculo="{{ m.vinculo }}">
+                                <svg class="icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                                Editar grau
+                            </button>
+                            {% endif %}
+                            <form method="post" action="{% url 'equipe:sair' paciente.id %}" onsubmit="return confirm('Sair da equipe de {{ paciente.nome|escapejs }}? Você deixará de ter acesso a este paciente.');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn--soft">
+                                    <svg class="icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>
+                                    Sair
+                                </button>
+                            </form>
+                            {% elif pode_gerenciar %}
                             {% if m.tipo_participacao == 'familiar' %}
                             <button type="button" class="btn btn--soft fam-edit"
                                     data-action="{% url 'equipe:editar' paciente.id m.id %}"
@@ -98,7 +131,8 @@
                                     Remover
                                 </button>
                             </form>
-                            {% else %}
+                            {% endif %}
+                            {% elif pode_gerenciar %}
                             <form method="post" action="{% url 'equipe:reenviar' paciente.id m.id %}">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn--soft">
@@ -133,13 +167,24 @@
                         <tbody>
                             {% for m in membros %}
                             <tr>
-                                <td><strong>{{ m.nome }}</strong></td>
+                                <td><strong>{{ m.nome }}</strong>{% if m.usuario_id == paciente.familiar_responsavel_id %} <span class="fam-badge fam-badge--criador"><i class="bi bi-star-fill"></i> Criador</span>{% endif %}</td>
                                 <td><span class="fam-tipo fam-tipo--{{ m.tipo_participacao }}">{{ m.get_tipo_participacao_display }}</span></td>
                                 <td>{% if m.tipo_participacao == 'familiar' %}{{ m.vinculo|default:"—" }}{% else %}—{% endif %}</td>
                                 <td>{{ m.email }}</td>
                                 <td>{{ m.telefone|default:"—" }}</td>
                                 <td><span class="fam-badge fam-badge--{{ m.status_convite }}">{{ m.get_status_convite_display }}</span></td>
                                 <td class="fam-table__acoes">
+                                    {% if m.usuario_id == paciente.familiar_responsavel_id %}
+                                    {% if pode_gerenciar and m.tipo_participacao == 'familiar' %}
+                                    <button type="button" class="btn btn--soft btn--xs fam-edit" data-action="{% url 'equipe:editar' paciente.id m.id %}" data-vinculo="{{ m.vinculo }}">Editar</button>
+                                    {% endif %}
+                                    <span class="fam-card__criador"><i class="bi bi-shield-check"></i> Responsável</span>
+                                    {% elif m.usuario_id == request.user.id %}
+                                    {% if m.tipo_participacao == 'familiar' %}
+                                    <button type="button" class="btn btn--soft btn--xs fam-edit" data-action="{% url 'equipe:editar' paciente.id m.id %}" data-vinculo="{{ m.vinculo }}">Editar grau</button>
+                                    {% endif %}
+                                    <form method="post" action="{% url 'equipe:sair' paciente.id %}" onsubmit="return confirm('Sair da equipe de {{ paciente.nome|escapejs }}?');">{% csrf_token %}<button type="submit" class="btn btn--soft btn--xs">Sair</button></form>
+                                    {% elif pode_gerenciar %}
                                     {% if m.is_aceito %}
                                     {% if m.tipo_participacao == 'familiar' %}
                                     <button type="button" class="btn btn--soft btn--xs fam-edit" data-action="{% url 'equipe:editar' paciente.id m.id %}" data-vinculo="{{ m.vinculo }}">Editar</button>
@@ -149,6 +194,7 @@
                                     <form method="post" action="{% url 'equipe:reenviar' paciente.id m.id %}">{% csrf_token %}<button type="submit" class="btn btn--soft btn--xs">Reenviar</button></form>
                                     <form method="post" action="{% url 'equipe:remover' paciente.id m.id %}" onsubmit="return confirm('Cancelar o convite de {{ m.nome|escapejs }}?');">{% csrf_token %}<button type="submit" class="btn btn--soft btn--xs">Cancelar</button></form>
                                     {% endif %}
+                                    {% else %}—{% endif %}
                                 </td>
                             </tr>
                             {% empty %}

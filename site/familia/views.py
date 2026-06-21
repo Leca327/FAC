@@ -26,6 +26,7 @@ __all__ = [
     "ConvidarMembroView",
     "EditarMembroView",
     "RemoverMembroView",
+    "SairEquipeView",
     "ReenviarConviteView",
     "AceitarConviteView",
     "ResponderConviteView",
@@ -37,6 +38,11 @@ TEMPLATE_LISTA = "familia/lista.html"
 def _modo_familiar(request):
     """A Equipe só existe no modo familiar."""
     return request.session.get("modo", "familiar") != "cuidador"
+
+
+def _pode_gerenciar(request, paciente):
+    """Só o CRIADOR (familiar responsável) gerencia a equipe (convidar/editar/remover)."""
+    return request.user.id == paciente.familiar_responsavel_id
 
 
 def _tipo_filtro(valor):
@@ -80,7 +86,10 @@ class EquipeView(LoginRequiredMixin, View):
 
         tipo = _tipo_filtro(request.GET.get("tipo", "todos").strip())
         status = request.GET.get("status", "todos").strip()
-        return render(request, TEMPLATE_LISTA, _contexto(paciente, tipo=tipo, status=status))
+        return render(request, TEMPLATE_LISTA, _contexto(
+            paciente, tipo=tipo, status=status,
+            pode_gerenciar=_pode_gerenciar(request, paciente),
+        ))
 
 
 class ConvidarMembroView(LoginRequiredMixin, View):
@@ -91,9 +100,9 @@ class ConvidarMembroView(LoginRequiredMixin, View):
         if not paciente:
             messages.error(request, "Paciente não encontrado ou sem acesso.")
             return redirect("pacientes:dashboard")
-        if not _modo_familiar(request):
-            messages.error(request, "Apenas no modo Familiar é possível convidar membros.")
-            return redirect("pacientes:visao_geral", pk=paciente.pk)
+        if not _pode_gerenciar(request, paciente):
+            messages.error(request, "Apenas o criador do paciente pode gerenciar a equipe.")
+            return redirect(_url_lista(paciente))
 
         form = ConvidarMembroForm(request.POST)
         if form.is_valid():
@@ -121,7 +130,8 @@ class ConvidarMembroView(LoginRequiredMixin, View):
             messages.success(request, f"Convite enviado para {membro.nome}.")
             return redirect(_url_lista(paciente, tipo=tipo))
 
-        context = _contexto(paciente, convidar_form=form, modal_aberto=True)
+        context = _contexto(paciente, convidar_form=form, modal_aberto=True,
+                            pode_gerenciar=True)
         return render(request, TEMPLATE_LISTA, context)
 
 
@@ -133,12 +143,14 @@ class EditarMembroView(LoginRequiredMixin, View):
         if not paciente:
             messages.error(request, "Paciente não encontrado ou sem acesso.")
             return redirect("pacientes:dashboard")
-        if not _modo_familiar(request):
-            return redirect("pacientes:visao_geral", pk=paciente.pk)
 
         membro = EquipeService.membro_acessivel(paciente, membro_id)
         if not membro:
             messages.error(request, "Membro não encontrado.")
+            return redirect(_url_lista(paciente))
+        # O criador edita qualquer um; qualquer membro pode editar o PRÓPRIO grau.
+        if not (_pode_gerenciar(request, paciente) or membro.usuario_id == request.user.id):
+            messages.error(request, "Você não pode editar este membro.")
             return redirect(_url_lista(paciente))
 
         form = EditarMembroForm(request.POST)
@@ -161,14 +173,37 @@ class RemoverMembroView(LoginRequiredMixin, View):
         if not paciente:
             messages.error(request, "Paciente não encontrado ou sem acesso.")
             return redirect("pacientes:dashboard")
-        if not _modo_familiar(request):
-            return redirect("pacientes:visao_geral", pk=paciente.pk)
+        if not _pode_gerenciar(request, paciente):
+            messages.error(request, "Apenas o criador do paciente pode gerenciar a equipe.")
+            return redirect(_url_lista(paciente))
+
+        membro = EquipeService.membro_acessivel(paciente, membro_id)
+        if membro and membro.usuario_id == paciente.familiar_responsavel_id:
+            messages.error(request, "O criador do paciente não pode ser removido da equipe.")
+            return redirect(_url_lista(paciente))
 
         if EquipeService.remover(paciente=paciente, pk=membro_id):
             messages.success(request, "Membro/convite removido.")
         else:
             messages.error(request, "Membro não encontrado.")
         return redirect(_url_lista(paciente))
+
+
+class SairEquipeView(LoginRequiredMixin, View):
+    """O próprio membro sai da equipe do paciente (remove sua participação)."""
+
+    def post(self, request, pk):
+        paciente = PacienteService.paciente_acessivel(request.user, pk)
+        if not paciente:
+            messages.error(request, "Paciente não encontrado ou sem acesso.")
+            return redirect("pacientes:dashboard")
+        if paciente.familiar_responsavel_id == request.user.id:
+            messages.error(request, "O criador do paciente não pode sair da equipe.")
+            return redirect(_url_lista(paciente))
+        from pacientes.models import Participacao
+        Participacao.objects.filter(paciente=paciente, usuario=request.user).delete()
+        messages.info(request, f"Você saiu da equipe de {paciente.nome}.")
+        return redirect("pacientes:dashboard")
 
 
 class ReenviarConviteView(LoginRequiredMixin, View):
@@ -179,8 +214,9 @@ class ReenviarConviteView(LoginRequiredMixin, View):
         if not paciente:
             messages.error(request, "Paciente não encontrado ou sem acesso.")
             return redirect("pacientes:dashboard")
-        if not _modo_familiar(request):
-            return redirect("pacientes:visao_geral", pk=paciente.pk)
+        if not _pode_gerenciar(request, paciente):
+            messages.error(request, "Apenas o criador do paciente pode gerenciar a equipe.")
+            return redirect(_url_lista(paciente))
 
         membro = EquipeService.membro_acessivel(paciente, membro_id)
         if membro and not membro.is_aceito:

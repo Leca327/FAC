@@ -191,6 +191,25 @@
     color: #9a7b1a;
 }
 
+.fam-badge--criador {
+    background: #ece9fb;
+    color: #4f46c9;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* Indicação do responsável no lugar do botão "Remover" */
+.fam-card__criador {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+.fam-card__criador .bi { color: #4f46c9; }
+
 .fam-card__name {
     font-size: 1.15rem;
     font-weight: 700;
@@ -231,6 +250,7 @@
 
 .fam-card__actions {
     display: flex;
+    align-items: stretch;
     gap: 10px;
     margin-top: auto;
     padding-top: 6px;
@@ -241,10 +261,14 @@
     flex: 1;
 }
 
+/* O form vira flex para o botão preencher toda a altura (alinha com o Editar). */
+.fam-card__actions form { display: flex; }
+
 .fam-card__actions .btn {
     width: 100%;
     padding: 9px 12px;
     font-size: 0.88rem;
+    line-height: 1.2;
     background: var(--white);
     color: var(--pac-accent-dark);
     border-color: color-mix(in srgb, var(--pac-accent) 35%, transparent);
