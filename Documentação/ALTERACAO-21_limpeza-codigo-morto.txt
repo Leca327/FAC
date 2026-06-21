@@ -1,0 +1,42 @@
+========================================================================
+ ALTERACAO 21 - Limpeza de código morto / imports não usados
+ Documento alvo: "A4 Lab. Desenv. Web - FAC.docx"
+ Banco: site/bd/bdcuidacare.sql  (SEM mudança de schema)
+ Data: 2026-06-21
+========================================================================
+
+MOTIVO
+------------------------------------------------------------------------
+Remoção de código que ficou sem uso e de imports não utilizados, sem mudar
+comportamento (verificado com pyflakes e manage.py check).
+
+ALTERACOES
+------------------------------------------------------------------------
+- ponto/services.py:
+    * REMOVIDO MonitorService.plantoes_periodo() (sem uso desde que a agenda
+      passou a usar EscalaService.agenda_dia).
+    * MonitorService._item() perdeu o parâmetro `agora` (não era usado — o
+      tempo decorrido vem de _minutos_corridos). Ajustadas as chamadas em
+      em_plantao_agora() e plantoes_do_dia() (não calculam mais `agora`).
+- escala/views.py: removido import não usado `datetime`.
+- pacientes/views.py: removido import não usado `timedelta`.
+
+OBS: os arquivos admin.py/tests.py dos apps mantêm os imports padrão gerados
+pelo Django (stubs) — não foram alterados.
+
+AJUSTES DE NAVEGAÇÃO (observações da vistoria)
+------------------------------------------------------------------------
+- core/views.py (HomeView): usuário AUTENTICADO que abre "/" (landing) é
+  redirecionado para pacientes:dashboard. Assim o logo e o "Início" não caem
+  mais na página de marketing quando logado. (Deslogado continua vendo a
+  landing normalmente.)
+- base.html: as âncoras da navbar (deslogado) "Como funciona/Para quem/
+  Contato" passaram a usar URL absoluta {% url 'core:home' %}#... para
+  funcionarem também em login/cadastro/termos (antes só funcionavam na home).
+
+RESUMO
+------------------------------------------------------------------------
+- Código morto e imports não usados removidos; sem mudança de comportamento.
+- Navegação: landing redireciona logados ao dashboard; âncoras da navbar
+  agora absolutas (funcionam fora da home).
+========================================================================

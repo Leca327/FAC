@@ -63,6 +63,8 @@ class PacienteForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         for nome, campo in self.fields.items():
             campo.required = nome not in self.OPCIONAIS
+        if not self.fields["pais"].initial:
+            self.fields["pais"].initial = "Brasil"
 
     def clean_cpf(self):
         cpf = (self.cleaned_data.get("cpf") or "").strip()
@@ -81,6 +83,9 @@ class PacienteForm(forms.ModelForm):
     def clean_estado(self):
         return (self.cleaned_data.get("estado") or "").strip().upper()
 
+    def clean_pais(self):
+        return (self.cleaned_data.get("pais") or "").strip() or "Brasil"
+
     def clean_data_nascimento(self):
         nascimento = self.cleaned_data.get("data_nascimento")
         if nascimento and nascimento > date.today():
@@ -95,6 +100,7 @@ class PacientePerfilForm(forms.ModelForm):
         model = Paciente
         # latitude/longitude NÃO são editáveis: vêm do geocoding do endereço.
         fields = [
+            "foto",
             "nome", "cpf", "data_nascimento", "telefone",
             "endereco", "complemento", "cidade", "estado", "cep", "pais",
             "condicoes_saude", "alergias", "raio_validacao_gps",
@@ -156,6 +162,16 @@ class PacientePerfilForm(forms.ModelForm):
 
     def clean_estado(self):
         return (self.cleaned_data.get("estado") or "").strip().upper()
+
+    def clean_foto(self):
+        foto = self.cleaned_data.get("foto")
+        if foto and hasattr(foto, "content_type"):
+            permitidos = {"image/jpeg", "image/png", "image/webp", "image/gif"}
+            if foto.content_type not in permitidos:
+                raise forms.ValidationError("Envie uma imagem JPG, PNG, WEBP ou GIF.")
+            if foto.size > 5 * 1024 * 1024:
+                raise forms.ValidationError("A imagem deve ter no máximo 5 MB.")
+        return foto
 
     def clean_data_nascimento(self):
         nascimento = self.cleaned_data.get("data_nascimento")

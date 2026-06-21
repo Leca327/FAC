@@ -96,13 +96,13 @@
                 <section class="vg-panel">
                     <header class="vg-panel__head">
                         <h2><svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v5a4 4 0 0 0 8 0V3"/><path d="M5 3H7M13 3h2"/><path d="M10 18a6 6 0 0 0 6-6v-1"/><circle cx="18" cy="10" r="2"/></svg> Cuidadores</h2>
-                        <a href="#">Ver todos</a>
+                        <a href="{% url 'equipe:lista' paciente.id %}?tipo=cuidador">Ver todos</a>
                     </header>
                     {% for cuidador in cuidadores %}
                     <div class="vg-panel__row">
                         <div>
                             <strong>{{ cuidador.get_full_name|default:cuidador.email }}</strong>
-                            {% if cuidador.cuidador.especialidade %}<small>{{ cuidador.cuidador.especialidade }}</small>{% endif %}
+                            <small>{{ cuidador.telefone|default:cuidador.email }}</small>
                         </div>
                     </div>
                     {% empty %}

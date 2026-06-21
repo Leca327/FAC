@@ -27,6 +27,7 @@
                 </div>
                 <div class="pf-head__acoes">
                     <label class="btn btn--primary btn--xs" for="id_foto"><i class="bi bi-camera"></i> Alterar Foto</label>
+                    {% if user.foto %}<button type="submit" form="form-remover-foto" class="btn btn--soft btn--xs"><i class="bi bi-trash"></i> Retirar Foto</button>{% endif %}
                 </div>
                 <span class="pf-foto-input">{{ form.foto }}</span>
                 {% for e in form.foto.errors %}<span class="pf-err">{{ e }}</span>{% endfor %}
@@ -152,6 +153,13 @@
                 </div>
             </div>
         </form>
+
+        {% if user.foto %}
+        <form id="form-remover-foto" method="post" action="{% url 'usuarios:remover_foto' %}"
+              onsubmit="return confirm('Retirar sua foto de perfil?');" hidden>
+            {% csrf_token %}
+        </form>
+        {% endif %}
 
         <!-- Conta & Segurança -->
         <div class="pf-card pf-section">

@@ -8,9 +8,12 @@ Sidebar do contexto do paciente. Requer:
         <span class="vg__patient-label">Paciente</span>
         <div class="vg__patient-info">
             <span class="vg__patient-avatar" aria-hidden="true">
+                {% if paciente.foto %}<img src="{{ paciente.foto.url }}" alt="">
+                {% else %}
                 <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
                     <circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>
                 </svg>
+                {% endif %}
             </span>
             <div>
                 <strong>{{ paciente.nome }}</strong>

@@ -6,7 +6,7 @@ entre semanas e exceções pontuais. Ver a escala vale nos dois modos; editar
 (Editar Padrão / Alterar Dia) só no modo familiar.
 """
 
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin

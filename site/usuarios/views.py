@@ -177,6 +177,18 @@ class PerfilView(View):
         })
 
 
+class RemoverFotoView(View):
+    """Remove a foto de perfil do próprio usuário."""
+
+    def post(self, request):
+        if not request.user.is_authenticated:
+            return redirect("usuarios:login")
+        if request.user.foto:
+            request.user.foto.delete(save=True)
+            messages.success(request, "Foto removida.")
+        return redirect("usuarios:perfil")
+
+
 class DeletarContaView(View):
     """Exclui a própria conta (ação irreversível)."""
 

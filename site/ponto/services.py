@@ -386,7 +386,7 @@ class MonitorService:
         return list(PacienteService.equipe_do_paciente(paciente)["cuidadores"])
 
     @staticmethod
-    def _item(p, agora=None):
+    def _item(p):
         """Formata um plantão para exibição (cards/lista)."""
         mins = _plantao_minutos(p)
         decorrido = None
@@ -407,35 +407,20 @@ class MonitorService:
 
     @staticmethod
     def em_plantao_agora(paciente):
-        agora = timezone.localtime().time().replace(microsecond=0)
         qs = Plantao.objects.filter(
             paciente=paciente, status=Plantao.Status.ABERTO
         ).select_related("cuidador").order_by("hora_entrada")
-        return [MonitorService._item(p, agora) for p in qs]
+        return [MonitorService._item(p) for p in qs]
 
     @staticmethod
     def plantoes_do_dia(paciente, dia, cuidador_id=None):
-        agora = timezone.localtime().time().replace(microsecond=0)
         qs = Plantao.objects.filter(
             paciente=paciente, data_plantao=dia
         ).select_related("cuidador")
         if cuidador_id:
             qs = qs.filter(cuidador_id=cuidador_id)
         # Mais recente primeiro (entrada mais tarde / inserido por último).
-        return [MonitorService._item(p, agora) for p in qs.order_by("-hora_entrada", "-id")]
-
-    @staticmethod
-    def plantoes_periodo(paciente, inicio, fim):
-        """Plantões do paciente entre `inicio` e `fim` (mais recente primeiro)."""
-        agora = timezone.localtime().time().replace(microsecond=0)
-        qs = (
-            Plantao.objects.filter(
-                paciente=paciente, data_plantao__gte=inicio, data_plantao__lte=fim
-            )
-            .select_related("cuidador")
-            .order_by("-data_plantao", "-hora_entrada")
-        )
-        return [MonitorService._item(p, agora) for p in qs]
+        return [MonitorService._item(p) for p in qs.order_by("-hora_entrada", "-id")]
 
     @staticmethod
     def relatorio_mes(paciente, ano, mes):

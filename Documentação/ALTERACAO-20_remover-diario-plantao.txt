@@ -1,0 +1,40 @@
+========================================================================
+ ALTERACAO 20 - Remover a tabela diario_plantao (redundante)
+ Documento alvo: "A4 Lab. Desenv. Web - FAC.docx"
+ Banco: site/bd/bdcuidacare.sql  (COM mudança de schema: tabela removida)
+ Data: 2026-06-21
+========================================================================
+
+MOTIVO
+------------------------------------------------------------------------
+A tabela `diario_plantao` tinha como ideia guardar as anotações do
+prontuário, mas isso JÁ é feito pela tabela `anotacao` (app prontuario,
+model Anotacao). Era uma duplicidade nunca usada (não havia model Django,
+app nem tela — o app "diario" só existia como comentário nas URLs). Por
+isso foi removida.
+
+
+------------------------------------------------------------------------
+ ALTERACOES
+------------------------------------------------------------------------
+- site/bd/bdcuidacare.sql:
+    * REMOVIDO o CREATE TABLE `diario_plantao`.
+    * REMOVIDO o trigger `trg_desabilitar_edicao_diario` (só servia para
+      marcar o diário como não-editável ao fechar o plantão).
+- Banco vivo: executados
+    DROP TRIGGER IF EXISTS trg_desabilitar_edicao_diario;
+    DROP TABLE IF EXISTS diario_plantao;
+- config/urls.py: removida a linha comentada "# path('diario/', ...)"
+  (e as demais linhas de apps comentadas que não existem).
+
+Nada no código Python referenciava a tabela (não havia model/app/tela),
+então não houve mudança de comportamento. As anotações do prontuário
+continuam em `anotacao` (prontuario.Anotacao).
+
+
+------------------------------------------------------------------------
+ RESUMO
+------------------------------------------------------------------------
+- Tabela `diario_plantao` e seu trigger removidos (duplicavam o papel de
+  `anotacao`). Refletido no bdcuidacare.sql e aplicado no banco.
+========================================================================

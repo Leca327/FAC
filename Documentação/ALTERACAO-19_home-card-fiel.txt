@@ -1,0 +1,30 @@
+========================================================================
+ ALTERACAO 19 - Home: card de demonstração fiel ao sistema
+ Documento alvo: "A4 Lab. Desenv. Web - FAC.docx"
+ Banco: site/bd/bdcuidacare.sql  (SEM mudança de schema)
+ Data: 2026-06-20
+========================================================================
+
+MOTIVO
+------------------------------------------------------------------------
+O mockup do "dashboard do paciente" na home (landing) mostrava dados que o
+sistema NÃO tem. Ajustado para refletir as seções reais.
+
+ALTERACOES (templates/core/home.html)
+------------------------------------------------------------------------
+- REMOVIDO "120/80 / Pressão" (o sistema não registra sinais vitais).
+- REMOVIDO o status "Online" do paciente (não existe) -> agora "Cuidadora em
+  plantão" (conceito real: cuidador em plantão / ponto aberto).
+- Estatísticas agora refletem seções reais:
+    "3/4 / Doses de hoje"        (Medicação Diária)
+    "10 Abr / Próxima consulta"  (Consultas)
+    "4 / Equipe"                 (Equipe: familiares + cuidadores)
+- "Atividades de hoje" -> "Prontuário de hoje", com itens dos tipos reais da
+  linha do tempo: dose tomada (Medicamentos), anotação (Prontuário) e
+  consulta (Consultas).
+- Mantido "Ponto registrado · 07:02" (check-in do cuidador é real).
+- Faixa de recursos: "Alertas em tempo real" (não existe) -> "Escala de
+  cuidadores" (seção real).
+
+Sem mudança de banco; é só conteúdo da landing.
+========================================================================

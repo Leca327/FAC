@@ -41,7 +41,7 @@ class Paciente(models.Model):
 
     condicoes_saude = models.TextField("condições de saúde", blank=True)
     alergias = models.TextField("alergias", blank=True)
-    foto = models.CharField("foto", max_length=255, blank=True)
+    foto = models.FileField("foto", upload_to="pacientes/", null=True, blank=True)
 
     # Localização para validação de check-in via GPS (RN01)
     latitude_gps = models.DecimalField(max_digits=10, decimal_places=8, null=True, blank=True)

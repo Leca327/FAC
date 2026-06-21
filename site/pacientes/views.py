@@ -7,7 +7,7 @@ o tipo do usuário — sem necessidade de alternância manual.
 """
 
 import calendar
-from datetime import date, timedelta
+from datetime import date
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -25,6 +25,7 @@ __all__ = [
     "VisaoGeralPacienteView",
     "AgendaPacienteView",
     "PerfilPacienteView",
+    "RemoverFotoPacienteView",
     "ExcluirPacienteView",
 ]
 
@@ -243,7 +244,7 @@ class PerfilPacienteView(LoginRequiredMixin, View):
             return redirect("pacientes:perfil", pk=paciente.pk)
 
         endereco_antigo = PacienteService.endereco_completo(paciente)
-        form = PacientePerfilForm(request.POST, instance=paciente)
+        form = PacientePerfilForm(request.POST, request.FILES, instance=paciente)
         if form.is_valid():
             obj = form.save(commit=False)
             # Localização do check-in (RN01) vem do ENDEREÇO: geocodifica quando
@@ -292,6 +293,23 @@ class ExcluirPacienteView(LoginRequiredMixin, View):
         paciente.save(update_fields=["ativo"])
         messages.info(request, f"Paciente {paciente.nome} excluído.")
         return redirect("pacientes:dashboard")
+
+
+class RemoverFotoPacienteView(LoginRequiredMixin, View):
+    """Remove a foto do paciente (modo Familiar)."""
+
+    def post(self, request, pk):
+        paciente = PacienteService.paciente_acessivel(request.user, pk)
+        if not paciente:
+            messages.error(request, "Paciente não encontrado ou sem acesso.")
+            return redirect("pacientes:dashboard")
+        if modo_atual(request) == "cuidador":
+            messages.error(request, "Apenas no modo Familiar é possível editar o paciente.")
+            return redirect("pacientes:perfil", pk=paciente.pk)
+        if paciente.foto:
+            paciente.foto.delete(save=True)
+            messages.success(request, "Foto removida.")
+        return redirect("pacientes:perfil", pk=paciente.pk)
 
 
 class NovoPacienteView(LoginRequiredMixin, View):

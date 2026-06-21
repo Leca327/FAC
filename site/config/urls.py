@@ -31,10 +31,6 @@ urlpatterns = [
     path("prontuario/", include("prontuario.urls")),
     # Ponto: check-in/check-out do cuidador
     path("ponto/", include("ponto.urls")),
-    # Apps do projeto (habilitados conforme implementados):
-    # path("agenda/", include("agenda.urls")),
-    # path("ponto/", include("ponto.urls")),
-    # path("diario/", include("diario.urls")),
 ]
 
 # Em desenvolvimento, serve os uploads (ex.: fotos de perfil) do MEDIA_ROOT.

@@ -100,7 +100,7 @@ CREATE TABLE `paciente` (
   `familiar_responsavel_id` INT NOT NULL,
   `condicoes_saude` TEXT,
   `alergias` TEXT,
-  `foto` VARCHAR(255),
+  `foto` VARCHAR(100),            -- caminho do arquivo (FileField upload_to=pacientes/)
   `latitude_gps` DECIMAL(10, 8),
   `longitude_gps` DECIMAL(11, 8),
   `raio_validacao_gps` FLOAT DEFAULT 100,  -- em metros
@@ -301,27 +301,6 @@ CREATE TABLE `plantao` (
   INDEX idx_data (data_plantao),
   INDEX idx_status (status),
   UNIQUE KEY unique_plantao_aberto (paciente_id, cuidador_id, data_plantao)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- =====================================================
--- TABELA: DIARIO_PLANTAO (Registra e Possui)
--- =====================================================
-
-CREATE TABLE `diario_plantao` (
-  `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `plantao_id` INT NOT NULL,
-  `cuidador_id` INT NOT NULL,
-  `tipo_registro` ENUM('ocorrencia', 'medicacao', 'observacao', 'atividade') NOT NULL,
-  `descricao` TEXT NOT NULL,
-  `data_hora` DATETIME DEFAULT CURRENT_TIMESTAMP,
-  `data_hora_edicao` DATETIME,
-  `editavel` BOOLEAN DEFAULT TRUE,  -- desabilita edição após plantão fechado
-  
-  FOREIGN KEY (plantao_id) REFERENCES plantao(id) ON DELETE CASCADE,
-  FOREIGN KEY (cuidador_id) REFERENCES usuario(id) ON DELETE RESTRICT,
-  INDEX idx_plantao (plantao_id),
-  INDEX idx_tipo (tipo_registro),
-  INDEX idx_data_hora (data_hora)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =====================================================
@@ -537,22 +516,6 @@ BEGIN
     VALUES (NEW.paciente_id, NEW.cuidador_id, 'plantao_aberto', 
             CONCAT('Plantão aberto por ', (SELECT first_name FROM usuario WHERE id = NEW.cuidador_id)), 
             NOW());
-  END IF;
-END$$
-
-DELIMITER ;
-
--- Trigger: Desabilitar edição do diário quando plantão é fechado
-DELIMITER $$
-
-CREATE TRIGGER trg_desabilitar_edicao_diario
-AFTER UPDATE ON plantao
-FOR EACH ROW
-BEGIN
-  IF NEW.status = 'fechado' AND OLD.status != 'fechado' THEN
-    UPDATE diario_plantao
-    SET editavel = FALSE
-    WHERE plantao_id = NEW.id;
   END IF;
 END$$
 

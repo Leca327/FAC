@@ -58,6 +58,27 @@ mais por latitude/longitude digitadas:
 
 
 ------------------------------------------------------------------------
+ TRECHO 4 - Foto do paciente (com ícone de fallback)
+------------------------------------------------------------------------
+- Paciente.foto passou de CharField para FileField (upload_to=pacientes/).
+  Migração pacientes/0004 (real, AlterField); no .sql vira VARCHAR(100).
+- PacientePerfilForm ganhou o campo foto (validação: imagem JPG/PNG/WEBP/GIF,
+  até 5 MB). PerfilPacienteView trata request.FILES; o "Alterar Foto" no
+  cabeçalho usa o perfil.js (envia ao escolher o arquivo); form com enctype
+  multipart.
+- A foto aparece com FALLBACK de ícone quando não há: cabeçalho do perfil,
+  card do paciente no sidebar (_sidebar.html) e cards do dashboard
+  (familiar e cuidador). CSS: containers com overflow hidden + img object-fit
+  cover. (A foto do usuário já funcionava no Meu Perfil, com inicial como
+  fallback.)
+- "RETIRAR FOTO": botão ao lado de "Alterar Foto" (só aparece quando há foto)
+  que remove a imagem. Paciente: RemoverFotoPacienteView / pacientes:remover_foto
+  (modo Familiar). Usuário: RemoverFotoView / usuarios:remover_foto. Usam um
+  <form> separado via atributo form= (não dá para aninhar forms) e
+  foto.delete(save=True) (apaga o arquivo). Após remover, volta o ícone/inicial.
+
+
+------------------------------------------------------------------------
  RESUMO
 ------------------------------------------------------------------------
 - Nova tela pacientes:perfil com os dados do paciente em cartões por seção.
@@ -81,4 +102,9 @@ mais por latitude/longitude digitadas:
   funcionar: aponta para pacientes:perfil com ?editar=1; PerfilPacienteView
   abre as seções já em modo edição (abrir_edicao) quando ?editar=1 e o modo
   é Familiar.
+- O cadastro de paciente (PacienteForm + modal "Novo Paciente") passou a ter
+  TODOS os campos de endereço: Rua, Complemento, Cidade, Estado(UF), CEP, País
+  (complemento e país opcionais; país padrão "Brasil"; UF em maiúsculas). Ao
+  criar, PacienteService.criar_paciente já geocodifica o endereço completo
+  para a localização do check-in.
 ========================================================================

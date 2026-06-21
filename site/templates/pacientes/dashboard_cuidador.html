@@ -22,9 +22,12 @@
             {% for paciente in pacientes %}
             <article class="pac-card">
                 <div class="pac-card__avatar" aria-hidden="true">
+                    {% if paciente.foto %}<img src="{{ paciente.foto.url }}" alt="">
+                    {% else %}
                     <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
                         <circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>
                     </svg>
+                    {% endif %}
                 </div>
                 <div class="pac-card__body">
                     <h3 class="pac-card__name">{{ paciente.nome }}</h3>

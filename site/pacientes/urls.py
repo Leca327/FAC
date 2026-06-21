@@ -8,6 +8,7 @@ from .views import (
     NovoPacienteView,
     PacientesDashboardView,
     PerfilPacienteView,
+    RemoverFotoPacienteView,
     VisaoGeralPacienteView,
 )
 
@@ -20,4 +21,5 @@ urlpatterns = [
     path("<int:pk>/", VisaoGeralPacienteView.as_view(), name="visao_geral"),
     path("<int:pk>/agenda/", AgendaPacienteView.as_view(), name="agenda"),
     path("<int:pk>/perfil/", PerfilPacienteView.as_view(), name="perfil"),
+    path("<int:pk>/perfil/foto/remover/", RemoverFotoPacienteView.as_view(), name="remover_foto"),
 ]
