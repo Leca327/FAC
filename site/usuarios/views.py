@@ -57,11 +57,13 @@ class CadastroView(View):
                 password=dados["password"],
                 first_name=dados["first_name"],
                 last_name=dados["last_name"],
-                tipo_usuario=dados["tipo_usuario"],
                 cpf=dados.get("cpf"),
                 cep=dados.get("cep", ""),
                 telefone=dados.get("telefone", ""),
                 endereco=dados.get("endereco", ""),
+                complemento=dados.get("complemento", ""),
+                cidade=dados.get("cidade", ""),
+                estado=dados.get("estado", ""),
             )
             login(request, usuario)
             messages.success(request, "Conta criada com sucesso! Bem-vindo(a) ao CuidaCare.")

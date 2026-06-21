@@ -19,7 +19,7 @@
     </aside>
 
     <!-- Formulário (direita) -->
-    <section class="auth__panel auth__panel--register" id="auth-panel">
+    <section class="auth__panel auth__panel--register is-familiar" id="auth-panel">
         <div class="auth__box auth__box--wide">
             <h1 class="auth__title auth__title--center">Crie sua conta</h1>
             <p class="auth__subtitle auth__subtitle--center">Junte-se à comunidade de cuidadores.</p>
@@ -43,18 +43,9 @@
                   {% if form.errors %}data-tem-erros="1"{% endif %}>
                 {% csrf_token %}
 
-                <!-- Etapa 1: Tipo de conta e identificação -->
+                <!-- Etapa 1: Identificação -->
                 <fieldset class="wizard-step" data-step="1">
-                    <p class="wizard-step__titulo">Quem é você?</p>
-
-                    <div class="toggle" role="radiogroup" aria-label="Tipo de conta">
-                        {% for radio in form.tipo_usuario %}
-                        <label class="toggle__option">
-                            {{ radio.tag }}
-                            <span>{{ radio.choice_label }}</span>
-                        </label>
-                        {% endfor %}
-                    </div>
+                    <p class="wizard-step__titulo">Seus dados</p>
 
                     <div class="field-grid">
                         <div class="field">
@@ -124,6 +115,25 @@
                         </div>
                     </div>
 
+                    <div class="field">
+                        <label for="id_complemento">Complemento:</label>
+                        {{ form.complemento }}
+                        {% for e in form.complemento.errors %}<span class="field__error">{{ e }}</span>{% endfor %}
+                    </div>
+
+                    <div class="field-grid">
+                        <div class="field">
+                            <label for="id_cidade">Cidade:</label>
+                            {{ form.cidade }}
+                            {% for e in form.cidade.errors %}<span class="field__error">{{ e }}</span>{% endfor %}
+                        </div>
+                        <div class="field">
+                            <label for="id_estado">Estado (UF):</label>
+                            {{ form.estado }}
+                            {% for e in form.estado.errors %}<span class="field__error">{{ e }}</span>{% endfor %}
+                        </div>
+                    </div>
+
                     <label class="checkbox">
                         {{ form.aceite_termos }}
                         <span>Ao cadastrar, concordo com os <a href="{% url 'core:termos' %}" target="_blank" rel="noopener">Termos de Uso</a>.</span>
@@ -148,19 +158,4 @@
 {% block extra_js %}
 <script src="{% static 'js/auth.js' %}"></script>
 <script src="{% static 'js/cadastro.js' %}"></script>
-<script>
-    // Troca o tema do painel (rosa = Familiar / azul = Cuidador)
-    (function () {
-        var panel = document.getElementById("auth-panel");
-        var radios = document.querySelectorAll('input[name="tipo_usuario"]');
-        function aplicarTema() {
-            var sel = document.querySelector('input[name="tipo_usuario"]:checked');
-            var tipo = sel ? sel.value : "familiar";
-            panel.classList.toggle("is-cuidador", tipo === "cuidador");
-            panel.classList.toggle("is-familiar", tipo !== "cuidador");
-        }
-        radios.forEach(function (r) { r.addEventListener("change", aplicarTema); });
-        aplicarTema();
-    })();
-</script>
 {% endblock %}

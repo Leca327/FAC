@@ -8,7 +8,6 @@ exibição são passados pelo contexto e consumidos pelos templates.
 
 from datetime import date
 
-from django.shortcuts import redirect
 from django.views.generic import TemplateView
 
 
@@ -27,12 +26,6 @@ class HomeView(TemplateView):
     """Tela principal (landing page) pública do CuidaCare."""
 
     template_name = "core/home.html"
-
-    def get(self, request, *args, **kwargs):
-        # Usuário logado não vê a landing de marketing: vai para os pacientes.
-        if request.user.is_authenticated:
-            return redirect("pacientes:dashboard")
-        return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

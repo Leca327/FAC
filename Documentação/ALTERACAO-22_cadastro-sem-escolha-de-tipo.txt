@@ -1,0 +1,79 @@
+========================================================================
+ ALTERACAO 22 - Cadastro sem escolha de tipo (Familiar/Cuidador) + fix de design
+ Documento alvo: "A4 Lab. Desenv. Web - FAC.docx"
+ Banco: site/bd/bdcuidacare.sql  (SEM mudança de schema)
+ Data: 2026-06-21
+========================================================================
+
+MOTIVO
+------------------------------------------------------------------------
+Na tela de cadastro havia um seletor "Quem é você? Familiar / Cuidador".
+Esse seletor ficou redundante: o papel de cada pessoa NÃO é mais escolhido
+por ela na criação da conta — ele é determinado pelo vínculo com um paciente
+(pacientes.Participacao):
+  - quem CADASTRA um paciente vira o familiar responsável (Criador) — RN14;
+  - quem é CONVIDADO entra com o papel definido no convite (familiar/cuidador).
+Além disso, o <fieldset> de cada etapa do wizard exibia a borda/recuo padrão
+do navegador, formando um "box" indesejado em volta dos campos (bug visual).
+
+ALTERACOES
+------------------------------------------------------------------------
+- usuarios/forms.py (CadastroForm): REMOVIDO o campo `tipo_usuario`
+  (ChoiceField/RadioSelect). O formulário não pergunta mais o tipo de conta.
+- usuarios/views.py (CadastroView.post): não envia mais `tipo_usuario` ao
+  service.
+- usuarios/services.py (UsuarioService.criar_usuario): `tipo_usuario` passou a
+  ter default = Usuario.Tipo.FAMILIAR (coerente com o UsuarioManager, que já
+  usava setdefault "familiar"). O papel efetivo vem da Participacao.
+- Campos de endereço no cadastro (etapa 3): além de CEP e Endereço (rua),
+  foram adicionados COMPLEMENTO, CIDADE e ESTADO (UF) — todos opcionais, como
+  no modelo (blank=True) e na tela "Meu Perfil". O país segue no default
+  "Brasil". Wiring: usuarios/forms.py (novos CharField + clean_estado que faz
+  strip().upper()), usuarios/views.py (passa complemento/cidade/estado ao
+  service), usuarios/services.py (criar_usuario repassa ao create_user) e
+  templates/usuarios/cadastro.html (campos na etapa 3, reusando .field/.field-grid).
+- static/js/cadastro.js: o form usa `novalidate`, então um Enter num campo
+  disparava o submit nativo — ia direto ao servidor e o bloco `data-tem-erros`
+  revelava TODAS as etapas de uma vez. Agora há um handler de `submit`: enquanto
+  não estiver na última etapa, o Enter age como "Próximo" (valida só a etapa
+  atual e avança; se inválida, aponta o erro e permanece na etapa, mostrando
+  apenas os campos dela). Na última etapa, valida a etapa antes de deixar o
+  envio ao servidor acontecer (campos vazios são apontados; se tudo ok, cadastra).
+  E quando o servidor devolve erro (validação só do backend, ex.: CPF/e-mail já
+  cadastrados), o `data-tem-erros` NÃO revela mais todas as etapas de uma vez:
+  o wizard navega para a PRIMEIRA etapa que contém um campo com erro
+  (`.field__error`), mostrando só os campos daquela etapa.
+- templates/usuarios/cadastro.html:
+    * REMOVIDO o bloco do toggle "Quem é você?" (radiogroup tipo_usuario).
+    * Etapa 1 renomeada de "Quem é você?" para "Seus dados".
+    * Painel do formulário fixa o tema rosa: classe `is-familiar` estática no
+      <section id="auth-panel"> (antes era alternada por JS conforme o radio).
+    * REMOVIDO o <script> que trocava o tema rosa/azul conforme tipo_usuario.
+- static/css/auth.css:
+    * ADICIONADO reset do <fieldset> de etapa: `.wizard-step { border:0;
+      margin:0; padding:0; min-width:0; }` — corrige o "box" da borda padrão.
+    * REMOVIDOS estilos órfãos: bloco `.toggle` / `.toggle__option` e o tema
+      `.auth__panel--register.is-cuidador` (não há mais modo cuidador no
+      cadastro).
+    * ADICIONADO `.wizard-nav .btn[hidden] { display: none; }` — o `.btn` usa
+      `display:inline-flex`, que sobrepunha o `display:none` do atributo
+      [hidden], fazendo TODOS os botões (Voltar/Próximo/Cadastre-se) aparecerem
+      em todas as etapas. Agora o [hidden] do wizard é respeitado: "Próximo" só
+      até a penúltima etapa e "Cadastre-se" só na última (assumindo o lugar do
+      "Próximo"); "Voltar" some na primeira etapa.
+
+OBS / IMPACTO
+------------------------------------------------------------------------
+- SEM mudança de schema: o campo usuario.tipo_usuario continua existindo no
+  modelo e no banco; apenas deixa de ser preenchido pelo usuário no cadastro
+  (nasce "familiar" por padrão). As propriedades is_familiar/is_cuidador e os
+  gates que as usam (medicos/medicamentos/ponto) seguem funcionando.
+- Verificado: manage.py check sem issues; POST do cadastro retorna 302 -> "/"
+  e cria o usuário como Familiar; a tela renderiza sem o box e sem o seletor.
+
+RESUMO
+------------------------------------------------------------------------
+- Cadastro não pergunta mais Familiar/Cuidador; o papel vem do vínculo com o
+  paciente (criação = familiar; convite = papel do convite).
+- Corrigido o "box" da borda padrão do <fieldset> no wizard de cadastro.
+========================================================================

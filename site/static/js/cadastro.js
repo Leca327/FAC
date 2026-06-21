@@ -51,21 +51,41 @@
         return true;
     }
 
-    btnProximo.addEventListener("click", function () {
+    function avancar() {
         if (etapaValida() && atual < total - 1) mostrar(atual + 1);
-    });
+    }
+
+    btnProximo.addEventListener("click", avancar);
     btnVoltar.addEventListener("click", function () {
         if (atual > 0) mostrar(atual - 1);
     });
 
-    // Se o servidor devolveu erros, revela todas as etapas para o usuário
-    // ver/corrigir, sem o passo a passo.
+    // O form usa novalidate, então um Enter num campo dispara o submit nativo
+    // (que iria direto ao servidor e revelaria todas as etapas). Enquanto não
+    // estiver na última etapa, o Enter age como "Próximo": valida a etapa atual
+    // e avança — ou aponta o erro e fica onde está. Só na última etapa o envio
+    // ao servidor acontece de fato (e mesmo assim só se a etapa estiver válida).
+    form.addEventListener("submit", function (e) {
+        if (atual < total - 1) {
+            e.preventDefault();
+            avancar();
+        } else if (!etapaValida()) {
+            e.preventDefault();
+        }
+    });
+
+    // Se o servidor devolveu erros (validações que só existem no backend, ex.:
+    // CPF/e-mail já cadastrados), em vez de revelar tudo, leva o usuário à
+    // PRIMEIRA etapa que contém um campo com erro — mantendo o passo a passo.
     if (form.hasAttribute("data-tem-erros")) {
-        steps.forEach(function (s) { s.hidden = false; });
-        btnProximo.hidden = true;
-        btnVoltar.hidden = true;
-        btnFinalizar.hidden = false;
-        dots.forEach(function (d) { d.classList.add("is-active"); });
+        var passoComErro = 0;
+        for (var i = 0; i < steps.length; i++) {
+            if (steps[i].querySelector(".field__error")) {
+                passoComErro = i;
+                break;
+            }
+        }
+        mostrar(passoComErro);
     } else {
         mostrar(0);
     }

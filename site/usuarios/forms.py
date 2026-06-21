@@ -175,13 +175,15 @@ class PerfilForm(forms.ModelForm):
 
 
 class CadastroForm(forms.Form):
-    """Formulário de criação de conta (Familiar ou Cuidador)."""
+    """
+    Formulário de criação de conta.
 
-    tipo_usuario = forms.ChoiceField(
-        choices=Usuario.Tipo.choices,
-        initial=Usuario.Tipo.FAMILIAR,
-        widget=forms.RadioSelect,
-    )
+    Não há mais escolha de "tipo de conta" (Familiar/Cuidador): o papel de
+    cada pessoa é determinado pelo vínculo com um paciente — quem cadastra um
+    paciente vira familiar (criador); quem é convidado entra com o papel
+    definido no convite (``pacientes.Participacao``).
+    """
+
     first_name = forms.CharField(label="Nome", max_length=150)
     last_name = forms.CharField(label="Sobrenome", max_length=150)
     email = forms.EmailField(label="E-mail")
@@ -228,6 +230,18 @@ class CadastroForm(forms.Form):
         label="Endereço", max_length=255,
         widget=forms.TextInput(attrs={"placeholder": "Rua, número, bairro"}),
     )
+    complemento = forms.CharField(
+        label="Complemento", max_length=100, required=False,
+        widget=forms.TextInput(attrs={"placeholder": "Apto, bloco..."}),
+    )
+    cidade = forms.CharField(
+        label="Cidade", max_length=100, required=False,
+        widget=forms.TextInput(attrs={"placeholder": "Sua cidade"}),
+    )
+    estado = forms.CharField(
+        label="Estado", max_length=2, required=False,
+        widget=forms.TextInput(attrs={"maxlength": "2", "placeholder": "UF"}),
+    )
     aceite_termos = forms.BooleanField(
         label="Ao cadastrar, concordo com os Termos de Uso.",
         error_messages={"required": "É preciso aceitar os Termos de Uso."},
@@ -256,6 +270,9 @@ class CadastroForm(forms.Form):
                 "O telefone deve conter 10 ou 11 dígitos numéricos (com DDD)."
             )
         return telefone
+
+    def clean_estado(self):
+        return (self.cleaned_data.get("estado") or "").strip().upper()
 
     def clean(self):
         cleaned = super().clean()

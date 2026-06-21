@@ -93,12 +93,6 @@
     --auth-bg: var(--bg-pink-soft);
 }
 
-.auth__panel--register.is-cuidador {
-    --auth-accent: #5b8def;
-    --auth-accent-dark: #3f6fd1;
-    --auth-bg: #eaf1fd;
-}
-
 .auth__box {
     width: 100%;
     max-width: 380px;
@@ -255,40 +249,6 @@
     font-weight: 500;
 }
 
-/* ---------- Toggle Familiar / Cuidador ---------- */
-.toggle {
-    display: flex;
-    gap: 6px;
-    background: var(--white);
-    border: 1px solid var(--line);
-    border-radius: 999px;
-    padding: 5px;
-    width: fit-content;
-    margin: 0 auto 28px;
-}
-
-.toggle__option input {
-    position: absolute;
-    opacity: 0;
-    pointer-events: none;
-}
-
-.toggle__option span {
-    display: block;
-    padding: 9px 26px;
-    border-radius: 999px;
-    font-weight: 600;
-    font-size: 0.92rem;
-    color: var(--text-muted);
-    cursor: pointer;
-    transition: var(--transition);
-}
-
-.toggle__option:has(input:checked) span {
-    background: var(--auth-accent);
-    color: var(--white);
-}
-
 /* ---------- Checkbox de termos ---------- */
 .checkbox {
     display: flex;
@@ -378,6 +338,13 @@
     height: 2px;
     background: var(--line, #e4e2f2);
 }
+/* O <fieldset> de cada etapa não deve exibir a borda/recuo padrão do browser. */
+.wizard-step {
+    border: 0;
+    margin: 0;
+    padding: 0;
+    min-width: 0;
+}
 .wizard-step__titulo {
     font-weight: 700;
     color: var(--ink, #1f1b3a);
@@ -392,6 +359,10 @@
 }
 /* O "Voltar" fica compacto ao lado do botão principal. */
 .wizard-nav [data-voltar] { flex: 0 0 auto; }
+/* O .btn define display:inline-flex, que sobrepõe o display:none do atributo
+   [hidden]; reforçamos aqui para os botões ocultos do wizard realmente sumirem
+   (ex.: "Cadastre-se" só na última etapa; "Próximo" some nela). */
+.wizard-nav .btn[hidden] { display: none; }
 
 /* ---------- Responsivo ---------- */
 @media (max-width: 860px) {

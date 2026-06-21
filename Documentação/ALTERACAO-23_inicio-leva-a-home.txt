@@ -1,0 +1,35 @@
+========================================================================
+ ALTERACAO 23 - "Início" leva à Home (landing), inclusive para usuário logado
+ Documento alvo: "A4 Lab. Desenv. Web - FAC.docx"
+ Banco: site/bd/bdcuidacare.sql  (SEM mudança de schema)
+ Data: 2026-06-21
+========================================================================
+
+MOTIVO
+------------------------------------------------------------------------
+O link "Início" (e o logo) da navbar apontam para core:home, mas a HomeView
+redirecionava o usuário AUTENTICADO para pacientes:dashboard (comportamento
+introduzido na ALTERACAO-21). Resultado: clicar em "Início" caía na tela de
+Pacientes, não na Home. O esperado é que "Início" leve à Home (landing).
+
+ALTERACAO
+------------------------------------------------------------------------
+- core/views.py (HomeView): REMOVIDO o get() que redirecionava usuário logado
+  para pacientes:dashboard. Agora "/" renderiza a landing para todos (logado
+  ou não). Removido também o import não usado `redirect`.
+
+OBS / IMPACTO
+------------------------------------------------------------------------
+- Reverte o trecho de navegação da ALTERACAO-21 ("landing redireciona logados
+  ao dashboard"). As âncoras absolutas da navbar (Como funciona/Para quem/
+  Contato) continuam como na ALTERACAO-21.
+- A navbar já se adapta ao estado logado (mostra "Olá, <nome>"), então a
+  landing exibida ao usuário logado fica coerente.
+- Verificado: manage.py check sem issues; GET "/" autenticado retorna 200
+  (sem redirect) e renderiza core/home.html (seção "Como funciona" e métricas).
+
+RESUMO
+------------------------------------------------------------------------
+- "Início"/logo levam à Home para todos os usuários; HomeView não redireciona
+  mais o logado para Pacientes. Sem mudança de schema.
+========================================================================

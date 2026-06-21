@@ -19,8 +19,17 @@ class UsuarioService:
     @staticmethod
     @transaction.atomic
     def criar_usuario(*, email, password, first_name, last_name,
-                      tipo_usuario, cpf=None, cep="", telefone="", endereco=""):
-        """Cria um Usuario (tabela única — sem especialização)."""
+                      tipo_usuario=Usuario.Tipo.FAMILIAR,
+                      cpf=None, cep="", telefone="", endereco="",
+                      complemento="", cidade="", estado=""):
+        """
+        Cria um Usuario (tabela única — sem especialização).
+
+        ``tipo_usuario`` nasce como ``FAMILIAR`` por padrão: o papel efetivo
+        de cada pessoa vem do vínculo com o paciente (``Participacao``), seja
+        ao cadastrar um paciente (vira criador/familiar) ou ao aceitar um
+        convite (familiar ou cuidador).
+        """
         return Usuario.objects.create_user(
             email=email,
             password=password,
@@ -31,6 +40,9 @@ class UsuarioService:
             cep=cep,
             telefone=telefone,
             endereco=endereco,
+            complemento=complemento,
+            cidade=cidade,
+            estado=estado,
         )
 
     @staticmethod
