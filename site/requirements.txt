@@ -13,3 +13,5 @@ geopy>=2.4               # Cálculo de distância GPS (RN01 - check-in)
 
 # Produção
 gunicorn>=21.2           # Servidor WSGI (deploy)
+whitenoise
+dj-database-url
