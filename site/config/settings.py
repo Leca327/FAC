@@ -10,6 +10,7 @@ Conforme seção 2.6 da documentação:
 
 from pathlib import Path
 import os
+import dj_database_url  # <-- NOVO: para usar DATABASE_URL
 
 from dotenv import load_dotenv
 
@@ -31,7 +32,11 @@ SECRET_KEY = os.getenv(
     "django-insecure-dev-key-troque-em-producao-cuidacare-2026",
 )
 
+# ALLOWED_HOSTS: adiciona dinamicamente o hostname do Render
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+RENDER_EXTERNAL_HOSTNAME = os.getenv("RENDER_EXTERNAL_HOSTNAME")
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
 # ------------------------------------------------------------------
 # Aplicações
@@ -64,6 +69,7 @@ INSTALLED_APPS = DJANGO_APPS + LOCAL_APPS
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",   # <-- NOVO: WhiteNoise para arquivos estáticos
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -98,15 +104,13 @@ WSGI_APPLICATION = "config.wsgi.application"
 # Banco de dados (seção 2.6.8)
 # ------------------------------------------------------------------
 if ENVIRONMENT == "production":
+    # Em produção, usa DATABASE_URL (fornecido pelo Render ou outro PaaS)
     DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": os.getenv("DB_NAME", "cuidacare_db"),
-            "USER": os.getenv("DB_USER", ""),
-            "PASSWORD": os.getenv("DB_PASSWORD", ""),
-            "HOST": os.getenv("DB_HOST", "localhost"),
-            "PORT": os.getenv("DB_PORT", "5432"),
-        }
+        'default': dj_database_url.config(
+            default=os.getenv('DATABASE_URL'),
+            conn_max_age=600,
+            ssl_require=True
+        )
     }
 else:
     # Desenvolvimento: MySQL local (XAMPP) com o banco cuidacare_db.
@@ -148,6 +152,7 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"  # <-- NOVO
 
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
